@@ -8,9 +8,9 @@
 export { Client, Query, NuvixException } from './client';
 export { Account } from './services/account';
 export { Avatars } from './services/avatars';
-export { Databases } from './services/databases';
-export { Functions } from './services/functions';
-export { Graphql } from './services/graphql';
+export { Database } from './services/databases';
+// export { Functions } from './services/functions';
+// export { Graphql } from './services/graphql';
 export { Locale } from './services/locale';
 export { Messaging } from './services/messaging';
 export { Storage } from './services/storage';
