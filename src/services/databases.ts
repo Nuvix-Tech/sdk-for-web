@@ -1,11 +1,21 @@
+import { PromiseResponseType } from '../type';
 import { NuvixException, Client, type Payload } from '../client';
 import type { Models } from '../models';
+import { SchemaQueryBuilder } from '../builders/schema';
 
-export class Databases {
-    client: Client;
+export class Database<T extends Client, SchemasTypes = unknown, CollectionsTypes = unknown> {
+    client: T;
 
-    constructor(client: Client) {
+    constructor(client: T) {
         this.client = client;
+    }
+
+    /**
+     * 
+     * @param schema string
+     */
+    schema(schema: string) {
+        return new SchemaQueryBuilder<T, SchemasTypes, CollectionsTypes>(this.client, schema);
     }
 
     /**
@@ -16,10 +26,9 @@ export class Databases {
      * @param {string} databaseId
      * @param {string} collectionId
      * @param {string[]} queries
-     * @throws {NuvixException}
-     * @returns {Promise<Models.DocumentList<Document>>}
+     * @returns {PromiseResponseType<T, Models.DocumentList<Document>>}
      */
-    async listDocuments<Document extends Models.Document>(databaseId: string, collectionId: string, queries?: string[]): Promise<Models.DocumentList<Document>> {
+    async listDocuments<Document extends Models.Document>(databaseId: string, collectionId: string, queries?: string[]): PromiseResponseType<T, Models.DocumentList<Document>> {
         if (typeof databaseId === 'undefined') {
             throw new NuvixException('Missing required parameter: "databaseId"');
         }
@@ -55,10 +64,9 @@ export class Databases {
      * @param {string} documentId
      * @param {Omit<Document, keyof Models.Document>} data
      * @param {string[]} permissions
-     * @throws {NuvixException}
-     * @returns {Promise<Document>}
+     * @returns {PromiseResponseType<T, Document>}
      */
-    async createDocument<Document extends Models.Document>(databaseId: string, collectionId: string, documentId: string, data: Omit<Document, keyof Models.Document>, permissions?: string[]): Promise<Document> {
+    async createDocument<Document extends Models.Document>(databaseId: string, collectionId: string, documentId: string, data: Omit<Document, keyof Models.Document>, permissions?: string[]): PromiseResponseType<T, Document> {
         if (typeof databaseId === 'undefined') {
             throw new NuvixException('Missing required parameter: "databaseId"');
         }
@@ -105,10 +113,9 @@ export class Databases {
      * @param {string} collectionId
      * @param {string} documentId
      * @param {string[]} queries
-     * @throws {NuvixException}
-     * @returns {Promise<Document>}
+     * @returns {PromiseResponseType<T, Document>}
      */
-    async getDocument<Document extends Models.Document>(databaseId: string, collectionId: string, documentId: string, queries?: string[]): Promise<Document> {
+    async getDocument<Document extends Models.Document>(databaseId: string, collectionId: string, documentId: string, queries?: string[]): PromiseResponseType<T, Document> {
         if (typeof databaseId === 'undefined') {
             throw new NuvixException('Missing required parameter: "databaseId"');
         }
@@ -147,10 +154,9 @@ export class Databases {
      * @param {string} documentId
      * @param {Partial<Omit<Document, keyof Models.Document>>} data
      * @param {string[]} permissions
-     * @throws {NuvixException}
-     * @returns {Promise<Document>}
+     * @returns {PromiseResponseType<T, Document>}
      */
-    async updateDocument<Document extends Models.Document>(databaseId: string, collectionId: string, documentId: string, data?: Partial<Omit<Document, keyof Models.Document>>, permissions?: string[]): Promise<Document> {
+    async updateDocument<Document extends Models.Document>(databaseId: string, collectionId: string, documentId: string, data?: Partial<Omit<Document, keyof Models.Document>>, permissions?: string[]): PromiseResponseType<T, Document> {
         if (typeof databaseId === 'undefined') {
             throw new NuvixException('Missing required parameter: "databaseId"');
         }
@@ -190,10 +196,9 @@ export class Databases {
      * @param {string} databaseId
      * @param {string} collectionId
      * @param {string} documentId
-     * @throws {NuvixException}
-     * @returns {Promise<{}>}
+     * @returns {PromiseResponseType<T, {}>}
      */
-    async deleteDocument(databaseId: string, collectionId: string, documentId: string): Promise<{}> {
+    async deleteDocument(databaseId: string, collectionId: string, documentId: string): PromiseResponseType<T, {}> {
         if (typeof databaseId === 'undefined') {
             throw new NuvixException('Missing required parameter: "databaseId"');
         }

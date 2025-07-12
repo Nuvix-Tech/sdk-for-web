@@ -6,7 +6,10 @@
         "declaration": false,
         "esModuleInterop": true,
         "inlineSourceMap": false,
-        "lib": ["ESNext", "DOM"],
+        "lib": [
+            "ESNext",
+            "DOM"
+        ],
         "listEmittedFiles": false,
         "listFiles": false,
         "moduleResolution": "node",
@@ -17,8 +20,18 @@
         "strict": true,
         "target": "ES6",
         "traceResolution": false,
+        "paths": {
+            "@/*": [
+                "src/*"
+            ]
+        }
     },
     "compileOnSave": false,
-    "exclude": ["node_modules", "dist"],
-    "include": ["src"]
+    "exclude": [
+        "node_modules",
+        "dist"
+    ],
+    "include": [
+        "src"
+    ]
 }
