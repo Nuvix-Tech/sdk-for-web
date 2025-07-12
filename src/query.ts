@@ -247,7 +247,7 @@ export class Query {
    * @param {string[]} queries
    * @returns {string}
    */
-  static or = (queries: string[]) =>
+  static or = (queries: string[]): string =>
     new Query("or", undefined, queries.map((query) => JSON.parse(query))).toString();
 
   /**
@@ -256,6 +256,6 @@ export class Query {
    * @param {string[]} queries
    * @returns {string}
    */
-  static and = (queries: string[]) =>
+  static and = (queries: string[]): string =>
     new Query("and", undefined, queries.map((query) => JSON.parse(query))).toString();
 }
