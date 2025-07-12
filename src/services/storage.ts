@@ -1,13 +1,14 @@
 import { Service } from '../service';
-import { NuvixException, Client, type Payload, UploadProgress } from '../client';
+import { NuvixException, type Client, type Payload, UploadProgress } from '../client';
 import type { Models } from '../models';
 import { ImageGravity } from '../enums/image-gravity';
 import { ImageFormat } from '../enums/image-format';
+import { PromiseResponseType } from 'types';
 
-export class Storage {
+export class Storage<T extends Client> {
     client: Client;
 
-    constructor(client: Client) {
+    constructor(client: T) {
         this.client = client;
     }
 
@@ -20,9 +21,9 @@ export class Storage {
      * @param {string[]} queries
      * @param {string} search
      * @throws {NuvixException}
-     * @returns {Promise<Models.FileList>}
+     * @returns {PromiseResponseType<T, Models.FileList>}
      */
-    async listFiles(bucketId: string, queries?: string[], search?: string): Promise<Models.FileList> {
+    async listFiles(bucketId: string, queries?: string[], search?: string): PromiseResponseType<T, Models.FileList> {
         if (typeof bucketId === 'undefined') {
             throw new NuvixException('Missing required parameter: "bucketId"');
         }
@@ -65,9 +66,9 @@ If you&#039;re creating a new file using one of the Nuvix SDKs, all the chunking
      * @param {File} file
      * @param {string[]} permissions
      * @throws {NuvixException}
-     * @returns {Promise<Models.File>}
+     * @returns {PromiseResponseType<T, Models.File>}
      */
-    async createFile(bucketId: string, fileId: string, file: File, permissions?: string[], onProgress = (progress: UploadProgress) => {}): Promise<Models.File> {
+    async createFile(bucketId: string, fileId: string, file: File, permissions?: string[], onProgress = (progress: UploadProgress) => { }): PromiseResponseType<T, Models.File> {
         if (typeof bucketId === 'undefined') {
             throw new NuvixException('Missing required parameter: "bucketId"');
         }
@@ -111,9 +112,9 @@ If you&#039;re creating a new file using one of the Nuvix SDKs, all the chunking
      * @param {string} bucketId
      * @param {string} fileId
      * @throws {NuvixException}
-     * @returns {Promise<Models.File>}
+     * @returns {PromiseResponseType<T, Models.File>}
      */
-    async getFile(bucketId: string, fileId: string): Promise<Models.File> {
+    async getFile(bucketId: string, fileId: string): PromiseResponseType<T, Models.File> {
         if (typeof bucketId === 'undefined') {
             throw new NuvixException('Missing required parameter: "bucketId"');
         }
@@ -146,9 +147,9 @@ If you&#039;re creating a new file using one of the Nuvix SDKs, all the chunking
      * @param {string} name
      * @param {string[]} permissions
      * @throws {NuvixException}
-     * @returns {Promise<Models.File>}
+     * @returns {PromiseResponseType<T, Models.File>}
      */
-    async updateFile(bucketId: string, fileId: string, name?: string, permissions?: string[]): Promise<Models.File> {
+    async updateFile(bucketId: string, fileId: string, name?: string, permissions?: string[]): PromiseResponseType<T, Models.File> {
         if (typeof bucketId === 'undefined') {
             throw new NuvixException('Missing required parameter: "bucketId"');
         }
@@ -185,9 +186,9 @@ If you&#039;re creating a new file using one of the Nuvix SDKs, all the chunking
      * @param {string} bucketId
      * @param {string} fileId
      * @throws {NuvixException}
-     * @returns {Promise<{}>}
+     * @returns {PromiseResponseType<T, {}>}
      */
-    async deleteFile(bucketId: string, fileId: string): Promise<{}> {
+    async deleteFile(bucketId: string, fileId: string): PromiseResponseType<T, {}> {
         if (typeof bucketId === 'undefined') {
             throw new NuvixException('Missing required parameter: "bucketId"');
         }

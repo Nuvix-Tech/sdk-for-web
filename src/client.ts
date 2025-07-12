@@ -1,4 +1,4 @@
-import { Config, Headers, Payload, Realtime, RealtimeRequest, RealtimeResponse, RealtimeResponseConnected, RealtimeResponseError, RealtimeResponseEvent, UploadProgress } from 'types';
+import { Config, Headers, Payload, PromiseResponseType, Realtime, RealtimeRequest, RealtimeResponse, RealtimeResponseConnected, RealtimeResponseError, RealtimeResponseEvent, ResponseType, SafeResponse, UploadProgress } from 'types';
 import { Models } from './models';
 import { io } from "socket.io-client";
 import { NuvixException } from 'error';
@@ -431,39 +431,54 @@ class Client {
     }
 
     async call(method: string, url: URL, headers: Headers = {}, params: Payload = {}, responseType = 'json'): Promise<any> {
-        const { uri, options } = this.prepareRequest(method, url, headers, params);
+        try {
+            const { uri, options } = this.prepareRequest(method, url, headers, params);
 
-        let data: any = null;
+            let data: any = null;
 
-        const response = await fetch(uri, options);
+            const response = await fetch(uri, options);
 
-        const warnings = response.headers.get('x-nuvix-warning');
-        if (warnings) {
-            warnings.split(';').forEach((warning: string) => console.warn('Warning: ' + warning));
+            const warnings = response.headers.get('x-nuvix-warning');
+            if (warnings) {
+                warnings.split(';').forEach((warning: string) => console.warn('Warning: ' + warning));
+            }
+
+            if (response.headers.get('content-type')?.includes('application/json')) {
+                data = await response.json();
+            } else if (responseType === 'arrayBuffer') {
+                data = await response.arrayBuffer();
+            } else {
+                data = {
+                    message: await response.text()
+                };
+            }
+
+            if (400 <= response.status) {
+                throw new NuvixException(data?.message, response.status, data?.type, data);
+            }
+
+            const cookieFallback = response.headers.get('X-Fallback-Cookies');
+
+            if (typeof window !== 'undefined' && window.localStorage && cookieFallback) {
+                window.console.warn('Nuvix is using localStorage for session management. Increase your security by adding a custom domain as your API endpoint.');
+                window.localStorage.setItem('cookieFallback', cookieFallback);
+            }
+
+            if (this.safeResponse) {
+                return { data, error: null }
+            }
+
+            return data;
+        } catch (e) {
+            if (this.safeResponse) {
+                return {
+                    data: null, error: {
+                        // TODO: ---
+                    }
+                }
+            }
+            throw e;
         }
-
-        if (response.headers.get('content-type')?.includes('application/json')) {
-            data = await response.json();
-        } else if (responseType === 'arrayBuffer') {
-            data = await response.arrayBuffer();
-        } else {
-            data = {
-                message: await response.text()
-            };
-        }
-
-        if (400 <= response.status) {
-            throw new NuvixException(data?.message, response.status, data?.type, data);
-        }
-
-        const cookieFallback = response.headers.get('X-Fallback-Cookies');
-
-        if (typeof window !== 'undefined' && window.localStorage && cookieFallback) {
-            window.console.warn('Nuvix is using localStorage for session management. Increase your security by adding a custom domain as your API endpoint.');
-            window.localStorage.setItem('cookieFallback', cookieFallback);
-        }
-
-        return data;
     }
 
     static flatten(data: Payload, prefix = ''): Payload {
@@ -479,6 +494,22 @@ class Client {
         }
 
         return output;
+    }
+
+
+    async withSafeResponse<R>(callback: () => Promise<R>): PromiseResponseType<typeof this, R> {
+        try {
+            const res = await callback();
+            if (this.safeResponse) {
+                return { data: res, error: null } as ResponseType<typeof this, R>;
+            }
+            return res as ResponseType<typeof this, R>;
+        } catch (e) {
+            if (this.safeResponse) {
+                return { data: null, error: e as Error } as ResponseType<typeof this, R>;;
+            }
+            throw e;
+        }
     }
 }
 

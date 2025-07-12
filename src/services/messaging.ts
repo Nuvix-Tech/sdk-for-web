@@ -1,11 +1,11 @@
-import { Service } from '../service';
-import { NuvixException, Client, type Payload, UploadProgress } from '../client';
+import { NuvixException, Client, type Payload } from '../client';
 import type { Models } from '../models';
+import { PromiseResponseType } from 'types';
 
-export class Messaging {
+export class Messaging<T extends Client> {
     client: Client;
 
-    constructor(client: Client) {
+    constructor(client: T) {
         this.client = client;
     }
 
@@ -18,9 +18,9 @@ export class Messaging {
      * @param {string} subscriberId
      * @param {string} targetId
      * @throws {NuvixException}
-     * @returns {Promise<Models.Subscriber>}
+     * @returns {PromiseResponseType<T, Models.Subscriber>}
      */
-    async createSubscriber(topicId: string, subscriberId: string, targetId: string): Promise<Models.Subscriber> {
+    async createSubscriber(topicId: string, subscriberId: string, targetId: string): PromiseResponseType<T, Models.Subscriber> {
         if (typeof topicId === 'undefined') {
             throw new NuvixException('Missing required parameter: "topicId"');
         }
@@ -60,9 +60,9 @@ export class Messaging {
      * @param {string} topicId
      * @param {string} subscriberId
      * @throws {NuvixException}
-     * @returns {Promise<{}>}
+     * @returns {PromiseResponseType<T, {}>}
      */
-    async deleteSubscriber(topicId: string, subscriberId: string): Promise<{}> {
+    async deleteSubscriber(topicId: string, subscriberId: string): PromiseResponseType<T, {}> {
         if (typeof topicId === 'undefined') {
             throw new NuvixException('Missing required parameter: "topicId"');
         }

@@ -1,14 +1,15 @@
 import { Service } from '../service';
-import { NuvixException, Client, type Payload, UploadProgress } from '../client';
+import { NuvixException, Client, type Payload } from '../client';
 import type { Models } from '../models';
 import { AuthenticatorType } from '../enums/authenticator-type';
 import { AuthenticationFactor } from '../enums/authentication-factor';
 import { OAuthProvider } from '../enums/o-auth-provider';
+import { PromiseResponseType, ResponseType } from 'types';
 
-export class Account {
+export class Account<T extends Client> {
     client: Client;
 
-    constructor(client: Client) {
+    constructor(client: T) {
         this.client = client;
     }
 
@@ -18,9 +19,9 @@ export class Account {
      * Get the currently logged in user.
      *
      * @throws {NuvixException}
-     * @returns {Promise<Models.User<Preferences>>}
+     * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
-    async get<Preferences extends Models.Preferences>(): Promise<Models.User<Preferences>> {
+    async get<Preferences extends Models.Preferences>(): PromiseResponseType<T, Models.User<Preferences>> {
         const apiPath = '/account';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -47,9 +48,9 @@ export class Account {
      * @param {string} password
      * @param {string} name
      * @throws {NuvixException}
-     * @returns {Promise<Models.User<Preferences>>}
+     * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
-    async create<Preferences extends Models.Preferences>(userId: string, email: string, password: string, name?: string): Promise<Models.User<Preferences>> {
+    async create<Preferences extends Models.Preferences>(userId: string, email: string, password: string, name?: string): PromiseResponseType<T, Models.User<Preferences>> {
         if (typeof userId === 'undefined') {
             throw new NuvixException('Missing required parameter: "userId"');
         }
@@ -97,9 +98,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * @param {string} email
      * @param {string} password
      * @throws {NuvixException}
-     * @returns {Promise<Models.User<Preferences>>}
+     * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
-    async updateEmail<Preferences extends Models.Preferences>(email: string, password: string): Promise<Models.User<Preferences>> {
+    async updateEmail<Preferences extends Models.Preferences>(email: string, password: string): PromiseResponseType<T, Models.User<Preferences>> {
         if (typeof email === 'undefined') {
             throw new NuvixException('Missing required parameter: "email"');
         }
@@ -135,9 +136,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {string[]} queries
      * @throws {NuvixException}
-     * @returns {Promise<Models.IdentityList>}
+     * @returns {PromiseResponseType<T, Models.IdentityList>}
      */
-    async listIdentities(queries?: string[]): Promise<Models.IdentityList> {
+    async listIdentities(queries?: string[]): PromiseResponseType<T, Models.IdentityList> {
         const apiPath = '/account/identities';
         const payload: Payload = {};
         if (typeof queries !== 'undefined') {
@@ -164,9 +165,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {string} identityId
      * @throws {NuvixException}
-     * @returns {Promise<{}>}
+     * @returns {PromiseResponseType<T, {}>}
      */
-    async deleteIdentity(identityId: string): Promise<{}> {
+    async deleteIdentity(identityId: string): PromiseResponseType<T, {}> {
         if (typeof identityId === 'undefined') {
             throw new NuvixException('Missing required parameter: "identityId"');
         }
@@ -192,9 +193,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Use this endpoint to create a JSON Web Token. You can use the resulting JWT to authenticate on behalf of the current user when working with the Nuvix server-side API and SDKs. The JWT secret is valid for 15 minutes from its creation and will be invalid if the user will logout in that time frame.
      *
      * @throws {NuvixException}
-     * @returns {Promise<Models.Jwt>}
+     * @returns {PromiseResponseType<T, Models.Jwt>}
      */
-    async createJWT(): Promise<Models.Jwt> {
+    async createJWT(): PromiseResponseType<T, Models.Jwt> {
         const apiPath = '/account/jwts';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -218,9 +219,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {string[]} queries
      * @throws {NuvixException}
-     * @returns {Promise<Models.LogList>}
+     * @returns {PromiseResponseType<T, Models.LogList>}
      */
-    async listLogs(queries?: string[]): Promise<Models.LogList> {
+    async listLogs(queries?: string[]): PromiseResponseType<T, Models.LogList> {
         const apiPath = '/account/logs';
         const payload: Payload = {};
         if (typeof queries !== 'undefined') {
@@ -247,9 +248,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {boolean} mfa
      * @throws {NuvixException}
-     * @returns {Promise<Models.User<Preferences>>}
+     * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
-    async updateMFA<Preferences extends Models.Preferences>(mfa: boolean): Promise<Models.User<Preferences>> {
+    async updateMFA<Preferences extends Models.Preferences>(mfa: boolean): PromiseResponseType<T, Models.User<Preferences>> {
         if (typeof mfa === 'undefined') {
             throw new NuvixException('Missing required parameter: "mfa"');
         }
@@ -279,9 +280,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {AuthenticatorType} type
      * @throws {NuvixException}
-     * @returns {Promise<Models.MfaType>}
+     * @returns {PromiseResponseType<T, Models.MfaType>}
      */
-    async createMfaAuthenticator(type: AuthenticatorType): Promise<Models.MfaType> {
+    async createMfaAuthenticator(type: AuthenticatorType): PromiseResponseType<T, Models.MfaType> {
         if (typeof type === 'undefined') {
             throw new NuvixException('Missing required parameter: "type"');
         }
@@ -309,9 +310,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * @param {AuthenticatorType} type
      * @param {string} otp
      * @throws {NuvixException}
-     * @returns {Promise<Models.User<Preferences>>}
+     * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
-    async updateMfaAuthenticator<Preferences extends Models.Preferences>(type: AuthenticatorType, otp: string): Promise<Models.User<Preferences>> {
+    async updateMfaAuthenticator<Preferences extends Models.Preferences>(type: AuthenticatorType, otp: string): PromiseResponseType<T, Models.User<Preferences>> {
         if (typeof type === 'undefined') {
             throw new NuvixException('Missing required parameter: "type"');
         }
@@ -344,9 +345,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {AuthenticatorType} type
      * @throws {NuvixException}
-     * @returns {Promise<{}>}
+     * @returns {PromiseResponseType<T, {}>}
      */
-    async deleteMfaAuthenticator(type: AuthenticatorType): Promise<{}> {
+    async deleteMfaAuthenticator(type: AuthenticatorType): PromiseResponseType<T, {}> {
         if (typeof type === 'undefined') {
             throw new NuvixException('Missing required parameter: "type"');
         }
@@ -373,9 +374,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {AuthenticationFactor} factor
      * @throws {NuvixException}
-     * @returns {Promise<Models.MfaChallenge>}
+     * @returns {PromiseResponseType<T, Models.MfaChallenge>}
      */
-    async createMfaChallenge(factor: AuthenticationFactor): Promise<Models.MfaChallenge> {
+    async createMfaChallenge(factor: AuthenticationFactor): PromiseResponseType<T, Models.MfaChallenge> {
         if (typeof factor === 'undefined') {
             throw new NuvixException('Missing required parameter: "factor"');
         }
@@ -406,9 +407,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * @param {string} challengeId
      * @param {string} otp
      * @throws {NuvixException}
-     * @returns {Promise<Models.Session>}
+     * @returns {PromiseResponseType<T, Models.Session>}
      */
-    async updateMfaChallenge(challengeId: string, otp: string): Promise<Models.Session> {
+    async updateMfaChallenge(challengeId: string, otp: string): PromiseResponseType<T, Models.Session> {
         if (typeof challengeId === 'undefined') {
             throw new NuvixException('Missing required parameter: "challengeId"');
         }
@@ -443,9 +444,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * List the factors available on the account to be used as a MFA challange.
      *
      * @throws {NuvixException}
-     * @returns {Promise<Models.MfaFactors>}
+     * @returns {PromiseResponseType<T, Models.MfaFactors>}
      */
-    async listMfaFactors(): Promise<Models.MfaFactors> {
+    async listMfaFactors(): PromiseResponseType<T, Models.MfaFactors> {
         const apiPath = '/account/mfa/factors';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -468,9 +469,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](/docs/references/cloud/client-web/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.
      *
      * @throws {NuvixException}
-     * @returns {Promise<Models.MfaRecoveryCodes>}
+     * @returns {PromiseResponseType<T, Models.MfaRecoveryCodes>}
      */
-    async getMfaRecoveryCodes(): Promise<Models.MfaRecoveryCodes> {
+    async getMfaRecoveryCodes(): PromiseResponseType<T, Models.MfaRecoveryCodes> {
         const apiPath = '/account/mfa/recovery-codes';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -493,9 +494,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Generate recovery codes as backup for MFA flow. It&#039;s recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](/docs/references/cloud/client-web/account#createMfaChallenge) method.
      *
      * @throws {NuvixException}
-     * @returns {Promise<Models.MfaRecoveryCodes>}
+     * @returns {PromiseResponseType<T, Models.MfaRecoveryCodes>}
      */
-    async createMfaRecoveryCodes(): Promise<Models.MfaRecoveryCodes> {
+    async createMfaRecoveryCodes(): PromiseResponseType<T, Models.MfaRecoveryCodes> {
         const apiPath = '/account/mfa/recovery-codes';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -518,9 +519,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](/docs/references/cloud/client-web/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.
      *
      * @throws {NuvixException}
-     * @returns {Promise<Models.MfaRecoveryCodes>}
+     * @returns {PromiseResponseType<T, Models.MfaRecoveryCodes>}
      */
-    async updateMfaRecoveryCodes(): Promise<Models.MfaRecoveryCodes> {
+    async updateMfaRecoveryCodes(): PromiseResponseType<T, Models.MfaRecoveryCodes> {
         const apiPath = '/account/mfa/recovery-codes';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -544,9 +545,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {string} name
      * @throws {NuvixException}
-     * @returns {Promise<Models.User<Preferences>>}
+     * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
-    async updateName<Preferences extends Models.Preferences>(name: string): Promise<Models.User<Preferences>> {
+    async updateName<Preferences extends Models.Preferences>(name: string): PromiseResponseType<T, Models.User<Preferences>> {
         if (typeof name === 'undefined') {
             throw new NuvixException('Missing required parameter: "name"');
         }
@@ -577,9 +578,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * @param {string} password
      * @param {string} oldPassword
      * @throws {NuvixException}
-     * @returns {Promise<Models.User<Preferences>>}
+     * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
-    async updatePassword<Preferences extends Models.Preferences>(password: string, oldPassword?: string): Promise<Models.User<Preferences>> {
+    async updatePassword<Preferences extends Models.Preferences>(password: string, oldPassword?: string): PromiseResponseType<T, Models.User<Preferences>> {
         if (typeof password === 'undefined') {
             throw new NuvixException('Missing required parameter: "password"');
         }
@@ -613,9 +614,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * @param {string} phone
      * @param {string} password
      * @throws {NuvixException}
-     * @returns {Promise<Models.User<Preferences>>}
+     * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
-    async updatePhone<Preferences extends Models.Preferences>(phone: string, password: string): Promise<Models.User<Preferences>> {
+    async updatePhone<Preferences extends Models.Preferences>(phone: string, password: string): PromiseResponseType<T, Models.User<Preferences>> {
         if (typeof phone === 'undefined') {
             throw new NuvixException('Missing required parameter: "phone"');
         }
@@ -650,9 +651,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Get the preferences as a key-value object for the currently logged in user.
      *
      * @throws {NuvixException}
-     * @returns {Promise<Preferences>}
+     * @returns {PromiseResponseType<T, Preferences>}
      */
-    async getPrefs<Preferences extends Models.Preferences>(): Promise<Preferences> {
+    async getPrefs<Preferences extends Models.Preferences>(): PromiseResponseType<T, Preferences> {
         const apiPath = '/account/prefs';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -676,9 +677,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {Partial<Preferences>} prefs
      * @throws {NuvixException}
-     * @returns {Promise<Models.User<Preferences>>}
+     * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
-    async updatePrefs<Preferences extends Models.Preferences>(prefs: Partial<Preferences>): Promise<Models.User<Preferences>> {
+    async updatePrefs<Preferences extends Models.Preferences>(prefs: Partial<Preferences>): PromiseResponseType<T, Models.User<Preferences>> {
         if (typeof prefs === 'undefined') {
             throw new NuvixException('Missing required parameter: "prefs"');
         }
@@ -709,9 +710,9 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * @param {string} email
      * @param {string} url
      * @throws {NuvixException}
-     * @returns {Promise<Models.Token>}
+     * @returns {PromiseResponseType<T, Models.Token>}
      */
-    async createRecovery(email: string, url: string): Promise<Models.Token> {
+    async createRecovery(email: string, url: string): PromiseResponseType<T, Models.Token> {
         if (typeof email === 'undefined') {
             throw new NuvixException('Missing required parameter: "email"');
         }
@@ -751,9 +752,9 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      * @param {string} secret
      * @param {string} password
      * @throws {NuvixException}
-     * @returns {Promise<Models.Token>}
+     * @returns {PromiseResponseType<T, Models.Token>}
      */
-    async updateRecovery(userId: string, secret: string, password: string): Promise<Models.Token> {
+    async updateRecovery(userId: string, secret: string, password: string): PromiseResponseType<T, Models.Token> {
         if (typeof userId === 'undefined') {
             throw new NuvixException('Missing required parameter: "userId"');
         }
@@ -794,9 +795,9 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      * Get the list of active sessions across different devices for the currently logged in user.
      *
      * @throws {NuvixException}
-     * @returns {Promise<Models.SessionList>}
+     * @returns {PromiseResponseType<T, Models.SessionList>}
      */
-    async listSessions(): Promise<Models.SessionList> {
+    async listSessions(): PromiseResponseType<T, Models.SessionList> {
         const apiPath = '/account/sessions';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -819,9 +820,9 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      * Delete all sessions from the user account and remove any sessions cookies from the end client.
      *
      * @throws {NuvixException}
-     * @returns {Promise<{}>}
+     * @returns {PromiseResponseType<T, {}>}
      */
-    async deleteSessions(): Promise<{}> {
+    async deleteSessions(): PromiseResponseType<T, {}> {
         const apiPath = '/account/sessions';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -844,9 +845,9 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      * Use this endpoint to allow a new user to register an anonymous account in your project. This route will also create a new session for the user. To allow the new user to convert an anonymous account to a normal account, you need to update its [email and password](https://nuvix.io/docs/references/cloud/client-web/account#updateEmail) or create an [OAuth2 session](https://nuvix.io/docs/references/cloud/client-web/account#CreateOAuth2Session).
      *
      * @throws {NuvixException}
-     * @returns {Promise<Models.Session>}
+     * @returns {PromiseResponseType<T, Models.Session>}
      */
-    async createAnonymousSession(): Promise<Models.Session> {
+    async createAnonymousSession(): PromiseResponseType<T, Models.Session> {
         const apiPath = '/account/sessions/anonymous';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -873,9 +874,9 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} email
      * @param {string} password
      * @throws {NuvixException}
-     * @returns {Promise<Models.Session>}
+     * @returns {PromiseResponseType<T, Models.Session>}
      */
-    async createEmailPasswordSession(email: string, password: string): Promise<Models.Session> {
+    async createEmailPasswordSession(email: string, password: string): PromiseResponseType<T, Models.Session> {
         if (typeof email === 'undefined') {
             throw new NuvixException('Missing required parameter: "email"');
         }
@@ -912,9 +913,9 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} userId
      * @param {string} secret
      * @throws {NuvixException}
-     * @returns {Promise<Models.Session>}
+     * @returns {PromiseResponseType<T, Models.Session>}
      */
-    async updateMagicURLSession(userId: string, secret: string): Promise<Models.Session> {
+    async updateMagicURLSession(userId: string, secret: string): PromiseResponseType<T, Models.Session> {
         if (typeof userId === 'undefined') {
             throw new NuvixException('Missing required parameter: "userId"');
         }
@@ -958,40 +959,42 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} failure
      * @param {string[]} scopes
      * @throws {NuvixException}
-     * @returns {Promise<void | string>}
+     * @returns {PromiseResponseType<T, undefined | string>}
      */
-    async createOAuth2Session(provider: OAuthProvider, success?: string, failure?: string, scopes?: string[]): Promise<void | string> {
-        if (typeof provider === 'undefined') {
-            throw new NuvixException('Missing required parameter: "provider"');
-        }
-        const apiPath = '/account/sessions/oauth2/{provider}'.replace('{provider}', provider);
-        const payload: Payload = {};
-        if (typeof success !== 'undefined') {
-            payload['success'] = success;
-        }
-        if (typeof failure !== 'undefined') {
-            payload['failure'] = failure;
-        }
-        if (typeof scopes !== 'undefined') {
-            payload['scopes'] = scopes;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+    async createOAuth2Session(provider: OAuthProvider, success?: string, failure?: string, scopes?: string[]): PromiseResponseType<T, void | string> {
+        return await this.client.withSafeResponse(async () => {
+            if (typeof provider === 'undefined') {
+                throw new NuvixException('Missing required parameter: "provider"');
+            }
+            const apiPath = '/account/sessions/oauth2/{provider}'.replace('{provider}', provider);
+            const payload: Payload = {};
+            if (typeof success !== 'undefined') {
+                payload['success'] = success;
+            }
+            if (typeof failure !== 'undefined') {
+                payload['failure'] = failure;
+            }
+            if (typeof scopes !== 'undefined') {
+                payload['scopes'] = scopes;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-        payload['project'] = this.client.config.project;
-        for (const [key, value] of Object.entries(Service.flatten(payload))) {
-            uri.searchParams.append(key, value);
-        }
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
 
-        if (typeof window !== 'undefined' && window?.location) {
-            window.location.href = uri.toString();
-            return;
-        } else {
-            return uri.toString();
-        }
+            if (typeof window !== 'undefined' && window?.location) {
+                window.location.href = uri.toString();
+                return undefined;
+            } else {
+                return uri.toString();
+            }
+        }) as ResponseType<T, undefined | string>
     }
     /**
      * Update phone session
@@ -1001,9 +1004,9 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} userId
      * @param {string} secret
      * @throws {NuvixException}
-     * @returns {Promise<Models.Session>}
+     * @returns {PromiseResponseType<T, Models.Session>}
      */
-    async updatePhoneSession(userId: string, secret: string): Promise<Models.Session> {
+    async updatePhoneSession(userId: string, secret: string): PromiseResponseType<T, Models.Session> {
         if (typeof userId === 'undefined') {
             throw new NuvixException('Missing required parameter: "userId"');
         }
@@ -1040,9 +1043,9 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} userId
      * @param {string} secret
      * @throws {NuvixException}
-     * @returns {Promise<Models.Session>}
+     * @returns {PromiseResponseType<T, Models.Session>}
      */
-    async createSession(userId: string, secret: string): Promise<Models.Session> {
+    async createSession(userId: string, secret: string): PromiseResponseType<T, Models.Session> {
         if (typeof userId === 'undefined') {
             throw new NuvixException('Missing required parameter: "userId"');
         }
@@ -1078,9 +1081,9 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      *
      * @param {string} sessionId
      * @throws {NuvixException}
-     * @returns {Promise<Models.Session>}
+     * @returns {PromiseResponseType<T, Models.Session>}
      */
-    async getSession(sessionId: string): Promise<Models.Session> {
+    async getSession(sessionId: string): PromiseResponseType<T, Models.Session> {
         if (typeof sessionId === 'undefined') {
             throw new NuvixException('Missing required parameter: "sessionId"');
         }
@@ -1107,9 +1110,9 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      *
      * @param {string} sessionId
      * @throws {NuvixException}
-     * @returns {Promise<Models.Session>}
+     * @returns {PromiseResponseType<T, Models.Session>}
      */
-    async updateSession(sessionId: string): Promise<Models.Session> {
+    async updateSession(sessionId: string): PromiseResponseType<T, Models.Session> {
         if (typeof sessionId === 'undefined') {
             throw new NuvixException('Missing required parameter: "sessionId"');
         }
@@ -1136,9 +1139,9 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      *
      * @param {string} sessionId
      * @throws {NuvixException}
-     * @returns {Promise<{}>}
+     * @returns {PromiseResponseType<T, {}>}
      */
-    async deleteSession(sessionId: string): Promise<{}> {
+    async deleteSession(sessionId: string): PromiseResponseType<T, {}> {
         if (typeof sessionId === 'undefined') {
             throw new NuvixException('Missing required parameter: "sessionId"');
         }
@@ -1164,9 +1167,9 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * Block the currently logged in user account. Behind the scene, the user record is not deleted but permanently blocked from any access. To completely delete a user, use the Users API instead.
      *
      * @throws {NuvixException}
-     * @returns {Promise<Models.User<Preferences>>}
+     * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
-    async updateStatus<Preferences extends Models.Preferences>(): Promise<Models.User<Preferences>> {
+    async updateStatus<Preferences extends Models.Preferences>(): PromiseResponseType<T, Models.User<Preferences>> {
         const apiPath = '/account/status';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -1192,9 +1195,9 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} identifier
      * @param {string} providerId
      * @throws {NuvixException}
-     * @returns {Promise<Models.Target>}
+     * @returns {PromiseResponseType<T, Models.Target>}
      */
-    async createPushTarget(targetId: string, identifier: string, providerId?: string): Promise<Models.Target> {
+    async createPushTarget(targetId: string, identifier: string, providerId?: string): PromiseResponseType<T, Models.Target> {
         if (typeof targetId === 'undefined') {
             throw new NuvixException('Missing required parameter: "targetId"');
         }
@@ -1234,9 +1237,9 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} targetId
      * @param {string} identifier
      * @throws {NuvixException}
-     * @returns {Promise<Models.Target>}
+     * @returns {PromiseResponseType<T, Models.Target>}
      */
-    async updatePushTarget(targetId: string, identifier: string): Promise<Models.Target> {
+    async updatePushTarget(targetId: string, identifier: string): PromiseResponseType<T, Models.Target> {
         if (typeof targetId === 'undefined') {
             throw new NuvixException('Missing required parameter: "targetId"');
         }
@@ -1269,9 +1272,9 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      *
      * @param {string} targetId
      * @throws {NuvixException}
-     * @returns {Promise<{}>}
+     * @returns {PromiseResponseType<T, {}>}
      */
-    async deletePushTarget(targetId: string): Promise<{}> {
+    async deletePushTarget(targetId: string): PromiseResponseType<T, {}> {
         if (typeof targetId === 'undefined') {
             throw new NuvixException('Missing required parameter: "targetId"');
         }
@@ -1302,9 +1305,9 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} email
      * @param {boolean} phrase
      * @throws {NuvixException}
-     * @returns {Promise<Models.Token>}
+     * @returns {PromiseResponseType<T, Models.Token>}
      */
-    async createEmailToken(userId: string, email: string, phrase?: boolean): Promise<Models.Token> {
+    async createEmailToken(userId: string, email: string, phrase?: boolean): PromiseResponseType<T, Models.Token> {
         if (typeof userId === 'undefined') {
             throw new NuvixException('Missing required parameter: "userId"');
         }
@@ -1349,9 +1352,9 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} url
      * @param {boolean} phrase
      * @throws {NuvixException}
-     * @returns {Promise<Models.Token>}
+     * @returns {PromiseResponseType<T, Models.Token>}
      */
-    async createMagicURLToken(userId: string, email: string, url?: string, phrase?: boolean): Promise<Models.Token> {
+    async createMagicURLToken(userId: string, email: string, url?: string, phrase?: boolean): PromiseResponseType<T, Models.Token> {
         if (typeof userId === 'undefined') {
             throw new NuvixException('Missing required parameter: "userId"');
         }
@@ -1400,54 +1403,55 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} failure
      * @param {string[]} scopes
      * @throws {NuvixException}
-     * @returns {Promise<void | string>}
+     * @returns {PromiseResponseType<T, void | string>}
      */
-    async createOAuth2Token(provider: OAuthProvider, success?: string, failure?: string, scopes?: string[]): Promise<void | string> {
-        if (typeof provider === 'undefined') {
-            throw new NuvixException('Missing required parameter: "provider"');
-        }
-        const apiPath = '/account/tokens/oauth2/{provider}'.replace('{provider}', provider);
-        const payload: Payload = {};
-        if (typeof success !== 'undefined') {
-            payload['success'] = success;
-        }
-        if (typeof failure !== 'undefined') {
-            payload['failure'] = failure;
-        }
-        if (typeof scopes !== 'undefined') {
-            payload['scopes'] = scopes;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+    async createOAuth2Token(provider: OAuthProvider, success?: string, failure?: string, scopes?: string[]): PromiseResponseType<T, undefined | string> {
+        return await this.client.withSafeResponse(async () => {
+            if (typeof provider === 'undefined') {
+                throw new NuvixException('Missing required parameter: "provider"');
+            }
+            const apiPath = '/account/tokens/oauth2/{provider}'.replace('{provider}', provider);
+            const payload: Payload = {};
+            if (typeof success !== 'undefined') {
+                payload['success'] = success;
+            }
+            if (typeof failure !== 'undefined') {
+                payload['failure'] = failure;
+            }
+            if (typeof scopes !== 'undefined') {
+                payload['scopes'] = scopes;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-        payload['project'] = this.client.config.project;
-        for (const [key, value] of Object.entries(Service.flatten(payload))) {
-            uri.searchParams.append(key, value);
-        }
+            payload['project'] = this.client.config.project;
+            for (const [key, value] of Object.entries(Service.flatten(payload))) {
+                uri.searchParams.append(key, value);
+            }
 
-        if (typeof window !== 'undefined' && window?.location) {
-            window.location.href = uri.toString();
-            return;
-        } else {
-            return uri.toString();
-        }
+            if (typeof window !== 'undefined' && window?.location) {
+                window.location.href = uri.toString();
+                return;
+            } else {
+                return uri.toString();
+            }
+        }) as ResponseType<T, undefined | string>
     }
     /**
      * Create phone token
      *
      * Sends the user an SMS with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [POST /v1/account/sessions/token](https://nuvix.io/docs/references/cloud/client-web/account#createSession) endpoint to complete the login process. The secret sent to the user&#039;s phone is valid for 15 minutes.
-
-A user is limited to 10 active sessions at a time by default. [Learn more about session limits](https://nuvix.io/docs/authentication-security#limits).
+     * A user is limited to 10 active sessions at a time by default. [Learn more about session limits](https://nuvix.io/docs/authentication-security#limits).
      *
      * @param {string} userId
      * @param {string} phone
      * @throws {NuvixException}
-     * @returns {Promise<Models.Token>}
+     * @returns {PromiseResponseType<T, Models.Token>}
      */
-    async createPhoneToken(userId: string, phone: string): Promise<Models.Token> {
+    async createPhoneToken(userId: string, phone: string): PromiseResponseType<T, Models.Token> {
         if (typeof userId === 'undefined') {
             throw new NuvixException('Missing required parameter: "userId"');
         }
@@ -1486,9 +1490,9 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      *
      * @param {string} url
      * @throws {NuvixException}
-     * @returns {Promise<Models.Token>}
+     * @returns {PromiseResponseType<T, Models.Token>}
      */
-    async createVerification(url: string): Promise<Models.Token> {
+    async createVerification(url: string): PromiseResponseType<T, Models.Token> {
         if (typeof url === 'undefined') {
             throw new NuvixException('Missing required parameter: "url"');
         }
@@ -1519,9 +1523,9 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      * @param {string} userId
      * @param {string} secret
      * @throws {NuvixException}
-     * @returns {Promise<Models.Token>}
+     * @returns {PromiseResponseType<T, Models.Token>}
      */
-    async updateVerification(userId: string, secret: string): Promise<Models.Token> {
+    async updateVerification(userId: string, secret: string): PromiseResponseType<T, Models.Token> {
         if (typeof userId === 'undefined') {
             throw new NuvixException('Missing required parameter: "userId"');
         }
@@ -1556,9 +1560,9 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      * Use this endpoint to send a verification SMS to the currently logged in user. This endpoint is meant for use after updating a user&#039;s phone number using the [accountUpdatePhone](https://nuvix.io/docs/references/cloud/client-web/account#updatePhone) endpoint. Learn more about how to [complete the verification process](https://nuvix.io/docs/references/cloud/client-web/account#updatePhoneVerification). The verification code sent to the user&#039;s phone number is valid for 15 minutes.
      *
      * @throws {NuvixException}
-     * @returns {Promise<Models.Token>}
+     * @returns {PromiseResponseType<T, Models.Token>}
      */
-    async createPhoneVerification(): Promise<Models.Token> {
+    async createPhoneVerification(): PromiseResponseType<T, Models.Token> {
         const apiPath = '/account/verification/phone';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -1583,9 +1587,9 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      * @param {string} userId
      * @param {string} secret
      * @throws {NuvixException}
-     * @returns {Promise<Models.Token>}
+     * @returns {PromiseResponseType<T, Models.Token>}
      */
-    async updatePhoneVerification(userId: string, secret: string): Promise<Models.Token> {
+    async updatePhoneVerification(userId: string, secret: string): PromiseResponseType<T, Models.Token> {
         if (typeof userId === 'undefined') {
             throw new NuvixException('Missing required parameter: "userId"');
         }

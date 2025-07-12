@@ -1,3 +1,5 @@
+import type { Client } from "client";
+import { NuvixException } from "error";
 import { Socket } from "socket.io-client";
 
 /**
@@ -264,3 +266,18 @@ export interface Config {
     locale: string;
     session: string;
 }
+
+interface SuccessResponse<T> {
+    data: T;
+    error: null;
+}
+
+interface ErrorResponse {
+    data: null;
+    error: NuvixException;
+}
+
+export type SafeResponse<T> = SuccessResponse<T> | ErrorResponse;
+
+export type ResponseType<T extends Client, R> = T['safeResponse'] extends true ? SafeResponse<R> : R;
+export type PromiseResponseType<T extends Client, R> = Promise<T['safeResponse'] extends true ? SafeResponse<R> : R>;
