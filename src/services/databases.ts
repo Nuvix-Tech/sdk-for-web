@@ -1,5 +1,4 @@
-import { Service } from '../service';
-import { NuvixException, Client, type Payload, UploadProgress } from '../client';
+import { NuvixException, Client, type Payload } from '../client';
 import type { Models } from '../models';
 
 export class Databases {
@@ -27,7 +26,7 @@ export class Databases {
         if (typeof collectionId === 'undefined') {
             throw new NuvixException('Missing required parameter: "collectionId"');
         }
-        const apiPath = '/databases/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
+        const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
         const payload: Payload = {};
         if (typeof queries !== 'undefined') {
             payload['queries'] = queries;
@@ -49,7 +48,7 @@ export class Databases {
     /**
      * Create document
      *
-     * Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https://nuvix.io/docs/server/databases#databasesCreateCollection) API or directly from your database console.
+     * Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https://nuvix.io/docs/server/schemas#databasesCreateCollection) API or directly from your database console.
      *
      * @param {string} databaseId
      * @param {string} collectionId
@@ -72,7 +71,7 @@ export class Databases {
         if (typeof data === 'undefined') {
             throw new NuvixException('Missing required parameter: "data"');
         }
-        const apiPath = '/databases/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
+        const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
         const payload: Payload = {};
         if (typeof documentId !== 'undefined') {
             payload['documentId'] = documentId;
@@ -119,7 +118,7 @@ export class Databases {
         if (typeof documentId === 'undefined') {
             throw new NuvixException('Missing required parameter: "documentId"');
         }
-        const apiPath = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
+        const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
         const payload: Payload = {};
         if (typeof queries !== 'undefined') {
             payload['queries'] = queries;
@@ -161,7 +160,7 @@ export class Databases {
         if (typeof documentId === 'undefined') {
             throw new NuvixException('Missing required parameter: "documentId"');
         }
-        const apiPath = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
+        const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
         const payload: Payload = {};
         if (typeof data !== 'undefined') {
             payload['data'] = data;
@@ -204,7 +203,7 @@ export class Databases {
         if (typeof documentId === 'undefined') {
             throw new NuvixException('Missing required parameter: "documentId"');
         }
-        const apiPath = '/databases/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
+        const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
 

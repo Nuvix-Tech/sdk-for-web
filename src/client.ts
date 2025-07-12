@@ -497,16 +497,16 @@ class Client {
     }
 
 
-    async withSafeResponse<R>(callback: () => Promise<R>): PromiseResponseType<typeof this, R> {
+    async withSafeResponse<R>(callback: () => Promise<R>): PromiseResponseType<Client, Awaited<R>> {
         try {
             const res = await callback();
             if (this.safeResponse) {
-                return { data: res, error: null } as ResponseType<typeof this, R>;
+                return { data: res, error: null } as unknown as ResponseType<Client, Awaited<R>>;
             }
-            return res as ResponseType<typeof this, R>;
+            return res as unknown as ResponseType<Client, Awaited<R>>;
         } catch (e) {
             if (this.safeResponse) {
-                return { data: null, error: e as Error } as ResponseType<typeof this, R>;;
+                return { data: null, error: e as Error } as unknown as ResponseType<Client, Awaited<R>>;
             }
             throw e;
         }
