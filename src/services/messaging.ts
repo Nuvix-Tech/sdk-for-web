@@ -3,7 +3,7 @@ import type { Models } from '../models';
 import { PromiseResponseType } from 'types';
 
 export class Messaging<T extends Client> {
-    client: Client;
+    client: T;
 
     constructor(client: T) {
         this.client = client;
@@ -17,7 +17,6 @@ export class Messaging<T extends Client> {
      * @param {string} topicId
      * @param {string} subscriberId
      * @param {string} targetId
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Subscriber>}
      */
     async createSubscriber(topicId: string, subscriberId: string, targetId: string): PromiseResponseType<T, Models.Subscriber> {
@@ -59,7 +58,6 @@ export class Messaging<T extends Client> {
      *
      * @param {string} topicId
      * @param {string} subscriberId
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, {}>}
      */
     async deleteSubscriber(topicId: string, subscriberId: string): PromiseResponseType<T, {}> {

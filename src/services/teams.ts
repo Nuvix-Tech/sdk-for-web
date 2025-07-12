@@ -1,11 +1,11 @@
-import { Service } from '../service';
-import { NuvixException, Client, type Payload, UploadProgress } from '../client';
+import { NuvixException, Client, type Payload } from '../client';
 import type { Models } from '../models';
+import { PromiseResponseType } from 'types';
 
-export class Teams {
-    client: Client;
+export class Teams<T extends Client> {
+    client: T;
 
-    constructor(client: Client) {
+    constructor(client: T) {
         this.client = client;
     }
 
@@ -16,10 +16,9 @@ export class Teams {
      *
      * @param {string[]} queries
      * @param {string} search
-     * @throws {NuvixException}
-     * @returns {Promise<Models.TeamList<Preferences>>}
+     * @returns {PromiseResponseType<T, Models.TeamList<Preferences>>}
      */
-    async list<Preferences extends Models.Preferences>(queries?: string[], search?: string): Promise<Models.TeamList<Preferences>> {
+    async list<Preferences extends Models.Preferences>(queries?: string[], search?: string): PromiseResponseType<T, Models.TeamList<Preferences>> {
         const apiPath = '/teams';
         const payload: Payload = {};
         if (typeof queries !== 'undefined') {
@@ -50,10 +49,9 @@ export class Teams {
      * @param {string} teamId
      * @param {string} name
      * @param {string[]} roles
-     * @throws {NuvixException}
-     * @returns {Promise<Models.Team<Preferences>>}
+     * @returns {PromiseResponseType<T,  Models.Team<Preferences>>}
      */
-    async create<Preferences extends Models.Preferences>(teamId: string, name: string, roles?: string[]): Promise<Models.Team<Preferences>> {
+    async create<Preferences extends Models.Preferences>(teamId: string, name: string, roles?: string[]): PromiseResponseType<T, Models.Team<Preferences>> {
         if (typeof teamId === 'undefined') {
             throw new NuvixException('Missing required parameter: "teamId"');
         }
@@ -91,10 +89,9 @@ export class Teams {
      * Get a team by its ID. All team members have read access for this resource.
      *
      * @param {string} teamId
-     * @throws {NuvixException}
-     * @returns {Promise<Models.Team<Preferences>>}
+     * @returns {PromiseResponseType<T,  Models.Team<Preferences>>}
      */
-    async get<Preferences extends Models.Preferences>(teamId: string): Promise<Models.Team<Preferences>> {
+    async get<Preferences extends Models.Preferences>(teamId: string): PromiseResponseType<T, Models.Team<Preferences>> {
         if (typeof teamId === 'undefined') {
             throw new NuvixException('Missing required parameter: "teamId"');
         }
@@ -121,10 +118,9 @@ export class Teams {
      *
      * @param {string} teamId
      * @param {string} name
-     * @throws {NuvixException}
-     * @returns {Promise<Models.Team<Preferences>>}
+     * @returns {PromiseResponseType<T,  Models.Team<Preferences>>}
      */
-    async updateName<Preferences extends Models.Preferences>(teamId: string, name: string): Promise<Models.Team<Preferences>> {
+    async updateName<Preferences extends Models.Preferences>(teamId: string, name: string): PromiseResponseType<T, Models.Team<Preferences>> {
         if (typeof teamId === 'undefined') {
             throw new NuvixException('Missing required parameter: "teamId"');
         }
@@ -156,10 +152,9 @@ export class Teams {
      * Delete a team using its ID. Only team members with the owner role can delete the team.
      *
      * @param {string} teamId
-     * @throws {NuvixException}
-     * @returns {Promise<{}>}
+     * @returns {PromiseResponseType<T,  {}>}
      */
-    async delete(teamId: string): Promise<{}> {
+    async delete(teamId: string): PromiseResponseType<T, {}> {
         if (typeof teamId === 'undefined') {
             throw new NuvixException('Missing required parameter: "teamId"');
         }
@@ -187,10 +182,9 @@ export class Teams {
      * @param {string} teamId
      * @param {string[]} queries
      * @param {string} search
-     * @throws {NuvixException}
-     * @returns {Promise<Models.MembershipList>}
+     * @returns {PromiseResponseType<T,  Models.MembershipList>}
      */
-    async listMemberships(teamId: string, queries?: string[], search?: string): Promise<Models.MembershipList> {
+    async listMemberships(teamId: string, queries?: string[], search?: string): PromiseResponseType<T, Models.MembershipList> {
         if (typeof teamId === 'undefined') {
             throw new NuvixException('Missing required parameter: "teamId"');
         }
@@ -235,10 +229,9 @@ Please note that to avoid a [Redirect Attack](https://github.com/OWASP/CheatShee
      * @param {string} phone
      * @param {string} url
      * @param {string} name
-     * @throws {NuvixException}
-     * @returns {Promise<Models.Membership>}
+     * @returns {PromiseResponseType<T,  Models.Membership>}
      */
-    async createMembership(teamId: string, roles: string[], email?: string, userId?: string, phone?: string, url?: string, name?: string): Promise<Models.Membership> {
+    async createMembership(teamId: string, roles: string[], email?: string, userId?: string, phone?: string, url?: string, name?: string): PromiseResponseType<T, Models.Membership> {
         if (typeof teamId === 'undefined') {
             throw new NuvixException('Missing required parameter: "teamId"');
         }
@@ -286,10 +279,9 @@ Please note that to avoid a [Redirect Attack](https://github.com/OWASP/CheatShee
      *
      * @param {string} teamId
      * @param {string} membershipId
-     * @throws {NuvixException}
-     * @returns {Promise<Models.Membership>}
+     * @returns {PromiseResponseType<T,  Models.Membership>}
      */
-    async getMembership(teamId: string, membershipId: string): Promise<Models.Membership> {
+    async getMembership(teamId: string, membershipId: string): PromiseResponseType<T, Models.Membership> {
         if (typeof teamId === 'undefined') {
             throw new NuvixException('Missing required parameter: "teamId"');
         }
@@ -321,10 +313,9 @@ Please note that to avoid a [Redirect Attack](https://github.com/OWASP/CheatShee
      * @param {string} teamId
      * @param {string} membershipId
      * @param {string[]} roles
-     * @throws {NuvixException}
-     * @returns {Promise<Models.Membership>}
+     * @returns {PromiseResponseType<T,  Models.Membership>}
      */
-    async updateMembership(teamId: string, membershipId: string, roles: string[]): Promise<Models.Membership> {
+    async updateMembership(teamId: string, membershipId: string, roles: string[]): PromiseResponseType<T, Models.Membership> {
         if (typeof teamId === 'undefined') {
             throw new NuvixException('Missing required parameter: "teamId"');
         }
@@ -360,10 +351,9 @@ Please note that to avoid a [Redirect Attack](https://github.com/OWASP/CheatShee
      *
      * @param {string} teamId
      * @param {string} membershipId
-     * @throws {NuvixException}
-     * @returns {Promise<{}>}
+     * @returns {PromiseResponseType<T,  {}>}
      */
-    async deleteMembership(teamId: string, membershipId: string): Promise<{}> {
+    async deleteMembership(teamId: string, membershipId: string): PromiseResponseType<T, {}> {
         if (typeof teamId === 'undefined') {
             throw new NuvixException('Missing required parameter: "teamId"');
         }
@@ -398,10 +388,9 @@ If the request is successful, a session for the user is automatically created.
      * @param {string} membershipId
      * @param {string} userId
      * @param {string} secret
-     * @throws {NuvixException}
-     * @returns {Promise<Models.Membership>}
+     * @returns {PromiseResponseType<T,  Models.Membership>}
      */
-    async updateMembershipStatus(teamId: string, membershipId: string, userId: string, secret: string): Promise<Models.Membership> {
+    async updateMembershipStatus(teamId: string, membershipId: string, userId: string, secret: string): PromiseResponseType<T, Models.Membership> {
         if (typeof teamId === 'undefined') {
             throw new NuvixException('Missing required parameter: "teamId"');
         }
@@ -442,10 +431,9 @@ If the request is successful, a session for the user is automatically created.
      * Get the team&#039;s shared preferences by its unique ID. If a preference doesn&#039;t need to be shared by all team members, prefer storing them in [user preferences](https://nuvix.io/docs/references/cloud/client-web/account#getPrefs).
      *
      * @param {string} teamId
-     * @throws {NuvixException}
-     * @returns {Promise<Preferences>}
+     * @returns {PromiseResponseType<T,  Preferences>}
      */
-    async getPrefs<Preferences extends Models.Preferences>(teamId: string): Promise<Preferences> {
+    async getPrefs<Preferences extends Models.Preferences>(teamId: string): PromiseResponseType<T, Preferences> {
         if (typeof teamId === 'undefined') {
             throw new NuvixException('Missing required parameter: "teamId"');
         }
@@ -472,10 +460,9 @@ If the request is successful, a session for the user is automatically created.
      *
      * @param {string} teamId
      * @param {object} prefs
-     * @throws {NuvixException}
-     * @returns {Promise<Preferences>}
+     * @returns {PromiseResponseType<T,  Preferences>}
      */
-    async updatePrefs<Preferences extends Models.Preferences>(teamId: string, prefs: object): Promise<Preferences> {
+    async updatePrefs<Preferences extends Models.Preferences>(teamId: string, prefs: object): PromiseResponseType<T, Preferences> {
         if (typeof teamId === 'undefined') {
             throw new NuvixException('Missing required parameter: "teamId"');
         }

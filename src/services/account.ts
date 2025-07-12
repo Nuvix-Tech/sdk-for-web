@@ -7,7 +7,7 @@ import { OAuthProvider } from '../enums/o-auth-provider';
 import { PromiseResponseType, ResponseType } from 'types';
 
 export class Account<T extends Client> {
-    client: Client;
+    client: T;
 
     constructor(client: T) {
         this.client = client;
@@ -18,7 +18,6 @@ export class Account<T extends Client> {
      *
      * Get the currently logged in user.
      *
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
     async get<Preferences extends Models.Preferences>(): PromiseResponseType<T, Models.User<Preferences>> {
@@ -47,7 +46,6 @@ export class Account<T extends Client> {
      * @param {string} email
      * @param {string} password
      * @param {string} name
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
     async create<Preferences extends Models.Preferences>(userId: string, email: string, password: string, name?: string): PromiseResponseType<T, Models.User<Preferences>> {
@@ -97,7 +95,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {string} email
      * @param {string} password
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
     async updateEmail<Preferences extends Models.Preferences>(email: string, password: string): PromiseResponseType<T, Models.User<Preferences>> {
@@ -135,7 +132,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Get the list of identities for the currently logged in user.
      *
      * @param {string[]} queries
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.IdentityList>}
      */
     async listIdentities(queries?: string[]): PromiseResponseType<T, Models.IdentityList> {
@@ -164,7 +160,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Delete an identity by its unique ID.
      *
      * @param {string} identityId
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, {}>}
      */
     async deleteIdentity(identityId: string): PromiseResponseType<T, {}> {
@@ -192,7 +187,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * Use this endpoint to create a JSON Web Token. You can use the resulting JWT to authenticate on behalf of the current user when working with the Nuvix server-side API and SDKs. The JWT secret is valid for 15 minutes from its creation and will be invalid if the user will logout in that time frame.
      *
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Jwt>}
      */
     async createJWT(): PromiseResponseType<T, Models.Jwt> {
@@ -218,7 +212,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Get the list of latest security activity logs for the currently logged in user. Each log returns user IP address, location and date and time of log.
      *
      * @param {string[]} queries
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.LogList>}
      */
     async listLogs(queries?: string[]): PromiseResponseType<T, Models.LogList> {
@@ -247,7 +240,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Enable or disable MFA on an account.
      *
      * @param {boolean} mfa
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
     async updateMFA<Preferences extends Models.Preferences>(mfa: boolean): PromiseResponseType<T, Models.User<Preferences>> {
@@ -279,7 +271,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Add an authenticator app to be used as an MFA factor. Verify the authenticator using the [verify authenticator](/docs/references/cloud/client-web/account#updateMfaAuthenticator) method.
      *
      * @param {AuthenticatorType} type
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.MfaType>}
      */
     async createMfaAuthenticator(type: AuthenticatorType): PromiseResponseType<T, Models.MfaType> {
@@ -309,7 +300,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {AuthenticatorType} type
      * @param {string} otp
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
     async updateMfaAuthenticator<Preferences extends Models.Preferences>(type: AuthenticatorType, otp: string): PromiseResponseType<T, Models.User<Preferences>> {
@@ -344,7 +334,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Delete an authenticator for a user by ID.
      *
      * @param {AuthenticatorType} type
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, {}>}
      */
     async deleteMfaAuthenticator(type: AuthenticatorType): PromiseResponseType<T, {}> {
@@ -373,7 +362,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Begin the process of MFA verification after sign-in. Finish the flow with [updateMfaChallenge](/docs/references/cloud/client-web/account#updateMfaChallenge) method.
      *
      * @param {AuthenticationFactor} factor
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.MfaChallenge>}
      */
     async createMfaChallenge(factor: AuthenticationFactor): PromiseResponseType<T, Models.MfaChallenge> {
@@ -406,7 +394,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {string} challengeId
      * @param {string} otp
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Session>}
      */
     async updateMfaChallenge(challengeId: string, otp: string): PromiseResponseType<T, Models.Session> {
@@ -443,7 +430,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * List the factors available on the account to be used as a MFA challange.
      *
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.MfaFactors>}
      */
     async listMfaFactors(): PromiseResponseType<T, Models.MfaFactors> {
@@ -468,7 +454,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * Get recovery codes that can be used as backup for MFA flow. Before getting codes, they must be generated using [createMfaRecoveryCodes](/docs/references/cloud/client-web/account#createMfaRecoveryCodes) method. An OTP challenge is required to read recovery codes.
      *
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.MfaRecoveryCodes>}
      */
     async getMfaRecoveryCodes(): PromiseResponseType<T, Models.MfaRecoveryCodes> {
@@ -493,7 +478,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * Generate recovery codes as backup for MFA flow. It&#039;s recommended to generate and show then immediately after user successfully adds their authehticator. Recovery codes can be used as a MFA verification type in [createMfaChallenge](/docs/references/cloud/client-web/account#createMfaChallenge) method.
      *
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.MfaRecoveryCodes>}
      */
     async createMfaRecoveryCodes(): PromiseResponseType<T, Models.MfaRecoveryCodes> {
@@ -518,7 +502,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * Regenerate recovery codes that can be used as backup for MFA flow. Before regenerating codes, they must be first generated using [createMfaRecoveryCodes](/docs/references/cloud/client-web/account#createMfaRecoveryCodes) method. An OTP challenge is required to regenreate recovery codes.
      *
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.MfaRecoveryCodes>}
      */
     async updateMfaRecoveryCodes(): PromiseResponseType<T, Models.MfaRecoveryCodes> {
@@ -544,7 +527,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Update currently logged in user account name.
      *
      * @param {string} name
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
     async updateName<Preferences extends Models.Preferences>(name: string): PromiseResponseType<T, Models.User<Preferences>> {
@@ -577,7 +559,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {string} password
      * @param {string} oldPassword
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
     async updatePassword<Preferences extends Models.Preferences>(password: string, oldPassword?: string): PromiseResponseType<T, Models.User<Preferences>> {
@@ -613,7 +594,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {string} phone
      * @param {string} password
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
     async updatePhone<Preferences extends Models.Preferences>(phone: string, password: string): PromiseResponseType<T, Models.User<Preferences>> {
@@ -650,7 +630,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * Get the preferences as a key-value object for the currently logged in user.
      *
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Preferences>}
      */
     async getPrefs<Preferences extends Models.Preferences>(): PromiseResponseType<T, Preferences> {
@@ -676,7 +655,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      * Update currently logged in user account preferences. The object you pass is stored as is, and replaces any previous value. The maximum allowed prefs size is 64kB and throws error if exceeded.
      *
      * @param {Partial<Preferences>} prefs
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
     async updatePrefs<Preferences extends Models.Preferences>(prefs: Partial<Preferences>): PromiseResponseType<T, Models.User<Preferences>> {
@@ -709,7 +687,6 @@ This endpoint can also be used to convert an anonymous account to a normal one, 
      *
      * @param {string} email
      * @param {string} url
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Token>}
      */
     async createRecovery(email: string, url: string): PromiseResponseType<T, Models.Token> {
@@ -751,7 +728,6 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      * @param {string} userId
      * @param {string} secret
      * @param {string} password
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Token>}
      */
     async updateRecovery(userId: string, secret: string, password: string): PromiseResponseType<T, Models.Token> {
@@ -794,7 +770,6 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      *
      * Get the list of active sessions across different devices for the currently logged in user.
      *
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.SessionList>}
      */
     async listSessions(): PromiseResponseType<T, Models.SessionList> {
@@ -819,7 +794,6 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      *
      * Delete all sessions from the user account and remove any sessions cookies from the end client.
      *
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, {}>}
      */
     async deleteSessions(): PromiseResponseType<T, {}> {
@@ -844,7 +818,6 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      *
      * Use this endpoint to allow a new user to register an anonymous account in your project. This route will also create a new session for the user. To allow the new user to convert an anonymous account to a normal account, you need to update its [email and password](https://nuvix.io/docs/references/cloud/client-web/account#updateEmail) or create an [OAuth2 session](https://nuvix.io/docs/references/cloud/client-web/account#CreateOAuth2Session).
      *
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Session>}
      */
     async createAnonymousSession(): PromiseResponseType<T, Models.Session> {
@@ -873,7 +846,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      *
      * @param {string} email
      * @param {string} password
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Session>}
      */
     async createEmailPasswordSession(email: string, password: string): PromiseResponseType<T, Models.Session> {
@@ -912,7 +884,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      *
      * @param {string} userId
      * @param {string} secret
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Session>}
      */
     async updateMagicURLSession(userId: string, secret: string): PromiseResponseType<T, Models.Session> {
@@ -958,7 +929,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} success
      * @param {string} failure
      * @param {string[]} scopes
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, undefined | string>}
      */
     async createOAuth2Session(provider: OAuthProvider, success?: string, failure?: string, scopes?: string[]): PromiseResponseType<T, void | string> {
@@ -1003,7 +973,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      *
      * @param {string} userId
      * @param {string} secret
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Session>}
      */
     async updatePhoneSession(userId: string, secret: string): PromiseResponseType<T, Models.Session> {
@@ -1042,7 +1011,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      *
      * @param {string} userId
      * @param {string} secret
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Session>}
      */
     async createSession(userId: string, secret: string): PromiseResponseType<T, Models.Session> {
@@ -1080,7 +1048,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * Use this endpoint to get a logged in user&#039;s session using a Session ID. Inputting &#039;current&#039; will return the current session being used.
      *
      * @param {string} sessionId
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Session>}
      */
     async getSession(sessionId: string): PromiseResponseType<T, Models.Session> {
@@ -1109,7 +1076,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * Use this endpoint to extend a session&#039;s length. Extending a session is useful when session expiry is short. If the session was created using an OAuth provider, this endpoint refreshes the access token from the provider.
      *
      * @param {string} sessionId
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Session>}
      */
     async updateSession(sessionId: string): PromiseResponseType<T, Models.Session> {
@@ -1138,7 +1104,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * Logout the user. Use &#039;current&#039; as the session ID to logout on this device, use a session ID to logout on another device. If you&#039;re looking to logout the user on all devices, use [Delete Sessions](https://nuvix.io/docs/references/cloud/client-web/account#deleteSessions) instead.
      *
      * @param {string} sessionId
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, {}>}
      */
     async deleteSession(sessionId: string): PromiseResponseType<T, {}> {
@@ -1166,7 +1131,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      *
      * Block the currently logged in user account. Behind the scene, the user record is not deleted but permanently blocked from any access. To completely delete a user, use the Users API instead.
      *
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.User<Preferences>>}
      */
     async updateStatus<Preferences extends Models.Preferences>(): PromiseResponseType<T, Models.User<Preferences>> {
@@ -1194,7 +1158,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} targetId
      * @param {string} identifier
      * @param {string} providerId
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Target>}
      */
     async createPushTarget(targetId: string, identifier: string, providerId?: string): PromiseResponseType<T, Models.Target> {
@@ -1236,7 +1199,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      *
      * @param {string} targetId
      * @param {string} identifier
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Target>}
      */
     async updatePushTarget(targetId: string, identifier: string): PromiseResponseType<T, Models.Target> {
@@ -1271,7 +1233,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * Delete a push notification target for the currently logged in user. After deletion, the device will no longer receive push notifications. The target must exist and belong to the current user.
      *
      * @param {string} targetId
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, {}>}
      */
     async deletePushTarget(targetId: string): PromiseResponseType<T, {}> {
@@ -1304,7 +1265,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} userId
      * @param {string} email
      * @param {boolean} phrase
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Token>}
      */
     async createEmailToken(userId: string, email: string, phrase?: boolean): PromiseResponseType<T, Models.Token> {
@@ -1351,7 +1311,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} email
      * @param {string} url
      * @param {boolean} phrase
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Token>}
      */
     async createMagicURLToken(userId: string, email: string, url?: string, phrase?: boolean): PromiseResponseType<T, Models.Token> {
@@ -1402,7 +1361,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      * @param {string} success
      * @param {string} failure
      * @param {string[]} scopes
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, void | string>}
      */
     async createOAuth2Token(provider: OAuthProvider, success?: string, failure?: string, scopes?: string[]): PromiseResponseType<T, undefined | string> {
@@ -1448,7 +1406,6 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
      *
      * @param {string} userId
      * @param {string} phone
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Token>}
      */
     async createPhoneToken(userId: string, phone: string): PromiseResponseType<T, Models.Token> {
@@ -1489,7 +1446,6 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
 
      *
      * @param {string} url
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Token>}
      */
     async createVerification(url: string): PromiseResponseType<T, Models.Token> {
@@ -1522,7 +1478,6 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      *
      * @param {string} userId
      * @param {string} secret
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Token>}
      */
     async updateVerification(userId: string, secret: string): PromiseResponseType<T, Models.Token> {
@@ -1559,7 +1514,6 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      *
      * Use this endpoint to send a verification SMS to the currently logged in user. This endpoint is meant for use after updating a user&#039;s phone number using the [accountUpdatePhone](https://nuvix.io/docs/references/cloud/client-web/account#updatePhone) endpoint. Learn more about how to [complete the verification process](https://nuvix.io/docs/references/cloud/client-web/account#updatePhoneVerification). The verification code sent to the user&#039;s phone number is valid for 15 minutes.
      *
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Token>}
      */
     async createPhoneVerification(): PromiseResponseType<T, Models.Token> {
@@ -1586,7 +1540,6 @@ Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/
      *
      * @param {string} userId
      * @param {string} secret
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.Token>}
      */
     async updatePhoneVerification(userId: string, secret: string): PromiseResponseType<T, Models.Token> {

@@ -6,7 +6,7 @@ import { ImageFormat } from '../enums/image-format';
 import { PromiseResponseType } from 'types';
 
 export class Storage<T extends Client> {
-    client: Client;
+    client: T;
 
     constructor(client: T) {
         this.client = client;
@@ -20,7 +20,6 @@ export class Storage<T extends Client> {
      * @param {string} bucketId
      * @param {string[]} queries
      * @param {string} search
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.FileList>}
      */
     async listFiles(bucketId: string, queries?: string[], search?: string): PromiseResponseType<T, Models.FileList> {
@@ -65,7 +64,6 @@ If you&#039;re creating a new file using one of the Nuvix SDKs, all the chunking
      * @param {string} fileId
      * @param {File} file
      * @param {string[]} permissions
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.File>}
      */
     async createFile(bucketId: string, fileId: string, file: File, permissions?: string[], onProgress = (progress: UploadProgress) => { }): PromiseResponseType<T, Models.File> {
@@ -111,7 +109,6 @@ If you&#039;re creating a new file using one of the Nuvix SDKs, all the chunking
      *
      * @param {string} bucketId
      * @param {string} fileId
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.File>}
      */
     async getFile(bucketId: string, fileId: string): PromiseResponseType<T, Models.File> {
@@ -146,7 +143,6 @@ If you&#039;re creating a new file using one of the Nuvix SDKs, all the chunking
      * @param {string} fileId
      * @param {string} name
      * @param {string[]} permissions
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, Models.File>}
      */
     async updateFile(bucketId: string, fileId: string, name?: string, permissions?: string[]): PromiseResponseType<T, Models.File> {
@@ -185,7 +181,6 @@ If you&#039;re creating a new file using one of the Nuvix SDKs, all the chunking
      *
      * @param {string} bucketId
      * @param {string} fileId
-     * @throws {NuvixException}
      * @returns {PromiseResponseType<T, {}>}
      */
     async deleteFile(bucketId: string, fileId: string): PromiseResponseType<T, {}> {
@@ -218,7 +213,6 @@ If you&#039;re creating a new file using one of the Nuvix SDKs, all the chunking
      *
      * @param {string} bucketId
      * @param {string} fileId
-     * @throws {NuvixException}
      * @returns {string}
      */
     getFileDownload(bucketId: string, fileId: string): string {
@@ -252,27 +246,62 @@ If you&#039;re creating a new file using one of the Nuvix SDKs, all the chunking
      *
      * @param {string} bucketId
      * @param {string} fileId
-     * @param {number} width
-     * @param {number} height
-     * @param {ImageGravity} gravity
-     * @param {number} quality
-     * @param {number} borderWidth
-     * @param {string} borderColor
-     * @param {number} borderRadius
-     * @param {number} opacity
-     * @param {number} rotation
-     * @param {string} background
-     * @param {ImageFormat} output
-     * @throws {NuvixException}
      * @returns {string}
      */
-    getFilePreview(bucketId: string, fileId: string, width?: number, height?: number, gravity?: ImageGravity, quality?: number, borderWidth?: number, borderColor?: string, borderRadius?: number, opacity?: number, rotation?: number, background?: string, output?: ImageFormat): string {
+    getFilePreview(bucketId: string, fileId: string, width?: number, height?: number, gravity?: ImageGravity, quality?: number, borderWidth?: number, borderColor?: string, borderRadius?: number, opacity?: number, rotation?: number, background?: string, output?: ImageFormat): string;
+    getFilePreview(bucketId: string, fileId: string, options?: {
+        width?: number;
+        height?: number;
+        gravity?: ImageGravity;
+        quality?: number;
+        borderWidth?: number;
+        borderColor?: string;
+        borderRadius?: number;
+        opacity?: number;
+        rotation?: number;
+        background?: string;
+        output?: ImageFormat;
+    }): string;
+    getFilePreview(bucketId: string, fileId: string, widthOrOptions?: number | {
+        width?: number;
+        height?: number;
+        gravity?: ImageGravity;
+        quality?: number;
+        borderWidth?: number;
+        borderColor?: string;
+        borderRadius?: number;
+        opacity?: number;
+        rotation?: number;
+        background?: string;
+        output?: ImageFormat;
+    }, height?: number, gravity?: ImageGravity, quality?: number, borderWidth?: number, borderColor?: string, borderRadius?: number, opacity?: number, rotation?: number, background?: string, output?: ImageFormat): string {
         if (typeof bucketId === 'undefined') {
             throw new NuvixException('Missing required parameter: "bucketId"');
         }
         if (typeof fileId === 'undefined') {
             throw new NuvixException('Missing required parameter: "fileId"');
         }
+
+        let width: number | undefined;
+        let options: any = {};
+
+        if (typeof widthOrOptions === 'object') {
+            options = widthOrOptions;
+            width = options.width;
+            height = options.height;
+            gravity = options.gravity;
+            quality = options.quality;
+            borderWidth = options.borderWidth;
+            borderColor = options.borderColor;
+            borderRadius = options.borderRadius;
+            opacity = options.opacity;
+            rotation = options.rotation;
+            background = options.background;
+            output = options.output;
+        } else {
+            width = widthOrOptions;
+        }
+
         const apiPath = '/storage/buckets/{bucketId}/files/{fileId}/preview'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
         const payload: Payload = {};
         if (typeof width !== 'undefined') {
@@ -330,7 +359,6 @@ If you&#039;re creating a new file using one of the Nuvix SDKs, all the chunking
      *
      * @param {string} bucketId
      * @param {string} fileId
-     * @throws {NuvixException}
      * @returns {string}
      */
     getFileView(bucketId: string, fileId: string): string {
