@@ -12,7 +12,7 @@ class Client {
 
     public safeResponse: boolean = false;
 
-    constructor({ safeResponse, ...rest }: Partial<Omit<Config, 'endpointRealtime'>> & { safeResponse?: boolean }) {
+    constructor({ safeResponse, ...rest }: Partial<Omit<Config, 'endpointRealtime'>> & { safeResponse?: boolean } = {}) {
         this.safeResponse = safeResponse ?? false;
         this.config = {
             ...this.config,

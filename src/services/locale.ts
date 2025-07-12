@@ -1,25 +1,22 @@
-import { Service } from '../service';
-import { NuvixException, Client, type Payload, UploadProgress } from '../client';
+import { PromiseResponseType } from 'types';
+import { Client, type Payload } from '../client';
 import type { Models } from '../models';
 
-export class Locale {
-    client: Client;
+export class Locale<T extends Client = Client> {
+    client: T;
 
-    constructor(client: Client) {
+    constructor(client: T) {
         this.client = client;
     }
 
     /**
      * Get user locale
      *
-     * Get the current user location based on IP. Returns an object with user country code, country name, continent name, continent code, ip address and suggested currency. You can use the locale header to get the data in a supported language.
-
-([IP Geolocation by DB-IP](https://db-ip.com))
+     * Get the current user location based on IP. Returns an object with user country code, country name, continent name, continent code, ip address and suggested currency. You can use the locale header to get the data in a supported language. ([IP Geolocation by DB-IP](https://db-ip.com))
      *
-     * @throws {NuvixException}
-     * @returns {Promise<Models.Locale>}
+     * @returns {PromiseResponseType<T, Models.Locale>}
      */
-    async get(): Promise<Models.Locale> {
+    async get(): PromiseResponseType<T, Models.Locale> {
         const apiPath = '/locale';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -41,10 +38,9 @@ export class Locale {
      *
      * List of all locale codes in [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes).
      *
-     * @throws {NuvixException}
-     * @returns {Promise<Models.LocaleCodeList>}
+     * @returns {PromiseResponseType<T, Models.LocaleCodeList>}
      */
-    async listCodes(): Promise<Models.LocaleCodeList> {
+    async listCodes(): PromiseResponseType<T, Models.LocaleCodeList> {
         const apiPath = '/locale/codes';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -66,10 +62,9 @@ export class Locale {
      *
      * List of all continents. You can use the locale header to get the data in a supported language.
      *
-     * @throws {NuvixException}
-     * @returns {Promise<Models.ContinentList>}
+     * @returns {PromiseResponseType<T, Models.ContinentList>}
      */
-    async listContinents(): Promise<Models.ContinentList> {
+    async listContinents(): PromiseResponseType<T, Models.ContinentList> {
         const apiPath = '/locale/continents';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -91,10 +86,9 @@ export class Locale {
      *
      * List of all countries. You can use the locale header to get the data in a supported language.
      *
-     * @throws {NuvixException}
-     * @returns {Promise<Models.CountryList>}
+     * @returns {PromiseResponseType<T, Models.CountryList>}
      */
-    async listCountries(): Promise<Models.CountryList> {
+    async listCountries(): PromiseResponseType<T, Models.CountryList> {
         const apiPath = '/locale/countries';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -116,10 +110,9 @@ export class Locale {
      *
      * List of all countries that are currently members of the EU. You can use the locale header to get the data in a supported language.
      *
-     * @throws {NuvixException}
-     * @returns {Promise<Models.CountryList>}
+     * @returns {PromiseResponseType<T, Models.CountryList>}
      */
-    async listCountriesEU(): Promise<Models.CountryList> {
+    async listCountriesEU(): PromiseResponseType<T, Models.CountryList> {
         const apiPath = '/locale/countries/eu';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -141,10 +134,9 @@ export class Locale {
      *
      * List of all countries phone codes. You can use the locale header to get the data in a supported language.
      *
-     * @throws {NuvixException}
-     * @returns {Promise<Models.PhoneList>}
+     * @returns {PromiseResponseType<T, Models.PhoneList>}
      */
-    async listCountriesPhones(): Promise<Models.PhoneList> {
+    async listCountriesPhones(): PromiseResponseType<T, Models.PhoneList> {
         const apiPath = '/locale/countries/phones';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -166,10 +158,9 @@ export class Locale {
      *
      * List of all currencies, including currency symbol, name, plural, and decimal digits for all major and minor currencies. You can use the locale header to get the data in a supported language.
      *
-     * @throws {NuvixException}
-     * @returns {Promise<Models.CurrencyList>}
+     * @returns {PromiseResponseType<T, Models.CurrencyList>}
      */
-    async listCurrencies(): Promise<Models.CurrencyList> {
+    async listCurrencies(): PromiseResponseType<T, Models.CurrencyList> {
         const apiPath = '/locale/currencies';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
@@ -191,10 +182,9 @@ export class Locale {
      *
      * List of all languages classified by ISO 639-1 including 2-letter code, name in English, and name in the respective language.
      *
-     * @throws {NuvixException}
-     * @returns {Promise<Models.LanguageList>}
+     * @returns {PromiseResponseType<T, Models.LanguageList>}
      */
-    async listLanguages(): Promise<Models.LanguageList> {
+    async listLanguages(): PromiseResponseType<T, Models.LanguageList> {
         const apiPath = '/locale/languages';
         const payload: Payload = {};
         const uri = new URL(this.client.config.endpoint + apiPath);
