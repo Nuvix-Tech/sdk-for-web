@@ -3,7 +3,7 @@ import { NuvixException, Client, type Payload } from '../client';
 import { Browser } from '../enums/browser';
 import { CreditCard } from '../enums/credit-card';
 import { Flag } from '../enums/flag';
-import { ResponseType } from 'types';
+import { ResponseType } from '../type';
 
 export class Avatars<T extends Client> {
     client: T;

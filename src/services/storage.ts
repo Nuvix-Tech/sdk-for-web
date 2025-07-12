@@ -3,7 +3,7 @@ import { NuvixException, type Client, type Payload, UploadProgress } from '../cl
 import type { Models } from '../models';
 import { ImageGravity } from '../enums/image-gravity';
 import { ImageFormat } from '../enums/image-format';
-import { PromiseResponseType } from 'types';
+import { PromiseResponseType } from '../type';
 
 export class Storage<T extends Client> {
     client: T;

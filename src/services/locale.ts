@@ -1,4 +1,4 @@
-import { PromiseResponseType } from 'types';
+import { PromiseResponseType } from '../type';
 import { Client, type Payload } from '../client';
 import type { Models } from '../models';
 

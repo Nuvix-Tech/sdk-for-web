@@ -4,7 +4,7 @@ import type { Models } from '../models';
 import { AuthenticatorType } from '../enums/authenticator-type';
 import { AuthenticationFactor } from '../enums/authentication-factor';
 import { OAuthProvider } from '../enums/o-auth-provider';
-import { PromiseResponseType, ResponseType } from 'types';
+import { PromiseResponseType, ResponseType } from '../type';
 
 export class Account<T extends Client> {
     client: T;
@@ -955,7 +955,7 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
 
             payload['project'] = this.client.config.project;
             for (const [key, value] of Object.entries(Service.flatten(payload))) {
-                uri.searchParams.append(key, value);
+                uri.searchParams.append(key, value as string);
             }
 
             if (typeof window !== 'undefined' && window?.location) {
@@ -1387,7 +1387,7 @@ A user is limited to 10 active sessions at a time by default. [Learn more about 
 
             payload['project'] = this.client.config.project;
             for (const [key, value] of Object.entries(Service.flatten(payload))) {
-                uri.searchParams.append(key, value);
+                uri.searchParams.append(key, value as string);
             }
 
             if (typeof window !== 'undefined' && window?.location) {

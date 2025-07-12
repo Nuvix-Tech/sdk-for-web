@@ -1,5 +1,5 @@
-import type { Client } from "client";
-import { NuvixException } from "error";
+import type { Client } from "./client";
+import { NuvixException } from "./error";
 import { Socket } from "socket.io-client";
 
 /**

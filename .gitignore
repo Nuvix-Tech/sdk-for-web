@@ -1,3 +1,6 @@
 
 # Devlopment Environment
 node_modules
+temp
+dist/**
+types

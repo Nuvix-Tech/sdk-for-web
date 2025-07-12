@@ -1,4 +1,4 @@
-import { Config, Headers, Payload, PromiseResponseType, Realtime, RealtimeRequest, RealtimeResponse, RealtimeResponseConnected, RealtimeResponseError, RealtimeResponseEvent, ResponseType, SafeResponse, UploadProgress } from 'types';
+import { Config, Headers, Payload, PromiseResponseType, Realtime, RealtimeRequest, RealtimeResponse, RealtimeResponseConnected, RealtimeResponseError, RealtimeResponseEvent, ResponseType, UploadProgress } from './type';
 import { Models } from './models';
 import { io } from "socket.io-client";
 import { NuvixException } from 'error';
@@ -7,13 +7,13 @@ import { NuvixException } from 'error';
 /**
  * Client that handles requests to Nuvix
  */
-class Client {
+class Client<IsSafe extends boolean = false | true> {
     static CHUNK_SIZE = 1024 * 1024 * 5;
 
-    public safeResponse: boolean = false;
+    public safeResponse: IsSafe;
 
-    constructor({ safeResponse, ...rest }: Partial<Omit<Config, 'endpointRealtime'>> & { safeResponse?: boolean } = {}) {
-        this.safeResponse = safeResponse ?? false;
+    constructor({ safeResponse, ...rest }: Partial<Omit<Config, 'endpointRealtime'>> & { safeResponse?: IsSafe } = {}) {
+        this.safeResponse = (safeResponse ?? false) as IsSafe;
         this.config = {
             ...this.config,
             ...rest,
@@ -124,11 +124,6 @@ class Client {
     setSession(value: string): this {
         this.headers['X-Nuvix-Session'] = value;
         this.config.session = value;
-        return this;
-    }
-
-    setSafeResponse(value: boolean): this {
-        this.safeResponse = value;
         return this;
     }
 
@@ -472,9 +467,7 @@ class Client {
         } catch (e) {
             if (this.safeResponse) {
                 return {
-                    data: null, error: {
-                        // TODO: ---
-                    }
+                    data: null, error: e instanceof NuvixException ? e : new NuvixException(String(e))
                 }
             }
             throw e;

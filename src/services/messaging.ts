@@ -1,6 +1,6 @@
 import { NuvixException, Client, type Payload } from '../client';
 import type { Models } from '../models';
-import { PromiseResponseType } from 'types';
+import { PromiseResponseType } from '../type';
 
 export class Messaging<T extends Client> {
     client: T;
