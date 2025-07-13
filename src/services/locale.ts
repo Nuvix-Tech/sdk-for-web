@@ -17,21 +17,22 @@ export class Locale<T extends Client = Client> {
      * @returns {PromiseResponseType<T, Models.Locale>}
      */
     async get(): PromiseResponseType<T, Models.Locale> {
-        const apiPath = '/locale';
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            const apiPath = '/locale';
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * List locale codes
@@ -41,21 +42,22 @@ export class Locale<T extends Client = Client> {
      * @returns {PromiseResponseType<T, Models.LocaleCodeList>}
      */
     async listCodes(): PromiseResponseType<T, Models.LocaleCodeList> {
-        const apiPath = '/locale/codes';
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            const apiPath = '/locale/codes';
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * List continents
@@ -65,21 +67,22 @@ export class Locale<T extends Client = Client> {
      * @returns {PromiseResponseType<T, Models.ContinentList>}
      */
     async listContinents(): PromiseResponseType<T, Models.ContinentList> {
-        const apiPath = '/locale/continents';
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            const apiPath = '/locale/continents';
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * List countries
@@ -89,21 +92,22 @@ export class Locale<T extends Client = Client> {
      * @returns {PromiseResponseType<T, Models.CountryList>}
      */
     async listCountries(): PromiseResponseType<T, Models.CountryList> {
-        const apiPath = '/locale/countries';
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            const apiPath = '/locale/countries';
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * List EU countries
@@ -113,21 +117,22 @@ export class Locale<T extends Client = Client> {
      * @returns {PromiseResponseType<T, Models.CountryList>}
      */
     async listCountriesEU(): PromiseResponseType<T, Models.CountryList> {
-        const apiPath = '/locale/countries/eu';
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            const apiPath = '/locale/countries/eu';
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * List countries phone codes
@@ -137,21 +142,22 @@ export class Locale<T extends Client = Client> {
      * @returns {PromiseResponseType<T, Models.PhoneList>}
      */
     async listCountriesPhones(): PromiseResponseType<T, Models.PhoneList> {
-        const apiPath = '/locale/countries/phones';
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            const apiPath = '/locale/countries/phones';
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * List currencies
@@ -161,21 +167,22 @@ export class Locale<T extends Client = Client> {
      * @returns {PromiseResponseType<T, Models.CurrencyList>}
      */
     async listCurrencies(): PromiseResponseType<T, Models.CurrencyList> {
-        const apiPath = '/locale/currencies';
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            const apiPath = '/locale/currencies';
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * List languages
@@ -185,20 +192,21 @@ export class Locale<T extends Client = Client> {
      * @returns {PromiseResponseType<T, Models.LanguageList>}
      */
     async listLanguages(): PromiseResponseType<T, Models.LanguageList> {
-        const apiPath = '/locale/languages';
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            const apiPath = '/locale/languages';
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
 }

@@ -6,4 +6,8 @@ export class CollectionQueryBuilder<T extends Client, Collection, CollectionsTyp
 
     }
 
+    async find(){
+        
+    }
+
 }

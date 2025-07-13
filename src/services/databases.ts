@@ -29,30 +29,32 @@ export class Database<T extends Client, SchemasTypes = unknown, CollectionsTypes
      * @returns {PromiseResponseType<T, Models.DocumentList<Document>>}
      */
     async listDocuments<Document extends Models.Document>(databaseId: string, collectionId: string, queries?: string[]): PromiseResponseType<T, Models.DocumentList<Document>> {
-        if (typeof databaseId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "databaseId"');
-        }
-        if (typeof collectionId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "collectionId"');
-        }
-        const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
-        const payload: Payload = {};
-        if (typeof queries !== 'undefined') {
-            payload['queries'] = queries;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof databaseId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "databaseId"');
+            }
+            if (typeof collectionId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "collectionId"');
+            }
+            const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
+            const payload: Payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
 
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Create document
@@ -67,42 +69,44 @@ export class Database<T extends Client, SchemasTypes = unknown, CollectionsTypes
      * @returns {PromiseResponseType<T, Document>}
      */
     async createDocument<Document extends Models.Document>(databaseId: string, collectionId: string, documentId: string, data: Omit<Document, keyof Models.Document>, permissions?: string[]): PromiseResponseType<T, Document> {
-        if (typeof databaseId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "databaseId"');
-        }
-        if (typeof collectionId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "collectionId"');
-        }
-        if (typeof documentId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "documentId"');
-        }
-        if (typeof data === 'undefined') {
-            throw new NuvixException('Missing required parameter: "data"');
-        }
-        const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
-        const payload: Payload = {};
-        if (typeof documentId !== 'undefined') {
-            payload['documentId'] = documentId;
-        }
-        if (typeof data !== 'undefined') {
-            payload['data'] = data;
-        }
-        if (typeof permissions !== 'undefined') {
-            payload['permissions'] = permissions;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof databaseId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "databaseId"');
+            }
+            if (typeof collectionId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "collectionId"');
+            }
+            if (typeof documentId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "documentId"');
+            }
+            if (typeof data === 'undefined') {
+                throw new NuvixException('Missing required parameter: "data"');
+            }
+            const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId);
+            const payload: Payload = {};
+            if (typeof documentId !== 'undefined') {
+                payload['documentId'] = documentId;
+            }
+            if (typeof data !== 'undefined') {
+                payload['data'] = data;
+            }
+            if (typeof permissions !== 'undefined') {
+                payload['permissions'] = permissions;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
 
-        return await this.client.call(
-            'post',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'post',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Get document
@@ -116,33 +120,35 @@ export class Database<T extends Client, SchemasTypes = unknown, CollectionsTypes
      * @returns {PromiseResponseType<T, Document>}
      */
     async getDocument<Document extends Models.Document>(databaseId: string, collectionId: string, documentId: string, queries?: string[]): PromiseResponseType<T, Document> {
-        if (typeof databaseId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "databaseId"');
-        }
-        if (typeof collectionId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "collectionId"');
-        }
-        if (typeof documentId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "documentId"');
-        }
-        const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
-        const payload: Payload = {};
-        if (typeof queries !== 'undefined') {
-            payload['queries'] = queries;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof databaseId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "databaseId"');
+            }
+            if (typeof collectionId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "collectionId"');
+            }
+            if (typeof documentId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "documentId"');
+            }
+            const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
+            const payload: Payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
 
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Update document
@@ -157,36 +163,38 @@ export class Database<T extends Client, SchemasTypes = unknown, CollectionsTypes
      * @returns {PromiseResponseType<T, Document>}
      */
     async updateDocument<Document extends Models.Document>(databaseId: string, collectionId: string, documentId: string, data?: Partial<Omit<Document, keyof Models.Document>>, permissions?: string[]): PromiseResponseType<T, Document> {
-        if (typeof databaseId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "databaseId"');
-        }
-        if (typeof collectionId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "collectionId"');
-        }
-        if (typeof documentId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "documentId"');
-        }
-        const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
-        const payload: Payload = {};
-        if (typeof data !== 'undefined') {
-            payload['data'] = data;
-        }
-        if (typeof permissions !== 'undefined') {
-            payload['permissions'] = permissions;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof databaseId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "databaseId"');
+            }
+            if (typeof collectionId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "collectionId"');
+            }
+            if (typeof documentId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "documentId"');
+            }
+            const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
+            const payload: Payload = {};
+            if (typeof data !== 'undefined') {
+                payload['data'] = data;
+            }
+            if (typeof permissions !== 'undefined') {
+                payload['permissions'] = permissions;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
 
-        return await this.client.call(
-            'patch',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'patch',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Delete document
@@ -199,29 +207,31 @@ export class Database<T extends Client, SchemasTypes = unknown, CollectionsTypes
      * @returns {PromiseResponseType<T, {}>}
      */
     async deleteDocument(databaseId: string, collectionId: string, documentId: string): PromiseResponseType<T, {}> {
-        if (typeof databaseId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "databaseId"');
-        }
-        if (typeof collectionId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "collectionId"');
-        }
-        if (typeof documentId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "documentId"');
-        }
-        const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof databaseId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "databaseId"');
+            }
+            if (typeof collectionId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "collectionId"');
+            }
+            if (typeof documentId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "documentId"');
+            }
+            const apiPath = '/schemas/{databaseId}/collections/{collectionId}/documents/{documentId}'.replace('{databaseId}', databaseId).replace('{collectionId}', collectionId).replace('{documentId}', documentId);
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
 
-        return await this.client.call(
-            'delete',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'delete',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
 }

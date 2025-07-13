@@ -19,27 +19,28 @@ export class Teams<T extends Client> {
      * @returns {PromiseResponseType<T, Models.TeamList<Preferences>>}
      */
     async list<Preferences extends Models.Preferences>(queries?: string[], search?: string): PromiseResponseType<T, Models.TeamList<Preferences>> {
-        const apiPath = '/teams';
-        const payload: Payload = {};
-        if (typeof queries !== 'undefined') {
-            payload['queries'] = queries;
-        }
-        if (typeof search !== 'undefined') {
-            payload['search'] = search;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            const apiPath = '/teams';
+            const payload: Payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            if (typeof search !== 'undefined') {
+                payload['search'] = search;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Create team
@@ -52,36 +53,37 @@ export class Teams<T extends Client> {
      * @returns {PromiseResponseType<T,  Models.Team<Preferences>>}
      */
     async create<Preferences extends Models.Preferences>(teamId: string, name: string, roles?: string[]): PromiseResponseType<T, Models.Team<Preferences>> {
-        if (typeof teamId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "teamId"');
-        }
-        if (typeof name === 'undefined') {
-            throw new NuvixException('Missing required parameter: "name"');
-        }
-        const apiPath = '/teams';
-        const payload: Payload = {};
-        if (typeof teamId !== 'undefined') {
-            payload['teamId'] = teamId;
-        }
-        if (typeof name !== 'undefined') {
-            payload['name'] = name;
-        }
-        if (typeof roles !== 'undefined') {
-            payload['roles'] = roles;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof teamId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "teamId"');
+            }
+            if (typeof name === 'undefined') {
+                throw new NuvixException('Missing required parameter: "name"');
+            }
+            const apiPath = '/teams';
+            const payload: Payload = {};
+            if (typeof teamId !== 'undefined') {
+                payload['teamId'] = teamId;
+            }
+            if (typeof name !== 'undefined') {
+                payload['name'] = name;
+            }
+            if (typeof roles !== 'undefined') {
+                payload['roles'] = roles;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'post',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'post',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Get team
@@ -92,24 +94,25 @@ export class Teams<T extends Client> {
      * @returns {PromiseResponseType<T,  Models.Team<Preferences>>}
      */
     async get<Preferences extends Models.Preferences>(teamId: string): PromiseResponseType<T, Models.Team<Preferences>> {
-        if (typeof teamId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "teamId"');
-        }
-        const apiPath = '/teams/{teamId}'.replace('{teamId}', teamId);
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof teamId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "teamId"');
+            }
+            const apiPath = '/teams/{teamId}'.replace('{teamId}', teamId);
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Update name
@@ -121,30 +124,31 @@ export class Teams<T extends Client> {
      * @returns {PromiseResponseType<T,  Models.Team<Preferences>>}
      */
     async updateName<Preferences extends Models.Preferences>(teamId: string, name: string): PromiseResponseType<T, Models.Team<Preferences>> {
-        if (typeof teamId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "teamId"');
-        }
-        if (typeof name === 'undefined') {
-            throw new NuvixException('Missing required parameter: "name"');
-        }
-        const apiPath = '/teams/{teamId}'.replace('{teamId}', teamId);
-        const payload: Payload = {};
-        if (typeof name !== 'undefined') {
-            payload['name'] = name;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof teamId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "teamId"');
+            }
+            if (typeof name === 'undefined') {
+                throw new NuvixException('Missing required parameter: "name"');
+            }
+            const apiPath = '/teams/{teamId}'.replace('{teamId}', teamId);
+            const payload: Payload = {};
+            if (typeof name !== 'undefined') {
+                payload['name'] = name;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'put',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'put',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Delete team
@@ -155,24 +159,25 @@ export class Teams<T extends Client> {
      * @returns {PromiseResponseType<T,  {}>}
      */
     async delete(teamId: string): PromiseResponseType<T, {}> {
-        if (typeof teamId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "teamId"');
-        }
-        const apiPath = '/teams/{teamId}'.replace('{teamId}', teamId);
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof teamId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "teamId"');
+            }
+            const apiPath = '/teams/{teamId}'.replace('{teamId}', teamId);
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'delete',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'delete',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * List team memberships
@@ -185,30 +190,31 @@ export class Teams<T extends Client> {
      * @returns {PromiseResponseType<T,  Models.MembershipList>}
      */
     async listMemberships(teamId: string, queries?: string[], search?: string): PromiseResponseType<T, Models.MembershipList> {
-        if (typeof teamId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "teamId"');
-        }
-        const apiPath = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
-        const payload: Payload = {};
-        if (typeof queries !== 'undefined') {
-            payload['queries'] = queries;
-        }
-        if (typeof search !== 'undefined') {
-            payload['search'] = search;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof teamId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "teamId"');
+            }
+            const apiPath = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
+            const payload: Payload = {};
+            if (typeof queries !== 'undefined') {
+                payload['queries'] = queries;
+            }
+            if (typeof search !== 'undefined') {
+                payload['search'] = search;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Create team membership
@@ -232,45 +238,46 @@ Please note that to avoid a [Redirect Attack](https://github.com/OWASP/CheatShee
      * @returns {PromiseResponseType<T,  Models.Membership>}
      */
     async createMembership(teamId: string, roles: string[], email?: string, userId?: string, phone?: string, url?: string, name?: string): PromiseResponseType<T, Models.Membership> {
-        if (typeof teamId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "teamId"');
-        }
-        if (typeof roles === 'undefined') {
-            throw new NuvixException('Missing required parameter: "roles"');
-        }
-        const apiPath = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
-        const payload: Payload = {};
-        if (typeof email !== 'undefined') {
-            payload['email'] = email;
-        }
-        if (typeof userId !== 'undefined') {
-            payload['userId'] = userId;
-        }
-        if (typeof phone !== 'undefined') {
-            payload['phone'] = phone;
-        }
-        if (typeof roles !== 'undefined') {
-            payload['roles'] = roles;
-        }
-        if (typeof url !== 'undefined') {
-            payload['url'] = url;
-        }
-        if (typeof name !== 'undefined') {
-            payload['name'] = name;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof teamId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "teamId"');
+            }
+            if (typeof roles === 'undefined') {
+                throw new NuvixException('Missing required parameter: "roles"');
+            }
+            const apiPath = '/teams/{teamId}/memberships'.replace('{teamId}', teamId);
+            const payload: Payload = {};
+            if (typeof email !== 'undefined') {
+                payload['email'] = email;
+            }
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof phone !== 'undefined') {
+                payload['phone'] = phone;
+            }
+            if (typeof roles !== 'undefined') {
+                payload['roles'] = roles;
+            }
+            if (typeof url !== 'undefined') {
+                payload['url'] = url;
+            }
+            if (typeof name !== 'undefined') {
+                payload['name'] = name;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'post',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'post',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Get team membership
@@ -282,27 +289,28 @@ Please note that to avoid a [Redirect Attack](https://github.com/OWASP/CheatShee
      * @returns {PromiseResponseType<T,  Models.Membership>}
      */
     async getMembership(teamId: string, membershipId: string): PromiseResponseType<T, Models.Membership> {
-        if (typeof teamId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "teamId"');
-        }
-        if (typeof membershipId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "membershipId"');
-        }
-        const apiPath = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof teamId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "teamId"');
+            }
+            if (typeof membershipId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "membershipId"');
+            }
+            const apiPath = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Update membership
@@ -316,33 +324,34 @@ Please note that to avoid a [Redirect Attack](https://github.com/OWASP/CheatShee
      * @returns {PromiseResponseType<T,  Models.Membership>}
      */
     async updateMembership(teamId: string, membershipId: string, roles: string[]): PromiseResponseType<T, Models.Membership> {
-        if (typeof teamId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "teamId"');
-        }
-        if (typeof membershipId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "membershipId"');
-        }
-        if (typeof roles === 'undefined') {
-            throw new NuvixException('Missing required parameter: "roles"');
-        }
-        const apiPath = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
-        const payload: Payload = {};
-        if (typeof roles !== 'undefined') {
-            payload['roles'] = roles;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof teamId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "teamId"');
+            }
+            if (typeof membershipId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "membershipId"');
+            }
+            if (typeof roles === 'undefined') {
+                throw new NuvixException('Missing required parameter: "roles"');
+            }
+            const apiPath = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
+            const payload: Payload = {};
+            if (typeof roles !== 'undefined') {
+                payload['roles'] = roles;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'patch',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'patch',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Delete team membership
@@ -354,27 +363,28 @@ Please note that to avoid a [Redirect Attack](https://github.com/OWASP/CheatShee
      * @returns {PromiseResponseType<T,  {}>}
      */
     async deleteMembership(teamId: string, membershipId: string): PromiseResponseType<T, {}> {
-        if (typeof teamId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "teamId"');
-        }
-        if (typeof membershipId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "membershipId"');
-        }
-        const apiPath = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof teamId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "teamId"');
+            }
+            if (typeof membershipId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "membershipId"');
+            }
+            const apiPath = '/teams/{teamId}/memberships/{membershipId}'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'delete',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'delete',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Update team membership status
@@ -391,39 +401,40 @@ If the request is successful, a session for the user is automatically created.
      * @returns {PromiseResponseType<T,  Models.Membership>}
      */
     async updateMembershipStatus(teamId: string, membershipId: string, userId: string, secret: string): PromiseResponseType<T, Models.Membership> {
-        if (typeof teamId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "teamId"');
-        }
-        if (typeof membershipId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "membershipId"');
-        }
-        if (typeof userId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "userId"');
-        }
-        if (typeof secret === 'undefined') {
-            throw new NuvixException('Missing required parameter: "secret"');
-        }
-        const apiPath = '/teams/{teamId}/memberships/{membershipId}/status'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
-        const payload: Payload = {};
-        if (typeof userId !== 'undefined') {
-            payload['userId'] = userId;
-        }
-        if (typeof secret !== 'undefined') {
-            payload['secret'] = secret;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof teamId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "teamId"');
+            }
+            if (typeof membershipId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "membershipId"');
+            }
+            if (typeof userId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "userId"');
+            }
+            if (typeof secret === 'undefined') {
+                throw new NuvixException('Missing required parameter: "secret"');
+            }
+            const apiPath = '/teams/{teamId}/memberships/{membershipId}/status'.replace('{teamId}', teamId).replace('{membershipId}', membershipId);
+            const payload: Payload = {};
+            if (typeof userId !== 'undefined') {
+                payload['userId'] = userId;
+            }
+            if (typeof secret !== 'undefined') {
+                payload['secret'] = secret;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'patch',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'patch',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Get team preferences
@@ -434,24 +445,25 @@ If the request is successful, a session for the user is automatically created.
      * @returns {PromiseResponseType<T,  Preferences>}
      */
     async getPrefs<Preferences extends Models.Preferences>(teamId: string): PromiseResponseType<T, Preferences> {
-        if (typeof teamId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "teamId"');
-        }
-        const apiPath = '/teams/{teamId}/prefs'.replace('{teamId}', teamId);
-        const payload: Payload = {};
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof teamId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "teamId"');
+            }
+            const apiPath = '/teams/{teamId}/prefs'.replace('{teamId}', teamId);
+            const payload: Payload = {};
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'get',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'get',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
     /**
      * Update preferences
@@ -463,29 +475,30 @@ If the request is successful, a session for the user is automatically created.
      * @returns {PromiseResponseType<T,  Preferences>}
      */
     async updatePrefs<Preferences extends Models.Preferences>(teamId: string, prefs: object): PromiseResponseType<T, Preferences> {
-        if (typeof teamId === 'undefined') {
-            throw new NuvixException('Missing required parameter: "teamId"');
-        }
-        if (typeof prefs === 'undefined') {
-            throw new NuvixException('Missing required parameter: "prefs"');
-        }
-        const apiPath = '/teams/{teamId}/prefs'.replace('{teamId}', teamId);
-        const payload: Payload = {};
-        if (typeof prefs !== 'undefined') {
-            payload['prefs'] = prefs;
-        }
-        const uri = new URL(this.client.config.endpoint + apiPath);
+        return this.client.withSafeResponse(async () => {
+            if (typeof teamId === 'undefined') {
+                throw new NuvixException('Missing required parameter: "teamId"');
+            }
+            if (typeof prefs === 'undefined') {
+                throw new NuvixException('Missing required parameter: "prefs"');
+            }
+            const apiPath = '/teams/{teamId}/prefs'.replace('{teamId}', teamId);
+            const payload: Payload = {};
+            if (typeof prefs !== 'undefined') {
+                payload['prefs'] = prefs;
+            }
+            const uri = new URL(this.client.config.endpoint + apiPath);
 
-        const apiHeaders: { [header: string]: string } = {
-            'content-type': 'application/json',
-        }
+            const apiHeaders: { [header: string]: string } = {
+                'content-type': 'application/json',
+            }
 
-
-        return await this.client.call(
-            'put',
-            uri,
-            apiHeaders,
-            payload
-        );
+            return await this.client.call(
+                'put',
+                uri,
+                apiHeaders,
+                payload
+            );
+        });
     }
 }
