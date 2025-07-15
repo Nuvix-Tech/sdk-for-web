@@ -1,6 +1,6 @@
 import type { Client } from "../client";
 import { DatabaseTypes } from "./types";
-import { Cast, Column, column } from "./utils";
+import { Cast, Column, column, ColumnBuilder } from "./utils";
 
 export type NuvqlOperator =
     | 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte'
@@ -45,10 +45,16 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
     // SELECT operations with better type safety
     select(): TableQueryBuilder<T, Table, SchemasTypes>;
     select(columns: '*'): TableQueryBuilder<T, Table, SchemasTypes>;
-    select<K extends string & keyof Table['Row'], A extends string, _A extends unknown, __A extends unknown>(...columns: (Record<A, K> | K | RawColumn<K, _A> | Column<K, __A>)[]): TableQueryBuilder<T, Table, SchemasTypes, { Row: Omit<Table['Row'], K> & Record<A, Table['Row'][K]> & Record<_A extends string ? _A : K, Table['Row'][K]> & Record<__A extends string ? __A : K, Table['Row'][K]> }>;
+    select<K extends string & keyof Table['Row'], A extends string, _A extends unknown, __A extends unknown>
+        (...columns: (Record<A, K> | K | RawColumn<K, _A> | ColumnBuilder<K, __A, Cast>)[]):
+        TableQueryBuilder<T, Table, SchemasTypes, { Row: Omit<Table['Row'], K> & Record<A, Table['Row'][K]> & Record<_A extends string ? _A : K, Table['Row'][K]> & Record<__A extends string ? __A : K, Table['Row'][K]> }>;
     select<K extends keyof Table['Row']>(...columns: K[]): TableQueryBuilder<T, any, SchemasTypes> {
         this.selectedColumns = columns as string[];
         return this as any;
+    }
+
+    re(): SelectTyeps {
+        return {} as any;
     }
 
     eq<C extends keyof Table['Row']>(column: C, value: Table['Row'][C]): Filter<typeof this, Sub> {
@@ -423,9 +429,9 @@ const queryBuilder = new TableQueryBuilder<any, Users, any>({} as Client, { tabl
 
 const res = queryBuilder
     .select(
-        'uu:id', 'name',
+        '_uu:id', 'name', 'alias:sduud::text',
         { io: "name", uu: "sduud", kk: "id" },
-        column('name').cast('text'),
+        column('name').as('rr').cast('text'),
         column('id').as('$id'),
     )
     // s => s('').select().filter(),
@@ -442,6 +448,8 @@ const res = queryBuilder
         .ilike('name', '%john%')
         .in('role', ['admin', 'user'])
         .between('created_at', '2023-01-01', '2023-12-31')
-    ).toString()
+    ).re()
+
+    res.Row
 
 console.log(res); // For debugging, you can implement a toString method to see the query structure

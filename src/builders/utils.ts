@@ -1,7 +1,7 @@
 export const cast = ['text', 'integere'] as const;
 export type Cast = typeof cast[number]
 
-export class ColumnBuilder<C extends string, A extends unknown, CA extends unknown> {
+export class ColumnBuilder<C extends string, A extends unknown, CA extends unknown = Cast> {
     private _as?: string;
     private _cast?: string;
 
@@ -18,7 +18,7 @@ export class ColumnBuilder<C extends string, A extends unknown, CA extends unkno
     }
 
     toString(): A extends string ?
-        CA extends string ? `${A}:${C}::${CA}` : `${A}:${C}` : CA extends string ? `${C}::${CA}` : C {
+        CA extends Cast ? `${A}:${C}::${CA}` : `${A}:${C}` : CA extends Cast ? `${C}::${CA}` : C {
         const _as = this._as !== undefined ? `${this._as}:` : '';
         const _cast = this._cast !== undefined ? `::${this._cast}` : '';
         return `${_as}${this.col}${_cast}` as any;
