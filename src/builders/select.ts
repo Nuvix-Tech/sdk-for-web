@@ -2,7 +2,7 @@
  * NUVQL Select Query Builder
  * Supports columns, aliases, types, and embedded resources
  * Syntax: column, alias:column, alias:column:type, alias:table.one|many{filter}(select)
- */
+ */ 
 
 import { NuvqlFilter } from './filter';
 

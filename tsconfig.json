@@ -12,13 +12,13 @@
         ],
         "listEmittedFiles": false,
         "listFiles": false,
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "noFallthroughCasesInSwitch": true,
         "pretty": true,
         "rootDir": "src",
         "skipLibCheck": true,
         "strict": true,
-        "target": "ES6",
+        "target": "es2024",
         "traceResolution": false,
         "paths": {
             "@/*": [

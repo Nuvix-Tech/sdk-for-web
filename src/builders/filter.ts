@@ -1,3 +1,8 @@
+/**
+ * NUVQL Filter Builder - Knex-like chainable API
+ * Supports: eq(column, value), and(), or(), not() with full chaining
+ */
+
 // NUVQL Filter Types and Operators
 export type NuvqlOperator =
     | 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte'
@@ -21,219 +26,233 @@ export interface NuvqlLogicalCondition {
 
 export type NuvqlCondition = NuvqlFilterCondition | NuvqlLogicalCondition;
 
-// Column builder for fluent API
-export class ColumnBuilder {
-    constructor(private columnName: string) { }
+// Main NUVQL Filter Builder - Knex-like chainable API
+export class NuvqlFilter {
+    private conditions: NuvqlCondition[] = [];
 
-    // Comparison operators
-    eq(value: any): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
+    constructor(conditions: NuvqlCondition[] = []) {
+        this.conditions = [...conditions];
+    }
+
+    // Comparison operators - Knex-like: eq(column, value)
+    eq(column: string, value: any): NuvqlFilter {
+        return this.addCondition({
+            column,
             operator: 'eq',
             value,
             isColumnReference: this.isColumnReference(value)
-        };
+        });
     }
 
-    neq(value: any): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
+    neq(column: string, value: any): NuvqlFilter {
+        return this.addCondition({
+            column,
             operator: 'neq',
             value,
             isColumnReference: this.isColumnReference(value)
-        };
+        });
     }
 
-    gt(value: any): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
+    gt(column: string, value: any): NuvqlFilter {
+        return this.addCondition({
+            column,
             operator: 'gt',
             value,
             isColumnReference: this.isColumnReference(value)
-        };
+        });
     }
 
-    gte(value: any): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
+    gte(column: string, value: any): NuvqlFilter {
+        return this.addCondition({
+            column,
             operator: 'gte',
             value,
             isColumnReference: this.isColumnReference(value)
-        };
+        });
     }
 
-    lt(value: any): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
+    lt(column: string, value: any): NuvqlFilter {
+        return this.addCondition({
+            column,
             operator: 'lt',
             value,
             isColumnReference: this.isColumnReference(value)
-        };
+        });
     }
 
-    lte(value: any): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
+    lte(column: string, value: any): NuvqlFilter {
+        return this.addCondition({
+            column,
             operator: 'lte',
             value,
             isColumnReference: this.isColumnReference(value)
-        };
+        });
     }
 
-    // Array operators
-    in(values: any[]): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
-            operator: 'in',
-            value: values
-        };
-    }
-
-    nin(values: any[]): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
-            operator: 'nin',
-            value: values
-        };
-    }
-
-    // String operators
-    like(value: string): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
+    // Text operators
+    like(column: string, value: string): NuvqlFilter {
+        return this.addCondition({
+            column,
             operator: 'like',
             value,
             isColumnReference: this.isColumnReference(value)
-        };
+        });
     }
 
-    ilike(value: string): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
+    ilike(column: string, value: string): NuvqlFilter {
+        return this.addCondition({
+            column,
             operator: 'ilike',
             value,
             isColumnReference: this.isColumnReference(value)
-        };
+        });
     }
 
-    contains(value: string): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
+    contains(column: string, value: string): NuvqlFilter {
+        return this.addCondition({
+            column,
             operator: 'contains',
             value,
             isColumnReference: this.isColumnReference(value)
-        };
+        });
     }
 
-    startswith(value: string): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
+    startswith(column: string, value: string): NuvqlFilter {
+        return this.addCondition({
+            column,
             operator: 'startswith',
             value,
             isColumnReference: this.isColumnReference(value)
-        };
+        });
     }
 
-    endswith(value: string): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
+    endswith(column: string, value: string): NuvqlFilter {
+        return this.addCondition({
+            column,
             operator: 'endswith',
             value,
             isColumnReference: this.isColumnReference(value)
-        };
+        });
     }
 
-    // Null checks
-    is(value: null | boolean | 'null' | 'not_null'): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
-            operator: 'is',
-            value
-        };
+    // Array operators
+    in(column: string, values: any[]): NuvqlFilter {
+        return this.addCondition({
+            column,
+            operator: 'in',
+            value: values
+        });
     }
 
-    isnot(value: null | boolean | 'null' | 'not_null'): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
-            operator: 'isnot',
-            value
-        };
+    nin(column: string, values: any[]): NuvqlFilter {
+        return this.addCondition({
+            column,
+            operator: 'nin',
+            value: values
+        });
     }
 
     // Range operators
-    between(min: any, max: any): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
+    between(column: string, min: any, max: any): NuvqlFilter {
+        return this.addCondition({
+            column,
             operator: 'between',
             value: [min, max]
-        };
+        });
     }
 
-    nbetween(min: any, max: any): NuvqlFilterCondition {
-        return {
-            column: this.columnName,
+    nbetween(column: string, min: any, max: any): NuvqlFilter {
+        return this.addCondition({
+            column,
             operator: 'nbetween',
             value: [min, max]
-        };
+        });
+    }
+
+    // Null/existence operators
+    is(column: string, value: null | boolean | 'null' | 'not_null'): NuvqlFilter {
+        return this.addCondition({
+            column,
+            operator: 'is',
+            value
+        });
+    }
+
+    isnot(column: string, value: null | boolean | 'null' | 'not_null'): NuvqlFilter {
+        return this.addCondition({
+            column,
+            operator: 'isnot',
+            value
+        });
+    }
+
+    // Convenience methods
+    isNull(column: string): NuvqlFilter {
+        return this.is(column, 'null');
+    }
+
+    isNotNull(column: string): NuvqlFilter {
+        return this.is(column, 'not_null');
+    }
+
+    isEmptyString(column: string): NuvqlFilter {
+        return this.eq(column, '');
+    }
+
+    isNotEmptyString(column: string): NuvqlFilter {
+        return this.neq(column, '');
+    }
+
+    // Logical operators - Knex-like chaining
+    and(callback: (filter: NuvqlFilter) => NuvqlFilter): NuvqlFilter {
+        const nestedFilter = callback(new NuvqlFilter());
+        const nestedConditions = nestedFilter.getConditions();
+
+        if (nestedConditions.length > 0) {
+            const andCondition: NuvqlLogicalCondition = {
+                operator: 'and',
+                conditions: nestedConditions
+            };
+            return new NuvqlFilter([...this.conditions, andCondition]);
+        }
+        return this;
+    }
+
+    or(callback: (filter: NuvqlFilter) => NuvqlFilter): NuvqlFilter {
+        const nestedFilter = callback(new NuvqlFilter());
+        const nestedConditions = nestedFilter.getConditions();
+
+        if (nestedConditions.length > 0) {
+            const orCondition: NuvqlLogicalCondition = {
+                operator: 'or',
+                conditions: nestedConditions
+            };
+            return new NuvqlFilter([...this.conditions, orCondition]);
+        }
+        return this;
+    }
+
+    not(callback: (filter: NuvqlFilter) => NuvqlFilter): NuvqlFilter {
+        const nestedFilter = callback(new NuvqlFilter());
+        const nestedConditions = nestedFilter.getConditions();
+
+        if (nestedConditions.length > 0) {
+            const notCondition: NuvqlLogicalCondition = {
+                operator: 'not',
+                conditions: nestedConditions
+            };
+            return new NuvqlFilter([...this.conditions, notCondition]);
+        }
+        return this;
     }
 
     // Helper methods
-    isNull(): NuvqlFilterCondition {
-        return this.is('null');
-    }
-
-    isNotNull(): NuvqlFilterCondition {
-        return this.is('not_null');
-    }
-
-    isEmpty(): NuvqlFilterCondition {
-        return this.eq('');
-    }
-
-    isNotEmpty(): NuvqlFilterCondition {
-        return this.neq('');
+    private addCondition(condition: NuvqlFilterCondition): NuvqlFilter {
+        return new NuvqlFilter([...this.conditions, condition]);
     }
 
     private isColumnReference(value: any): boolean {
         return typeof value === 'string' && value.startsWith('"') && value.endsWith('"');
-    }
-}
-
-// Logical operators
-export function and(...conditions: NuvqlCondition[]): NuvqlLogicalCondition {
-    return {
-        operator: 'and',
-        conditions
-    };
-}
-
-export function or(...conditions: NuvqlCondition[]): NuvqlLogicalCondition {
-    return {
-        operator: 'or',
-        conditions
-    };
-}
-
-export function not(...conditions: NuvqlCondition[]): NuvqlLogicalCondition {
-    return {
-        operator: 'not',
-        conditions
-    };
-}
-
-// Column factory function
-export function column(name: string): ColumnBuilder {
-    return new ColumnBuilder(name);
-}
-
-// Filter class for building NUVQL filters
-export class NuvqlFilter {
-    private conditions: NuvqlCondition[] = [];
-
-    // Add a condition
-    add(condition: NuvqlCondition): this {
-        this.conditions.push(condition);
-        return this;
     }
 
     // Get all conditions
@@ -248,44 +267,38 @@ export class NuvqlFilter {
         }
 
         if (this.conditions.length === 1) {
-            return this.conditionToString(this.conditions[0]);
+            return this.buildCondition(this.conditions[0]);
         }
 
-        // Multiple conditions are implicitly AND-ed
-        return this.conditionToString({
-            operator: 'and',
-            conditions: this.conditions
-        });
+        // Multiple conditions are implicitly ANDed
+        return this.conditions.map(condition => this.buildCondition(condition)).join(',');
     }
 
-    private conditionToString(condition: NuvqlCondition): string {
+    private buildCondition(condition: NuvqlCondition): string {
         if ('operator' in condition && ['and', 'or', 'not'].includes(condition.operator)) {
-            const logicalCondition = condition as NuvqlLogicalCondition;
-            return this.logicalConditionToString(logicalCondition);
+            return this.buildLogicalCondition(condition as NuvqlLogicalCondition);
         } else {
-            const filterCondition = condition as NuvqlFilterCondition;
-            return this.filterConditionToString(filterCondition);
+            return this.buildFilterCondition(condition as NuvqlFilterCondition);
         }
     }
 
-    private logicalConditionToString(condition: NuvqlLogicalCondition): string {
-        const conditionsStr = condition.conditions
-            .map(c => this.conditionToString(c))
-            .join(',');
+    private buildLogicalCondition(condition: NuvqlLogicalCondition): string {
+        const { operator, conditions } = condition;
+        const built = conditions.map(c => this.buildCondition(c));
 
-        switch (condition.operator) {
+        switch (operator) {
             case 'and':
-                return `and(${conditionsStr})`;
+                return `and(${built.join(',')})`;
             case 'or':
-                return `or(${conditionsStr})`;
+                return `or(${built.join(',')})`;
             case 'not':
-                return `not(${conditionsStr})`;
+                return `not(${built.join(',')})`;
             default:
-                return conditionsStr;
+                return built.join(',');
         }
     }
 
-    private filterConditionToString(condition: NuvqlFilterCondition): string {
+    private buildFilterCondition(condition: NuvqlFilterCondition): string {
         const { column, operator, value, isColumnReference } = condition;
 
         switch (operator) {
@@ -381,106 +394,181 @@ export class NuvqlFilter {
     }
 
     // Static methods for convenience
-    static from(...conditions: NuvqlCondition[]): NuvqlFilter {
-        const filter = new NuvqlFilter();
-        conditions.forEach(condition => filter.add(condition));
-        return filter;
+    static create(): NuvqlFilter {
+        return new NuvqlFilter();
     }
 
     // Clear all conditions
-    clear(): this {
-        this.conditions = [];
-        return this;
+    clear(): NuvqlFilter {
+        return new NuvqlFilter();
     }
 
     // Check if filter is empty
     isEmpty(): boolean {
         return this.conditions.length === 0;
     }
-}
 
-// Type-safe column builder for specific table types
-export class TypedColumnBuilder<Table> {
-    constructor(private columnName: keyof Table) { }
-
-    // Comparison operators with type safety
-    eq(value: Table[keyof Table]): NuvqlFilterCondition {
-        return column(String(this.columnName)).eq(value);
-    }
-
-    neq(value: Table[keyof Table]): NuvqlFilterCondition {
-        return column(String(this.columnName)).neq(value);
-    }
-
-    gt(value: Table[keyof Table]): NuvqlFilterCondition {
-        return column(String(this.columnName)).gt(value);
-    }
-
-    gte(value: Table[keyof Table]): NuvqlFilterCondition {
-        return column(String(this.columnName)).gte(value);
-    }
-
-    lt(value: Table[keyof Table]): NuvqlFilterCondition {
-        return column(String(this.columnName)).lt(value);
-    }
-
-    lte(value: Table[keyof Table]): NuvqlFilterCondition {
-        return column(String(this.columnName)).lte(value);
-    }
-
-    in(values: Table[keyof Table][]): NuvqlFilterCondition {
-        return column(String(this.columnName)).in(values);
-    }
-
-    nin(values: Table[keyof Table][]): NuvqlFilterCondition {
-        return column(String(this.columnName)).nin(values);
-    }
-
-    between(min: Table[keyof Table], max: Table[keyof Table]): NuvqlFilterCondition {
-        return column(String(this.columnName)).between(min, max);
-    }
-
-    // String-specific methods
-    like(value: string): NuvqlFilterCondition {
-        return column(String(this.columnName)).like(value);
-    }
-
-    ilike(value: string): NuvqlFilterCondition {
-        return column(String(this.columnName)).ilike(value);
-    }
-
-    contains(value: string): NuvqlFilterCondition {
-        return column(String(this.columnName)).contains(value);
-    }
-
-    startswith(value: string): NuvqlFilterCondition {
-        return column(String(this.columnName)).startswith(value);
-    }
-
-    endswith(value: string): NuvqlFilterCondition {
-        return column(String(this.columnName)).endswith(value);
-    }
-
-    // Null checks
-    isNull(): NuvqlFilterCondition {
-        return column(String(this.columnName)).isNull();
-    }
-
-    isNotNull(): NuvqlFilterCondition {
-        return column(String(this.columnName)).isNotNull();
-    }
-
-    // Special value checks
-    is(value: null | boolean | 'null' | 'not_null'): NuvqlFilterCondition {
-        return column(String(this.columnName)).is(value);
-    }
-
-    isnot(value: null | boolean | 'null' | 'not_null'): NuvqlFilterCondition {
-        return column(String(this.columnName)).isnot(value);
+    // Clone the filter
+    clone(): NuvqlFilter {
+        return new NuvqlFilter([...this.conditions]);
     }
 }
 
-// Type-safe column factory
-export function typedColumn<Table>(name: keyof Table): TypedColumnBuilder<Table> {
-    return new TypedColumnBuilder(name);
+// Type-safe filter builder
+export class TypedNuvqlFilter<T extends Record<string, any>> {
+    private filter: NuvqlFilter;
+
+    constructor(filter?: NuvqlFilter) {
+        this.filter = filter || new NuvqlFilter();
+    }
+
+    // Type-safe comparison operators
+    eq<K extends keyof T>(column: K, value: T[K] | string): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.eq(String(column), value));
+    }
+
+    neq<K extends keyof T>(column: K, value: T[K] | string): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.neq(String(column), value));
+    }
+
+    gt<K extends keyof T>(column: K, value: T[K] | string): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.gt(String(column), value));
+    }
+
+    gte<K extends keyof T>(column: K, value: T[K] | string): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.gte(String(column), value));
+    }
+
+    lt<K extends keyof T>(column: K, value: T[K] | string): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.lt(String(column), value));
+    }
+
+    lte<K extends keyof T>(column: K, value: T[K] | string): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.lte(String(column), value));
+    }
+
+    // Type-safe text operators
+    like<K extends keyof T>(column: K, value: string): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.like(String(column), value));
+    }
+
+    ilike<K extends keyof T>(column: K, value: string): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.ilike(String(column), value));
+    }
+
+    contains<K extends keyof T>(column: K, value: string): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.contains(String(column), value));
+    }
+
+    startswith<K extends keyof T>(column: K, value: string): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.startswith(String(column), value));
+    }
+
+    endswith<K extends keyof T>(column: K, value: string): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.endswith(String(column), value));
+    }
+
+    // Type-safe array operators
+    in<K extends keyof T>(column: K, values: T[K][]): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.in(String(column), values));
+    }
+
+    nin<K extends keyof T>(column: K, values: T[K][]): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.nin(String(column), values));
+    }
+
+    // Type-safe range operators
+    between<K extends keyof T>(column: K, min: T[K], max: T[K]): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.between(String(column), min, max));
+    }
+
+    nbetween<K extends keyof T>(column: K, min: T[K], max: T[K]): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.nbetween(String(column), min, max));
+    }
+
+    // Type-safe null operators
+    is<K extends keyof T>(column: K, value: null | boolean | 'null' | 'not_null'): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.is(String(column), value));
+    }
+
+    isnot<K extends keyof T>(column: K, value: null | boolean | 'null' | 'not_null'): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.isnot(String(column), value));
+    }
+
+    // Type-safe convenience methods
+    isNull<K extends keyof T>(column: K): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.isNull(String(column)));
+    }
+
+    isNotNull<K extends keyof T>(column: K): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.isNotNull(String(column)));
+    }
+
+    isEmptyString<K extends keyof T>(column: K): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.isEmptyString(String(column)));
+    }
+
+    isNotEmptyString<K extends keyof T>(column: K): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.isNotEmptyString(String(column)));
+    }
+
+    // Type-safe logical operators
+    and(callback: (filter: TypedNuvqlFilter<T>) => TypedNuvqlFilter<T>): TypedNuvqlFilter<T> {
+        const typedFilter = this.filter.and((f) => {
+            const typedF = new TypedNuvqlFilter<T>(f);
+            return callback(typedF).build();
+        });
+        return new TypedNuvqlFilter<T>(typedFilter);
+    }
+
+    or(callback: (filter: TypedNuvqlFilter<T>) => TypedNuvqlFilter<T>): TypedNuvqlFilter<T> {
+        const typedFilter = this.filter.or((f) => {
+            const typedF = new TypedNuvqlFilter<T>(f);
+            return callback(typedF).build();
+        });
+        return new TypedNuvqlFilter<T>(typedFilter);
+    }
+
+    not(callback: (filter: TypedNuvqlFilter<T>) => TypedNuvqlFilter<T>): TypedNuvqlFilter<T> {
+        const typedFilter = this.filter.not((f) => {
+            const typedF = new TypedNuvqlFilter<T>(f);
+            return callback(typedF).build();
+        });
+        return new TypedNuvqlFilter<T>(typedFilter);
+    }
+
+    // Build methods
+    build(): NuvqlFilter {
+        return this.filter;
+    }
+
+    toString(): string {
+        return this.filter.toString();
+    }
+
+    // Utility methods
+    clear(): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.clear());
+    }
+
+    isEmpty(): boolean {
+        return this.filter.isEmpty();
+    }
+
+    clone(): TypedNuvqlFilter<T> {
+        return new TypedNuvqlFilter<T>(this.filter.clone());
+    }
 }
+
+// Factory functions
+export function filter(): NuvqlFilter {
+    return new NuvqlFilter();
+}
+
+export function typedFilter<T extends Record<string, any>>(): TypedNuvqlFilter<T> {
+    return new TypedNuvqlFilter<T>();
+}
+
+// Export aliases for convenience
+export { NuvqlFilter as Filter };
+export { TypedNuvqlFilter as TypedFilter };
