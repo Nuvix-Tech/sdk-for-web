@@ -1,55 +1,62 @@
-import { Service } from '../service';
-import { NuvixException, type Client, type Payload, UploadProgress } from '../client';
-import type { Models } from '../models';
-import { ImageGravity } from '../enums/image-gravity';
-import { ImageFormat } from '../enums/image-format';
-import { PromiseResponseType, ResponseType } from '../type';
+import { Service } from "../service";
+import {
+  NuvixException,
+  type Client,
+  type Payload,
+  UploadProgress,
+} from "../client";
+import type { Models } from "../models";
+import { ImageGravity } from "../enums/image-gravity";
+import { ImageFormat } from "../enums/image-format";
+import { PromiseResponseType, ResponseType } from "../type";
 
 export class Storage<T extends Client> {
-    client: T;
+  client: T;
 
-    constructor(client: T) {
-        this.client = client;
-    }
+  constructor(client: T) {
+    this.client = client;
+  }
 
-    /**
-     * List files
-     *
-     * Get a list of all the user files. You can use the query params to filter your results.
-     *
-     * @param {string} bucketId
-     * @param {string[]} queries
-     * @param {string} search
-     * @returns {PromiseResponseType<T, Models.FileList>}
-     */
-    async listFiles(bucketId: string, queries?: string[], search?: string): PromiseResponseType<T, Models.FileList> {
-        return this.client.withSafeResponse(async () => {
-            if (typeof bucketId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "bucketId"');
-            }
-            const apiPath = '/storage/buckets/{bucketId}/files'.replace('{bucketId}', bucketId);
-            const payload: Payload = {};
-            if (typeof queries !== 'undefined') {
-                payload['queries'] = queries;
-            }
-            if (typeof search !== 'undefined') {
-                payload['search'] = search;
-            }
-            const uri = new URL(this.client.config.endpoint + apiPath);
+  /**
+   * List files
+   *
+   * Get a list of all the user files. You can use the query params to filter your results.
+   *
+   * @param {string} bucketId
+   * @param {string[]} queries
+   * @param {string} search
+   * @returns {PromiseResponseType<T, Models.FileList>}
+   */
+  async listFiles(
+    bucketId: string,
+    queries?: string[],
+    search?: string,
+  ): PromiseResponseType<T, Models.FileList> {
+    return this.client.withSafeResponse(async () => {
+      if (typeof bucketId === "undefined") {
+        throw new NuvixException('Missing required parameter: "bucketId"');
+      }
+      const apiPath = "/storage/buckets/{bucketId}/files".replace(
+        "{bucketId}",
+        bucketId,
+      );
+      const payload: Payload = {};
+      if (typeof queries !== "undefined") {
+        payload["queries"] = queries;
+      }
+      if (typeof search !== "undefined") {
+        payload["search"] = search;
+      }
+      const uri = new URL(this.client.config.endpoint + apiPath);
 
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
 
-            return await this.client.call(
-                'get',
-                uri,
-                apiHeaders,
-                payload
-            );
-        });
-    }
-    /**
+      return await this.client.call("get", uri, apiHeaders, payload);
+    });
+  }
+  /**
      * Create file
      *
      * Create a new file. Before using this route, you should create a new bucket resource using either a [server integration](https://nuvix.io/docs/server/storage#storageCreateBucket) API or directly from your Nuvix console.
@@ -67,342 +74,399 @@ If you&#039;re creating a new file using one of the Nuvix SDKs, all the chunking
      * @param {string[]} permissions
      * @returns {PromiseResponseType<T, Models.File>}
      */
-    async createFile(bucketId: string, fileId: string, file: File, permissions?: string[], onProgress = (progress: UploadProgress) => { }): PromiseResponseType<T, Models.File> {
-        return this.client.withSafeResponse(async () => {
-            if (typeof bucketId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "bucketId"');
-            }
-            if (typeof fileId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "fileId"');
-            }
-            if (typeof file === 'undefined') {
-                throw new NuvixException('Missing required parameter: "file"');
-            }
-            const apiPath = '/storage/buckets/{bucketId}/files'.replace('{bucketId}', bucketId);
-            const payload: Payload = {};
-            if (typeof fileId !== 'undefined') {
-                payload['fileId'] = fileId;
-            }
-            if (typeof file !== 'undefined') {
-                payload['file'] = file;
-            }
-            if (typeof permissions !== 'undefined') {
-                payload['permissions'] = permissions;
-            }
-            const uri = new URL(this.client.config.endpoint + apiPath);
+  async createFile(
+    bucketId: string,
+    fileId: string,
+    file: File,
+    permissions?: string[],
+    onProgress = (progress: UploadProgress) => {},
+  ): PromiseResponseType<T, Models.File> {
+    return this.client.withSafeResponse(async () => {
+      if (typeof bucketId === "undefined") {
+        throw new NuvixException('Missing required parameter: "bucketId"');
+      }
+      if (typeof fileId === "undefined") {
+        throw new NuvixException('Missing required parameter: "fileId"');
+      }
+      if (typeof file === "undefined") {
+        throw new NuvixException('Missing required parameter: "file"');
+      }
+      const apiPath = "/storage/buckets/{bucketId}/files".replace(
+        "{bucketId}",
+        bucketId,
+      );
+      const payload: Payload = {};
+      if (typeof fileId !== "undefined") {
+        payload["fileId"] = fileId;
+      }
+      if (typeof file !== "undefined") {
+        payload["file"] = file;
+      }
+      if (typeof permissions !== "undefined") {
+        payload["permissions"] = permissions;
+      }
+      const uri = new URL(this.client.config.endpoint + apiPath);
 
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'multipart/form-data',
-            }
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "multipart/form-data",
+      };
 
-            return await this.client.chunkedUpload(
-                'post',
-                uri,
-                apiHeaders,
-                payload,
-                onProgress
-            );
-        });
+      return await this.client.chunkedUpload(
+        "post",
+        uri,
+        apiHeaders,
+        payload,
+        onProgress,
+      );
+    });
+  }
+  /**
+   * Get file
+   *
+   * Get a file by its unique ID. This endpoint response returns a JSON object with the file metadata.
+   *
+   * @param {string} bucketId
+   * @param {string} fileId
+   * @returns {PromiseResponseType<T, Models.File>}
+   */
+  async getFile(
+    bucketId: string,
+    fileId: string,
+  ): PromiseResponseType<T, Models.File> {
+    return this.client.withSafeResponse(async () => {
+      if (typeof bucketId === "undefined") {
+        throw new NuvixException('Missing required parameter: "bucketId"');
+      }
+      if (typeof fileId === "undefined") {
+        throw new NuvixException('Missing required parameter: "fileId"');
+      }
+      const apiPath = "/storage/buckets/{bucketId}/files/{fileId}"
+        .replace("{bucketId}", bucketId)
+        .replace("{fileId}", fileId);
+      const payload: Payload = {};
+      const uri = new URL(this.client.config.endpoint + apiPath);
+
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
+
+      return await this.client.call("get", uri, apiHeaders, payload);
+    });
+  }
+  /**
+   * Update file
+   *
+   * Update a file by its unique ID. Only users with write permissions have access to update this resource.
+   *
+   * @param {string} bucketId
+   * @param {string} fileId
+   * @param {string} name
+   * @param {string[]} permissions
+   * @returns {PromiseResponseType<T, Models.File>}
+   */
+  async updateFile(
+    bucketId: string,
+    fileId: string,
+    name?: string,
+    permissions?: string[],
+  ): PromiseResponseType<T, Models.File> {
+    return this.client.withSafeResponse(async () => {
+      if (typeof bucketId === "undefined") {
+        throw new NuvixException('Missing required parameter: "bucketId"');
+      }
+      if (typeof fileId === "undefined") {
+        throw new NuvixException('Missing required parameter: "fileId"');
+      }
+      const apiPath = "/storage/buckets/{bucketId}/files/{fileId}"
+        .replace("{bucketId}", bucketId)
+        .replace("{fileId}", fileId);
+      const payload: Payload = {};
+      if (typeof name !== "undefined") {
+        payload["name"] = name;
+      }
+      if (typeof permissions !== "undefined") {
+        payload["permissions"] = permissions;
+      }
+      const uri = new URL(this.client.config.endpoint + apiPath);
+
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
+
+      return await this.client.call("put", uri, apiHeaders, payload);
+    });
+  }
+  /**
+   * Delete file
+   *
+   * Delete a file by its unique ID. Only users with write permissions have access to delete this resource.
+   *
+   * @param {string} bucketId
+   * @param {string} fileId
+   * @returns {PromiseResponseType<T, {}>}
+   */
+  async deleteFile(
+    bucketId: string,
+    fileId: string,
+  ): PromiseResponseType<T, {}> {
+    return this.client.withSafeResponse(async () => {
+      if (typeof bucketId === "undefined") {
+        throw new NuvixException('Missing required parameter: "bucketId"');
+      }
+      if (typeof fileId === "undefined") {
+        throw new NuvixException('Missing required parameter: "fileId"');
+      }
+      const apiPath = "/storage/buckets/{bucketId}/files/{fileId}"
+        .replace("{bucketId}", bucketId)
+        .replace("{fileId}", fileId);
+      const payload: Payload = {};
+      const uri = new URL(this.client.config.endpoint + apiPath);
+
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
+
+      return await this.client.call("delete", uri, apiHeaders, payload);
+    });
+  }
+  /**
+   * Get file for download
+   *
+   * Get a file content by its unique ID. The endpoint response return with a &#039;Content-Disposition: attachment&#039; header that tells the browser to start downloading the file to user downloads directory.
+   *
+   * @param {string} bucketId
+   * @param {string} fileId
+   * @returns {string}
+   */
+  getFileDownload(bucketId: string, fileId: string): ResponseType<T, string> {
+    return this.safeResponse(() => {
+      if (typeof bucketId === "undefined") {
+        throw new NuvixException('Missing required parameter: "bucketId"');
+      }
+      if (typeof fileId === "undefined") {
+        throw new NuvixException('Missing required parameter: "fileId"');
+      }
+      const apiPath = "/storage/buckets/{bucketId}/files/{fileId}/download"
+        .replace("{bucketId}", bucketId)
+        .replace("{fileId}", fileId);
+      const payload: Payload = {};
+      const uri = new URL(this.client.config.endpoint + apiPath);
+
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
+
+      payload["project"] = this.client.config.project;
+      for (const [key, value] of Object.entries(Service.flatten(payload))) {
+        uri.searchParams.append(key, value);
+      }
+
+      payload["project"] = this.client.config.project;
+
+      return uri.toString();
+    });
+  }
+  /**
+   * Get file preview
+   *
+   * Get a file preview image. Currently, this method supports preview for image files (jpg, png, and gif), other supported formats, like pdf, docs, slides, and spreadsheets, will return the file icon image. You can also pass query string arguments for cutting and resizing your preview image. Preview is supported only for image files smaller than 10MB.
+   *
+   * @param {string} bucketId
+   * @param {string} fileId
+   * @returns {string}
+   */
+  getFilePreview(
+    bucketId: string,
+    fileId: string,
+    width?: number,
+    height?: number,
+    gravity?: ImageGravity,
+    quality?: number,
+    borderWidth?: number,
+    borderColor?: string,
+    borderRadius?: number,
+    opacity?: number,
+    rotation?: number,
+    background?: string,
+    output?: ImageFormat,
+  ): ResponseType<T, string>;
+  getFilePreview(
+    bucketId: string,
+    fileId: string,
+    options?: {
+      width?: number;
+      height?: number;
+      gravity?: ImageGravity;
+      quality?: number;
+      borderWidth?: number;
+      borderColor?: string;
+      borderRadius?: number;
+      opacity?: number;
+      rotation?: number;
+      background?: string;
+      output?: ImageFormat;
+    },
+  ): ResponseType<T, string>;
+  getFilePreview(
+    bucketId: string,
+    fileId: string,
+    widthOrOptions?:
+      | number
+      | {
+          width?: number;
+          height?: number;
+          gravity?: ImageGravity;
+          quality?: number;
+          borderWidth?: number;
+          borderColor?: string;
+          borderRadius?: number;
+          opacity?: number;
+          rotation?: number;
+          background?: string;
+          output?: ImageFormat;
+        },
+    height?: number,
+    gravity?: ImageGravity,
+    quality?: number,
+    borderWidth?: number,
+    borderColor?: string,
+    borderRadius?: number,
+    opacity?: number,
+    rotation?: number,
+    background?: string,
+    output?: ImageFormat,
+  ): ResponseType<T, string> {
+    return this.safeResponse(() => {
+      if (typeof bucketId === "undefined") {
+        throw new NuvixException('Missing required parameter: "bucketId"');
+      }
+      if (typeof fileId === "undefined") {
+        throw new NuvixException('Missing required parameter: "fileId"');
+      }
+
+      let width: number | undefined;
+      let options: any = {};
+
+      if (typeof widthOrOptions === "object") {
+        options = widthOrOptions;
+        width = options.width;
+        height = options.height;
+        gravity = options.gravity;
+        quality = options.quality;
+        borderWidth = options.borderWidth;
+        borderColor = options.borderColor;
+        borderRadius = options.borderRadius;
+        opacity = options.opacity;
+        rotation = options.rotation;
+        background = options.background;
+        output = options.output;
+      } else {
+        width = widthOrOptions;
+      }
+
+      const apiPath = "/storage/buckets/{bucketId}/files/{fileId}/preview"
+        .replace("{bucketId}", bucketId)
+        .replace("{fileId}", fileId);
+      const payload: Payload = {};
+      if (typeof width !== "undefined") {
+        payload["width"] = width;
+      }
+      if (typeof height !== "undefined") {
+        payload["height"] = height;
+      }
+      if (typeof gravity !== "undefined") {
+        payload["gravity"] = gravity;
+      }
+      if (typeof quality !== "undefined") {
+        payload["quality"] = quality;
+      }
+      if (typeof borderWidth !== "undefined") {
+        payload["borderWidth"] = borderWidth;
+      }
+      if (typeof borderColor !== "undefined") {
+        payload["borderColor"] = borderColor;
+      }
+      if (typeof borderRadius !== "undefined") {
+        payload["borderRadius"] = borderRadius;
+      }
+      if (typeof opacity !== "undefined") {
+        payload["opacity"] = opacity;
+      }
+      if (typeof rotation !== "undefined") {
+        payload["rotation"] = rotation;
+      }
+      if (typeof background !== "undefined") {
+        payload["background"] = background;
+      }
+      if (typeof output !== "undefined") {
+        payload["output"] = output;
+      }
+      const uri = new URL(this.client.config.endpoint + apiPath);
+
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
+
+      payload["project"] = this.client.config.project;
+      for (const [key, value] of Object.entries(Service.flatten(payload))) {
+        uri.searchParams.append(key, value);
+      }
+
+      payload["project"] = this.client.config.project;
+
+      return uri.toString();
+    });
+  }
+  /**
+   * Get file for view
+   *
+   * Get a file content by its unique ID. This endpoint is similar to the download method but returns with no  &#039;Content-Disposition: attachment&#039; header.
+   *
+   * @param {string} bucketId
+   * @param {string} fileId
+   * @returns {string}
+   */
+  getFileView(bucketId: string, fileId: string): ResponseType<T, string> {
+    return this.safeResponse(() => {
+      if (typeof bucketId === "undefined") {
+        throw new NuvixException('Missing required parameter: "bucketId"');
+      }
+      if (typeof fileId === "undefined") {
+        throw new NuvixException('Missing required parameter: "fileId"');
+      }
+      const apiPath = "/storage/buckets/{bucketId}/files/{fileId}/view"
+        .replace("{bucketId}", bucketId)
+        .replace("{fileId}", fileId);
+      const payload: Payload = {};
+      const uri = new URL(this.client.config.endpoint + apiPath);
+
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
+
+      payload["project"] = this.client.config.project;
+      for (const [key, value] of Object.entries(Service.flatten(payload))) {
+        uri.searchParams.append(key, value);
+      }
+
+      payload["project"] = this.client.config.project;
+
+      return uri.toString();
+    });
+  }
+
+  private safeResponse<R>(callback: () => R): ResponseType<T, R> {
+    try {
+      const result = callback();
+      return { data: result, error: null } as ResponseType<T, R>;
+    } catch (error: any) {
+      return {
+        data: null,
+        error:
+          error instanceof NuvixException
+            ? error
+            : new NuvixException(error.message),
+      } as ResponseType<T, R>;
     }
-    /**
-     * Get file
-     *
-     * Get a file by its unique ID. This endpoint response returns a JSON object with the file metadata.
-     *
-     * @param {string} bucketId
-     * @param {string} fileId
-     * @returns {PromiseResponseType<T, Models.File>}
-     */
-    async getFile(bucketId: string, fileId: string): PromiseResponseType<T, Models.File> {
-        return this.client.withSafeResponse(async () => {
-            if (typeof bucketId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "bucketId"');
-            }
-            if (typeof fileId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "fileId"');
-            }
-            const apiPath = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
-            const payload: Payload = {};
-            const uri = new URL(this.client.config.endpoint + apiPath);
-
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
-
-            return await this.client.call(
-                'get',
-                uri,
-                apiHeaders,
-                payload
-            );
-        });
-    }
-    /**
-     * Update file
-     *
-     * Update a file by its unique ID. Only users with write permissions have access to update this resource.
-     *
-     * @param {string} bucketId
-     * @param {string} fileId
-     * @param {string} name
-     * @param {string[]} permissions
-     * @returns {PromiseResponseType<T, Models.File>}
-     */
-    async updateFile(bucketId: string, fileId: string, name?: string, permissions?: string[]): PromiseResponseType<T, Models.File> {
-        return this.client.withSafeResponse(async () => {
-            if (typeof bucketId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "bucketId"');
-            }
-            if (typeof fileId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "fileId"');
-            }
-            const apiPath = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
-            const payload: Payload = {};
-            if (typeof name !== 'undefined') {
-                payload['name'] = name;
-            }
-            if (typeof permissions !== 'undefined') {
-                payload['permissions'] = permissions;
-            }
-            const uri = new URL(this.client.config.endpoint + apiPath);
-
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
-
-            return await this.client.call(
-                'put',
-                uri,
-                apiHeaders,
-                payload
-            );
-        });
-    }
-    /**
-     * Delete file
-     *
-     * Delete a file by its unique ID. Only users with write permissions have access to delete this resource.
-     *
-     * @param {string} bucketId
-     * @param {string} fileId
-     * @returns {PromiseResponseType<T, {}>}
-     */
-    async deleteFile(bucketId: string, fileId: string): PromiseResponseType<T, {}> {
-        return this.client.withSafeResponse(async () => {
-            if (typeof bucketId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "bucketId"');
-            }
-            if (typeof fileId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "fileId"');
-            }
-            const apiPath = '/storage/buckets/{bucketId}/files/{fileId}'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
-            const payload: Payload = {};
-            const uri = new URL(this.client.config.endpoint + apiPath);
-
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
-
-            return await this.client.call(
-                'delete',
-                uri,
-                apiHeaders,
-                payload
-            );
-        });
-    }
-    /**
-     * Get file for download
-     *
-     * Get a file content by its unique ID. The endpoint response return with a &#039;Content-Disposition: attachment&#039; header that tells the browser to start downloading the file to user downloads directory.
-     *
-     * @param {string} bucketId
-     * @param {string} fileId
-     * @returns {string}
-     */
-    getFileDownload(bucketId: string, fileId: string): ResponseType<T, string> {
-        return this.safeResponse(() => {
-            if (typeof bucketId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "bucketId"');
-            }
-            if (typeof fileId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "fileId"');
-            }
-            const apiPath = '/storage/buckets/{bucketId}/files/{fileId}/download'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
-            const payload: Payload = {};
-            const uri = new URL(this.client.config.endpoint + apiPath);
-
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
-
-            payload['project'] = this.client.config.project;
-            for (const [key, value] of Object.entries(Service.flatten(payload))) {
-                uri.searchParams.append(key, value);
-            }
-
-            payload['project'] = this.client.config.project;
-
-            return uri.toString();
-        });
-    }
-    /**
-     * Get file preview
-     *
-     * Get a file preview image. Currently, this method supports preview for image files (jpg, png, and gif), other supported formats, like pdf, docs, slides, and spreadsheets, will return the file icon image. You can also pass query string arguments for cutting and resizing your preview image. Preview is supported only for image files smaller than 10MB.
-     *
-     * @param {string} bucketId
-     * @param {string} fileId
-     * @returns {string}
-     */
-    getFilePreview(bucketId: string, fileId: string, width?: number, height?: number, gravity?: ImageGravity, quality?: number, borderWidth?: number, borderColor?: string, borderRadius?: number, opacity?: number, rotation?: number, background?: string, output?: ImageFormat): ResponseType<T, string>;
-    getFilePreview(bucketId: string, fileId: string, options?: {
-        width?: number;
-        height?: number;
-        gravity?: ImageGravity;
-        quality?: number;
-        borderWidth?: number;
-        borderColor?: string;
-        borderRadius?: number;
-        opacity?: number;
-        rotation?: number;
-        background?: string;
-        output?: ImageFormat;
-    }): ResponseType<T, string>;
-    getFilePreview(bucketId: string, fileId: string, widthOrOptions?: number | {
-        width?: number;
-        height?: number;
-        gravity?: ImageGravity;
-        quality?: number;
-        borderWidth?: number;
-        borderColor?: string;
-        borderRadius?: number;
-        opacity?: number;
-        rotation?: number;
-        background?: string;
-        output?: ImageFormat;
-    }, height?: number, gravity?: ImageGravity, quality?: number, borderWidth?: number, borderColor?: string, borderRadius?: number, opacity?: number, rotation?: number, background?: string, output?: ImageFormat): ResponseType<T, string> {
-        return this.safeResponse(() => {
-            if (typeof bucketId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "bucketId"');
-            }
-            if (typeof fileId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "fileId"');
-            }
-
-            let width: number | undefined;
-            let options: any = {};
-
-            if (typeof widthOrOptions === 'object') {
-                options = widthOrOptions;
-                width = options.width;
-                height = options.height;
-                gravity = options.gravity;
-                quality = options.quality;
-                borderWidth = options.borderWidth;
-                borderColor = options.borderColor;
-                borderRadius = options.borderRadius;
-                opacity = options.opacity;
-                rotation = options.rotation;
-                background = options.background;
-                output = options.output;
-            } else {
-                width = widthOrOptions;
-            }
-
-            const apiPath = '/storage/buckets/{bucketId}/files/{fileId}/preview'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
-            const payload: Payload = {};
-            if (typeof width !== 'undefined') {
-                payload['width'] = width;
-            }
-            if (typeof height !== 'undefined') {
-                payload['height'] = height;
-            }
-            if (typeof gravity !== 'undefined') {
-                payload['gravity'] = gravity;
-            }
-            if (typeof quality !== 'undefined') {
-                payload['quality'] = quality;
-            }
-            if (typeof borderWidth !== 'undefined') {
-                payload['borderWidth'] = borderWidth;
-            }
-            if (typeof borderColor !== 'undefined') {
-                payload['borderColor'] = borderColor;
-            }
-            if (typeof borderRadius !== 'undefined') {
-                payload['borderRadius'] = borderRadius;
-            }
-            if (typeof opacity !== 'undefined') {
-                payload['opacity'] = opacity;
-            }
-            if (typeof rotation !== 'undefined') {
-                payload['rotation'] = rotation;
-            }
-            if (typeof background !== 'undefined') {
-                payload['background'] = background;
-            }
-            if (typeof output !== 'undefined') {
-                payload['output'] = output;
-            }
-            const uri = new URL(this.client.config.endpoint + apiPath);
-
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
-
-            payload['project'] = this.client.config.project;
-            for (const [key, value] of Object.entries(Service.flatten(payload))) {
-                uri.searchParams.append(key, value);
-            }
-
-            payload['project'] = this.client.config.project;
-
-            return uri.toString();
-        });
-    }
-    /**
-     * Get file for view
-     *
-     * Get a file content by its unique ID. This endpoint is similar to the download method but returns with no  &#039;Content-Disposition: attachment&#039; header.
-     *
-     * @param {string} bucketId
-     * @param {string} fileId
-     * @returns {string}
-     */
-    getFileView(bucketId: string, fileId: string): ResponseType<T, string> {
-        return this.safeResponse(() => {
-            if (typeof bucketId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "bucketId"');
-            }
-            if (typeof fileId === 'undefined') {
-                throw new NuvixException('Missing required parameter: "fileId"');
-            }
-            const apiPath = '/storage/buckets/{bucketId}/files/{fileId}/view'.replace('{bucketId}', bucketId).replace('{fileId}', fileId);
-            const payload: Payload = {};
-            const uri = new URL(this.client.config.endpoint + apiPath);
-
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
-
-            payload['project'] = this.client.config.project;
-            for (const [key, value] of Object.entries(Service.flatten(payload))) {
-                uri.searchParams.append(key, value);
-            }
-
-            payload['project'] = this.client.config.project;
-
-            return uri.toString();
-        });
-    }
-
-    private safeResponse<R>(callback: () => R): ResponseType<T, R> {
-        try {
-            const result = callback();
-            return { data: result, error: null } as ResponseType<T, R>;
-        } catch (error: any) {
-            return { data: null, error: error instanceof NuvixException ? error : new NuvixException(error.message) } as ResponseType<T, R>;
-        }
-    }
+  }
 }

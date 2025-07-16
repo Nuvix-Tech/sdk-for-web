@@ -21,7 +21,7 @@ export class Query {
   constructor(
     method: string,
     attribute?: AttributesTypes,
-    values?: QueryTypes
+    values?: QueryTypes,
   ) {
     this.method = method;
     this.attribute = attribute;
@@ -134,7 +134,11 @@ export class Query {
    * @param {string | number} end
    * @returns {string}
    */
-  static between = (attribute: string, start: string | number, end: string | number): string =>
+  static between = (
+    attribute: string,
+    start: string | number,
+    end: string | number,
+  ): string =>
     new Query("between", attribute, [start, end] as QueryTypesList).toString();
 
   /**
@@ -248,7 +252,11 @@ export class Query {
    * @returns {string}
    */
   static or = (queries: string[]): string =>
-    new Query("or", undefined, queries.map((query) => JSON.parse(query))).toString();
+    new Query(
+      "or",
+      undefined,
+      queries.map((query) => JSON.parse(query)),
+    ).toString();
 
   /**
    * Combine multiple queries using logical AND operator.
@@ -257,5 +265,9 @@ export class Query {
    * @returns {string}
    */
   static and = (queries: string[]): string =>
-    new Query("and", undefined, queries.map((query) => JSON.parse(query))).toString();
+    new Query(
+      "and",
+      undefined,
+      queries.map((query) => JSON.parse(query)),
+    ).toString();
 }

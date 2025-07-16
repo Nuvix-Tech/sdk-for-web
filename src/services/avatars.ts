@@ -1,18 +1,18 @@
-import { Service } from '../service';
-import { NuvixException, Client, type Payload } from '../client';
-import { Browser } from '../enums/browser';
-import { CreditCard } from '../enums/credit-card';
-import { Flag } from '../enums/flag';
-import { ResponseType } from '../type';
+import { Service } from "../service";
+import { NuvixException, Client, type Payload } from "../client";
+import { Browser } from "../enums/browser";
+import { CreditCard } from "../enums/credit-card";
+import { Flag } from "../enums/flag";
+import { ResponseType } from "../type";
 
 export class Avatars<T extends Client> {
-    client: T;
+  client: T;
 
-    constructor(client: T) {
-        this.client = client;
-    }
+  constructor(client: T) {
+    this.client = client;
+  }
 
-    /**
+  /**
      * Get browser icon
      *
      * You can use this endpoint to show different browser icons to your users. The code argument receives the browser code as it appears in your user [GET /account/sessions](https://nuvix.io/docs/references/cloud/client-web/account#getSessions) endpoint. Use width, height and quality arguments to change the output settings.
@@ -25,39 +25,44 @@ When one dimension is specified and the other is 0, the image is scaled with pre
      * @param {number} quality
      * @returns {string}
      */
-    getBrowser(code: Browser, width?: number, height?: number, quality?: number): ResponseType<T, string> {
-        return this.safeResponse(() => {
-            if (typeof code === 'undefined') {
-                throw new NuvixException('Missing required parameter: "code"');
-            }
-            const apiPath = '/avatars/browsers/{code}'.replace('{code}', code);
-            const payload: Payload = {};
-            if (typeof width !== 'undefined') {
-                payload['width'] = width;
-            }
-            if (typeof height !== 'undefined') {
-                payload['height'] = height;
-            }
-            if (typeof quality !== 'undefined') {
-                payload['quality'] = quality;
-            }
-            const uri = new URL(this.client.config.endpoint + apiPath);
+  getBrowser(
+    code: Browser,
+    width?: number,
+    height?: number,
+    quality?: number,
+  ): ResponseType<T, string> {
+    return this.safeResponse(() => {
+      if (typeof code === "undefined") {
+        throw new NuvixException('Missing required parameter: "code"');
+      }
+      const apiPath = "/avatars/browsers/{code}".replace("{code}", code);
+      const payload: Payload = {};
+      if (typeof width !== "undefined") {
+        payload["width"] = width;
+      }
+      if (typeof height !== "undefined") {
+        payload["height"] = height;
+      }
+      if (typeof quality !== "undefined") {
+        payload["quality"] = quality;
+      }
+      const uri = new URL(this.client.config.endpoint + apiPath);
 
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
 
-            payload['project'] = this.client.config.project;
-            for (const [key, value] of Object.entries(Service.flatten(payload))) {
-                uri.searchParams.append(key, value);
-            }
+      payload["project"] = this.client.config.project;
+      for (const [key, value] of Object.entries(Service.flatten(payload))) {
+        uri.searchParams.append(key, value);
+      }
 
-            payload['project'] = this.client.config.project;
+      payload["project"] = this.client.config.project;
 
-            return uri.toString();
-        });
-    }
-    /**
+      return uri.toString();
+    });
+  }
+  /**
      * Get credit card icon
      *
      * The credit card endpoint will return you the icon of the credit card provider you need. Use width, height and quality arguments to change the output settings.
@@ -71,39 +76,44 @@ When one dimension is specified and the other is 0, the image is scaled with pre
      * @param {number} quality
      * @returns {string}
      */
-    getCreditCard(code: CreditCard, width?: number, height?: number, quality?: number): ResponseType<T, string> {
-        return this.safeResponse(() => {
-            if (typeof code === 'undefined') {
-                throw new NuvixException('Missing required parameter: "code"');
-            }
-            const apiPath = '/avatars/credit-cards/{code}'.replace('{code}', code);
-            const payload: Payload = {};
-            if (typeof width !== 'undefined') {
-                payload['width'] = width;
-            }
-            if (typeof height !== 'undefined') {
-                payload['height'] = height;
-            }
-            if (typeof quality !== 'undefined') {
-                payload['quality'] = quality;
-            }
-            const uri = new URL(this.client.config.endpoint + apiPath);
+  getCreditCard(
+    code: CreditCard,
+    width?: number,
+    height?: number,
+    quality?: number,
+  ): ResponseType<T, string> {
+    return this.safeResponse(() => {
+      if (typeof code === "undefined") {
+        throw new NuvixException('Missing required parameter: "code"');
+      }
+      const apiPath = "/avatars/credit-cards/{code}".replace("{code}", code);
+      const payload: Payload = {};
+      if (typeof width !== "undefined") {
+        payload["width"] = width;
+      }
+      if (typeof height !== "undefined") {
+        payload["height"] = height;
+      }
+      if (typeof quality !== "undefined") {
+        payload["quality"] = quality;
+      }
+      const uri = new URL(this.client.config.endpoint + apiPath);
 
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
 
-            payload['project'] = this.client.config.project;
-            for (const [key, value] of Object.entries(Service.flatten(payload))) {
-                uri.searchParams.append(key, value);
-            }
+      payload["project"] = this.client.config.project;
+      for (const [key, value] of Object.entries(Service.flatten(payload))) {
+        uri.searchParams.append(key, value);
+      }
 
-            payload['project'] = this.client.config.project;
+      payload["project"] = this.client.config.project;
 
-            return uri.toString();
-        });
-    }
-    /**
+      return uri.toString();
+    });
+  }
+  /**
      * Get favicon
      *
      * Use this endpoint to fetch the favorite icon (AKA favicon) of any remote website URL.
@@ -113,33 +123,33 @@ This endpoint does not follow HTTP redirects.
      * @param {string} url
      * @returns {string}
      */
-    getFavicon(url: string): ResponseType<T, string> {
-        return this.safeResponse(() => {
-            if (typeof url === 'undefined') {
-                throw new NuvixException('Missing required parameter: "url"');
-            }
-            const apiPath = '/avatars/favicon';
-            const payload: Payload = {};
-            if (typeof url !== 'undefined') {
-                payload['url'] = url;
-            }
-            const uri = new URL(this.client.config.endpoint + apiPath);
+  getFavicon(url: string): ResponseType<T, string> {
+    return this.safeResponse(() => {
+      if (typeof url === "undefined") {
+        throw new NuvixException('Missing required parameter: "url"');
+      }
+      const apiPath = "/avatars/favicon";
+      const payload: Payload = {};
+      if (typeof url !== "undefined") {
+        payload["url"] = url;
+      }
+      const uri = new URL(this.client.config.endpoint + apiPath);
 
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
 
-            payload['project'] = this.client.config.project;
-            for (const [key, value] of Object.entries(Service.flatten(payload))) {
-                uri.searchParams.append(key, value);
-            }
+      payload["project"] = this.client.config.project;
+      for (const [key, value] of Object.entries(Service.flatten(payload))) {
+        uri.searchParams.append(key, value);
+      }
 
-            payload['project'] = this.client.config.project;
+      payload["project"] = this.client.config.project;
 
-            return uri.toString();
-        });
-    }
-    /**
+      return uri.toString();
+    });
+  }
+  /**
      * Get country flag
      *
      * You can use this endpoint to show different country flags icons to your users. The code argument receives the 2 letter country code. Use width, height and quality arguments to change the output settings. Country codes follow the [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) standard.
@@ -153,39 +163,44 @@ When one dimension is specified and the other is 0, the image is scaled with pre
      * @param {number} quality
      * @returns {string}
      */
-    getFlag(code: Flag, width?: number, height?: number, quality?: number): ResponseType<T, string> {
-        return this.safeResponse(() => {
-            if (typeof code === 'undefined') {
-                throw new NuvixException('Missing required parameter: "code"');
-            }
-            const apiPath = '/avatars/flags/{code}'.replace('{code}', code);
-            const payload: Payload = {};
-            if (typeof width !== 'undefined') {
-                payload['width'] = width;
-            }
-            if (typeof height !== 'undefined') {
-                payload['height'] = height;
-            }
-            if (typeof quality !== 'undefined') {
-                payload['quality'] = quality;
-            }
-            const uri = new URL(this.client.config.endpoint + apiPath);
+  getFlag(
+    code: Flag,
+    width?: number,
+    height?: number,
+    quality?: number,
+  ): ResponseType<T, string> {
+    return this.safeResponse(() => {
+      if (typeof code === "undefined") {
+        throw new NuvixException('Missing required parameter: "code"');
+      }
+      const apiPath = "/avatars/flags/{code}".replace("{code}", code);
+      const payload: Payload = {};
+      if (typeof width !== "undefined") {
+        payload["width"] = width;
+      }
+      if (typeof height !== "undefined") {
+        payload["height"] = height;
+      }
+      if (typeof quality !== "undefined") {
+        payload["quality"] = quality;
+      }
+      const uri = new URL(this.client.config.endpoint + apiPath);
 
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
 
-            payload['project'] = this.client.config.project;
-            for (const [key, value] of Object.entries(Service.flatten(payload))) {
-                uri.searchParams.append(key, value);
-            }
+      payload["project"] = this.client.config.project;
+      for (const [key, value] of Object.entries(Service.flatten(payload))) {
+        uri.searchParams.append(key, value);
+      }
 
-            payload['project'] = this.client.config.project;
+      payload["project"] = this.client.config.project;
 
-            return uri.toString();
-        });
-    }
-    /**
+      return uri.toString();
+    });
+  }
+  /**
      * Get image from URL
      *
      * Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop and display remote images in your app or in case you want to make sure a 3rd party image is properly served using a TLS protocol.
@@ -199,39 +214,43 @@ This endpoint does not follow HTTP redirects.
      * @param {number} height
      * @returns {string}
      */
-    getImage(url: string, width?: number, height?: number): ResponseType<T, string> {
-        return this.safeResponse(() => {
-            if (typeof url === 'undefined') {
-                throw new NuvixException('Missing required parameter: "url"');
-            }
-            const apiPath = '/avatars/image';
-            const payload: Payload = {};
-            if (typeof url !== 'undefined') {
-                payload['url'] = url;
-            }
-            if (typeof width !== 'undefined') {
-                payload['width'] = width;
-            }
-            if (typeof height !== 'undefined') {
-                payload['height'] = height;
-            }
-            const uri = new URL(this.client.config.endpoint + apiPath);
+  getImage(
+    url: string,
+    width?: number,
+    height?: number,
+  ): ResponseType<T, string> {
+    return this.safeResponse(() => {
+      if (typeof url === "undefined") {
+        throw new NuvixException('Missing required parameter: "url"');
+      }
+      const apiPath = "/avatars/image";
+      const payload: Payload = {};
+      if (typeof url !== "undefined") {
+        payload["url"] = url;
+      }
+      if (typeof width !== "undefined") {
+        payload["width"] = width;
+      }
+      if (typeof height !== "undefined") {
+        payload["height"] = height;
+      }
+      const uri = new URL(this.client.config.endpoint + apiPath);
 
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
 
-            payload['project'] = this.client.config.project;
-            for (const [key, value] of Object.entries(Service.flatten(payload))) {
-                uri.searchParams.append(key, value);
-            }
+      payload["project"] = this.client.config.project;
+      for (const [key, value] of Object.entries(Service.flatten(payload))) {
+        uri.searchParams.append(key, value);
+      }
 
-            payload['project'] = this.client.config.project;
+      payload["project"] = this.client.config.project;
 
-            return uri.toString();
-        });
-    }
-    /**
+      return uri.toString();
+    });
+  }
+  /**
      * Get user initials
      *
      * Use this endpoint to show your user initials avatar icon on your website or app. By default, this route will try to print your logged-in user name or email initials. You can also overwrite the user name if you pass the &#039;name&#039; parameter. If no name is given and no user is logged, an empty avatar will be returned.
@@ -247,39 +266,44 @@ When one dimension is specified and the other is 0, the image is scaled with pre
      * @param {string} background
      * @returns {string}
      */
-    getInitials(name?: string, width?: number, height?: number, background?: string): ResponseType<T, string> {
-        return this.safeResponse(() => {
-            const apiPath = '/avatars/initials';
-            const payload: Payload = {};
-            if (typeof name !== 'undefined') {
-                payload['name'] = name;
-            }
-            if (typeof width !== 'undefined') {
-                payload['width'] = width;
-            }
-            if (typeof height !== 'undefined') {
-                payload['height'] = height;
-            }
-            if (typeof background !== 'undefined') {
-                payload['background'] = background;
-            }
-            const uri = new URL(this.client.config.endpoint + apiPath);
+  getInitials(
+    name?: string,
+    width?: number,
+    height?: number,
+    background?: string,
+  ): ResponseType<T, string> {
+    return this.safeResponse(() => {
+      const apiPath = "/avatars/initials";
+      const payload: Payload = {};
+      if (typeof name !== "undefined") {
+        payload["name"] = name;
+      }
+      if (typeof width !== "undefined") {
+        payload["width"] = width;
+      }
+      if (typeof height !== "undefined") {
+        payload["height"] = height;
+      }
+      if (typeof background !== "undefined") {
+        payload["background"] = background;
+      }
+      const uri = new URL(this.client.config.endpoint + apiPath);
 
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
 
-            payload['project'] = this.client.config.project;
-            for (const [key, value] of Object.entries(Service.flatten(payload))) {
-                uri.searchParams.append(key, value);
-            }
+      payload["project"] = this.client.config.project;
+      for (const [key, value] of Object.entries(Service.flatten(payload))) {
+        uri.searchParams.append(key, value);
+      }
 
-            payload['project'] = this.client.config.project;
+      payload["project"] = this.client.config.project;
 
-            return uri.toString();
-        });
-    }
-    /**
+      return uri.toString();
+    });
+  }
+  /**
      * Get QR code
      *
      * Converts a given plain text to a QR code image. You can use the query parameters to change the size and style of the resulting image.
@@ -291,48 +315,59 @@ When one dimension is specified and the other is 0, the image is scaled with pre
      * @param {boolean} download
      * @returns {string}
      */
-    getQR(text: string, size?: number, margin?: number, download?: boolean): ResponseType<T, string> {
-        return this.safeResponse(() => {
-            if (typeof text === 'undefined') {
-                throw new NuvixException('Missing required parameter: "text"');
-            }
-            const apiPath = '/avatars/qr';
-            const payload: Payload = {};
-            if (typeof text !== 'undefined') {
-                payload['text'] = text;
-            }
-            if (typeof size !== 'undefined') {
-                payload['size'] = size;
-            }
-            if (typeof margin !== 'undefined') {
-                payload['margin'] = margin;
-            }
-            if (typeof download !== 'undefined') {
-                payload['download'] = download;
-            }
-            const uri = new URL(this.client.config.endpoint + apiPath);
+  getQR(
+    text: string,
+    size?: number,
+    margin?: number,
+    download?: boolean,
+  ): ResponseType<T, string> {
+    return this.safeResponse(() => {
+      if (typeof text === "undefined") {
+        throw new NuvixException('Missing required parameter: "text"');
+      }
+      const apiPath = "/avatars/qr";
+      const payload: Payload = {};
+      if (typeof text !== "undefined") {
+        payload["text"] = text;
+      }
+      if (typeof size !== "undefined") {
+        payload["size"] = size;
+      }
+      if (typeof margin !== "undefined") {
+        payload["margin"] = margin;
+      }
+      if (typeof download !== "undefined") {
+        payload["download"] = download;
+      }
+      const uri = new URL(this.client.config.endpoint + apiPath);
 
-            const apiHeaders: { [header: string]: string } = {
-                'content-type': 'application/json',
-            }
+      const apiHeaders: { [header: string]: string } = {
+        "content-type": "application/json",
+      };
 
-            payload['project'] = this.client.config.project;
-            for (const [key, value] of Object.entries(Service.flatten(payload))) {
-                uri.searchParams.append(key, value);
-            }
+      payload["project"] = this.client.config.project;
+      for (const [key, value] of Object.entries(Service.flatten(payload))) {
+        uri.searchParams.append(key, value);
+      }
 
-            payload['project'] = this.client.config.project;
+      payload["project"] = this.client.config.project;
 
-            return uri.toString();
-        });
+      return uri.toString();
+    });
+  }
+
+  private safeResponse<R>(callback: () => R): ResponseType<T, R> {
+    try {
+      const result = callback();
+      return { data: result, error: null } as ResponseType<T, R>;
+    } catch (error: any) {
+      return {
+        data: null,
+        error:
+          error instanceof NuvixException
+            ? error
+            : new NuvixException(error.message),
+      } as ResponseType<T, R>;
     }
-
-    private safeResponse<R>(callback: () => R): ResponseType<T, R> {
-        try {
-            const result = callback();
-            return { data: result, error: null } as ResponseType<T, R>;
-        } catch (error: any) {
-            return { data: null, error: error instanceof NuvixException ? error : new NuvixException(error.message) } as ResponseType<T, R>;
-        }
-    }
+  }
 }
