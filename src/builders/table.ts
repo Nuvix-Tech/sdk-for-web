@@ -2,7 +2,6 @@ import type { Client } from "../client";
 import { DatabaseTypes } from "./types";
 import { NuvixException } from "../error";
 
-
 export type NuvqlOperator =
   | "eq"
   | "neq"
@@ -636,10 +635,8 @@ export class TableQueryBuilder<
         TSchema,
         TSchema["Tables"][TJoinName]["Row"],
         TTable,
-        // When joining, the nested builder doesn't inherit the parent's joined tables
-        // unless explicitly needed for nested join conditions against previous joins.
-        // For simplicity and to avoid circularity, it starts with an empty joinedTables for itself.
-        {}
+        // Pass parent's TJoinedTables to the nested builder
+        TJoinedTables
       >,
     ) => any,
   ): TableQueryBuilder<
@@ -656,11 +653,11 @@ export class TableQueryBuilder<
       >
     >,
     TParentTable,
-    AddJoinedTableWithOptions<
+    TJoinedTables & AddJoinedTableWithOptions<
       TJoinedTables,
       TJoinName,
       TSchema["Tables"][TJoinName],
-      { table: TJoinName; type: "inner"; shape: "many" }
+      { table: TJoinName; type: "inner", shape: "many" }
     >
   >;
 
@@ -673,7 +670,8 @@ export class TableQueryBuilder<
         TSchema,
         TSchema["Tables"][TJoinOptions["table"]]["Row"],
         TTable,
-        {}
+        // Pass parent's TJoinedTables to the nested builder
+        TJoinedTables
       >,
     ) => any,
   ): TableQueryBuilder<
@@ -719,6 +717,10 @@ export class TableQueryBuilder<
       joinOptions: options,
       parentTableName: this.config.tableName,
     });
+
+    // Copy joined tables context to nested filter
+    // This is crucial for runtime behavior to match the type inference
+    joinBuilder.joinedTables = this.joinedTables;
 
     // Call the callback to build the join condition
     const joinQuery = callback(joinBuilder);
@@ -1117,8 +1119,8 @@ export class TableQueryBuilder<
   // Helper method to access joined table columns with type safety
   getJoinedTableColumns<TJoinName extends keyof TJoinedTables>(
     joinName: TJoinName,
-  ): TJoinedTables[TJoinName] extends DatabaseTypes.GenericTable
-    ? TableColumns<TJoinedTables[TJoinName]>[]
+  ): TJoinedTables[TJoinName] extends { table: infer JTable extends DatabaseTypes.GenericTable }
+    ? TableColumns<JTable>[]
     : never {
     // This is a runtime helper - actual column names would come from schema
     return [] as any;
