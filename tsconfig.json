@@ -18,6 +18,7 @@
         "rootDir": "src",
         "skipLibCheck": true,
         "strict": true,
+        "module": "esnext",
         "target": "es2024",
         "traceResolution": false,
         "paths": {
