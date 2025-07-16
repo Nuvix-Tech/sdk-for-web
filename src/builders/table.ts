@@ -1,6 +1,7 @@
 import type { Client } from "../client";
 import { DatabaseTypes } from "./types";
-import { Cast, Column, column, ColumnBuilder } from "./utils";
+
+// ============ CORE TYPES ============
 
 export type NuvqlOperator =
     | 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte'
@@ -24,40 +25,641 @@ export interface NuvqlLogicalCondition {
 
 export type NuvqlCondition = NuvqlFilterCondition | NuvqlLogicalCondition;
 
-type LogicalFilter<TableQueryBuilder> = Omit<TableQueryBuilder, 'select'>;
-type Filter<TableQueryBuilder, Sub extends boolean = false> = Sub extends true ? Omit<TableQueryBuilder, 'select'> : TableQueryBuilder;
+// ============ COLUMN REFERENCE TYPES ============
 
-type RawColumn<C extends string, A extends unknown> = A extends string ? `${A}:${C}` | `${A}:${C}::${Cast}` : `${C}::${Cast}`
+// Column reference for type-safe cross-column comparisons
+export type ColumnReference<T extends DatabaseTypes.GenericTable, K extends TableColumns<T>> =
+    `"${string & K}"`;
 
-export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.GenericTable, SchemasTypes = unknown, SelectTyeps = Table['Row'], Sub extends boolean = false> {
-    private client: T;
+// For join references - allows referencing columns from other tables
+export type JoinColumnReference<TSchema extends DatabaseTypes.GenericSchema> =
+    `"${string}.${string}"`;
+
+// Cast types for PostgreSQL casting
+export type Cast =
+    | 'text' | 'varchar' | 'char'
+    | 'int' | 'integer' | 'bigint' | 'smallint'
+    | 'float' | 'real' | 'double' | 'numeric' | 'decimal'
+    | 'boolean' | 'bool'
+    | 'date' | 'time' | 'timestamp' | 'timestamptz'
+    | 'json' | 'jsonb'
+    | 'uuid'
+    | string; // Allow custom casts
+
+// ============ COLUMN BUILDER ============
+
+export class ColumnBuilder<
+    TColumn extends string = string,
+    TAlias extends string | unknown = unknown,
+    TCast extends Cast | unknown = unknown
+> {
+    private column: TColumn;
+    private alias?: TAlias;
+    private castType?: TCast;
+
+    constructor(column: TColumn) {
+        this.column = column;
+    }
+
+    as<A extends string>(alias: A): ColumnBuilder<TColumn, A, TCast> {
+        const builder = new ColumnBuilder(this.column) as any;
+        builder.alias = alias;
+        builder.castType = this.castType;
+        return builder;
+    }
+
+    cast<C extends Cast>(castType: C): ColumnBuilder<TColumn, TAlias, C> {
+        const builder = new ColumnBuilder(this.column) as any;
+        builder.alias = this.alias;
+        builder.castType = castType;
+        return builder;
+    }
+
+    toString(): string {
+        let result = this.column;
+        if (this.alias && typeof this.alias === 'string') {
+            result = `${this.alias}:${result}` as any;
+        }
+        if (this.castType && typeof this.castType === 'string') {
+            result = `${result}::${this.castType}` as any;
+        }
+        return result;
+    }
+
+    // Internal getters for type extraction
+    getColumn(): TColumn { return this.column; }
+    getAlias(): TAlias { return this.alias as TAlias; }
+    getCast(): TCast { return this.castType as TCast; }
+}
+
+// Helper function to create column builders
+export function column<T extends string>(name: T): ColumnBuilder<T> {
+    return new ColumnBuilder(name);
+}
+
+// Helper function to create JSON path selections
+export function jsonPath<
+    TTable extends DatabaseTypes.GenericTable,
+    TColumn extends string & TableColumns<TTable>,
+    TPath extends string
+>(
+    column: TColumn,
+    path: TPath
+): `${TColumn}->${TPath}` {
+    return `${column}->${path}` as const;
+}
+
+// Helper function to create aliased JSON path selections
+export function aliasedJsonPath<
+    TTable extends DatabaseTypes.GenericTable,
+    TColumn extends string & TableColumns<TTable>,
+    TPath extends string,
+    TAlias extends string
+>(
+    alias: TAlias,
+    column: TColumn,
+    path: TPath
+): `${TAlias}:${TColumn}->${TPath}` {
+    return `${alias}:${column}->${path}` as const;
+}
+
+// ============ TYPE UTILITIES ============
+
+// Extract column names from table type
+type TableColumns<T extends DatabaseTypes.GenericTable> = keyof T['Row'];
+
+// Check if a type is a valid column
+type IsValidColumn<T, K> = K extends keyof T ? true : false;
+
+// Get column type from table
+type ColumnType<T extends DatabaseTypes.GenericTable, K extends TableColumns<T>> = T['Row'][K];
+
+// Value type validation for operators
+type ValidOperatorValue<T, Op extends NuvqlOperator> =
+    Op extends 'in' | 'nin' ? T[] :
+    Op extends 'between' | 'nbetween' ? [T, T] :
+    Op extends 'is' | 'isnot' ? T | null | 'null' | 'not_null' | boolean :
+    Op extends 'like' | 'ilike' | 'contains' | 'startswith' | 'endswith' ? string :
+    T;
+
+// ============ SELECTION TYPES ============
+
+// JSON path extraction types
+type JsonPath<T extends string> = T extends `${infer Start}->${infer Rest}`
+    ? Rest extends `${infer Next}->${infer Further}`
+    ? `${Start}_${JsonPath<`${Next}->${Further}`>}`
+    : `${Start}_${Rest}`
+    : T;
+
+// Convert JSON path to column name
+type JsonPathToColumn<T extends string> = JsonPath<T>;
+
+// Extract JSON value type (simplified - in real implementation would need deeper inference)
+type JsonValueType<
+    TTable extends DatabaseTypes.GenericTable,
+    TColumn extends TableColumns<TTable>,
+    TPath extends string
+> = ColumnType<TTable, TColumn> extends Record<string, any>
+    ? any // Would need deeper JSON type inference here
+    : ColumnType<TTable, TColumn> extends string
+    ? any // JSON stored as string
+    : unknown;
+
+// Enhanced column selection types  
+type SelectionInput<TTable extends DatabaseTypes.GenericTable> =
+    | TableColumns<TTable>                                           // Simple column: 'name'
+    | `${string}:${string & TableColumns<TTable>}`                   // Aliased: 'full_name:name'
+    | `${string & TableColumns<TTable>}::${Cast}`                    // Cast: 'age::text'
+    | `${string}:${string & TableColumns<TTable>}::${Cast}`          // Alias + Cast: 'age_text:age::text'
+    | `${string & TableColumns<TTable>}->${string}`                  // JSON path: 'metadata->name'
+    | `${string}:${string & TableColumns<TTable>}->${string}`        // Alias + JSON: 'user_name:metadata->name'
+    | ColumnBuilder<any, any, any>                                   // Column builder
+    | Record<string, TableColumns<TTable> | `${string & TableColumns<TTable>}->${string}`>; // Object alias
+
+// Raw column with alias and cast
+type RawColumn<C extends string, A extends string | unknown = unknown> =
+    A extends string
+    ? `${A}:${C}` | `${A}:${C}::${Cast}`
+    : `${C}::${Cast}`;
+
+// Column alias mapping
+type AliasMapping<T extends Record<string, any>> = {
+    [K in keyof T as K extends string ? K : never]: T[K] extends string
+    ? T[K] extends `${infer Col}->${infer Path}`
+    ? any // JSON path result
+    : T[K]
+    : T[K];
+};
+
+// Enhanced selection type extraction
+type ExtractSelectionType<
+    T extends DatabaseTypes.GenericTable,
+    Input
+> = Input extends ColumnBuilder<infer C, infer A, any>
+    ? A extends string
+    ? { [K in A]: C extends TableColumns<T> ? ColumnType<T, C> : unknown }
+    : C extends TableColumns<T>
+    ? { [K in C]: ColumnType<T, C> }
+    : unknown
+    : Input extends Record<string, infer V>
+    ? {
+        [K in keyof Input as K extends string ? K : never]:
+        Input[K] extends `${infer Col}->${infer Path}`
+        ? Col extends TableColumns<T>
+        ? JsonValueType<T, Col, Path>
+        : unknown
+        : Input[K] extends TableColumns<T>
+        ? ColumnType<T, Input[K]>
+        : unknown
+    }
+    : Input extends `${infer A}:${infer Rest}`
+    ? Rest extends `${infer Col}->${infer Path}`
+    ? Col extends TableColumns<T>
+    ? { [K in A]: JsonValueType<T, Col, Path> }
+    : unknown
+    : Rest extends `${infer Col}::${Cast}`
+    ? Col extends TableColumns<T>
+    ? { [K in A]: ColumnType<T, Col> }
+    : unknown
+    : Rest extends TableColumns<T>
+    ? { [K in A]: ColumnType<T, Rest> }
+    : unknown
+    : Input extends `${infer Col}->${infer Path}`
+    ? Col extends TableColumns<T>
+    ? { [K in JsonPathToColumn<`${Col}_${JsonPath<Path>}`>]: JsonValueType<T, Col, Path> }
+    : unknown
+    : Input extends `${infer C}::${Cast}`
+    ? C extends TableColumns<T>
+    ? { [K in C]: ColumnType<T, C> }
+    : unknown
+    : Input extends TableColumns<T>
+    ? { [K in Input]: ColumnType<T, Input> }
+    : unknown;
+
+// Improved merge selections with proper intersection
+type MergeSelections<T extends readonly Record<string, any>[]> =
+    T extends readonly [infer First, ...infer Rest]
+    ? First extends Record<string, any>
+    ? Rest extends readonly Record<string, any>[]
+    ? First & MergeSelections<Rest>
+    : First
+    : Rest extends readonly Record<string, any>[]
+    ? MergeSelections<Rest>
+    : {}
+    : {};
+
+// Helper for selection validation
+type ValidateSelection<
+    TTable extends DatabaseTypes.GenericTable,
+    TSelection
+> = TSelection extends TableColumns<TTable>
+    ? TSelection
+    : TSelection extends `${infer Col}->${string}`
+    ? Col extends TableColumns<TTable>
+    ? TSelection
+    : `Error: Column '${Col}' does not exist`
+    : TSelection extends `${string}:${infer Rest}`
+    ? Rest extends TableColumns<TTable>
+    ? TSelection
+    : Rest extends `${infer Col}->${string}`
+    ? Col extends TableColumns<TTable>
+    ? TSelection
+    : `Error: Column '${Col}' does not exist`
+    : Rest extends `${infer Col}::${Cast}`
+    ? Col extends TableColumns<TTable>
+    ? TSelection
+    : `Error: Column '${Col}' does not exist`
+    : `Error: Invalid selection format`
+    : TSelection extends ColumnBuilder<any, any, any>
+    ? TSelection
+    : TSelection extends Record<string, any>
+    ? TSelection
+    : `Error: Invalid selection type`;
+
+// Helper type to convert tuple to merged object type
+type TupleToIntersection<T extends readonly any[]> = {
+    [K in keyof T]: T[K] extends Record<string, any> ? T[K] : never;
+} extends readonly (infer U)[] ?
+    U extends Record<string, any> ? U : never : never;
+
+// ============ JOIN TYPES ============
+
+type FlattenJoin = {
+    flatten: true;
+    type?: 'left' | 'inner' | 'right' | 'full';
+};
+
+type LiteralJoin = {
+    type?: 'left' | 'inner';
+    shape?: 'one' | 'many';
+};
+
+type JoinOptions<T extends string = string> = {
+    table: T;
+    as?: string;
+} & (FlattenJoin | LiteralJoin);
+
+// Extract joined table type
+type ExtractJoinedType<
+    Schema extends DatabaseTypes.GenericSchema,
+    JoinOpts extends JoinOptions,
+    SelectedType
+> = JoinOpts extends { flatten: true }
+    ? SelectedType  // Flattened joins merge into parent
+    : JoinOpts extends { as: infer Alias }
+    ? Alias extends string
+    ? JoinOpts extends { shape: 'one' }
+    ? { [K in Alias]: SelectedType }
+    : { [K in Alias]: SelectedType[] }
+    : JoinOpts extends { shape: 'one' }
+    ? SelectedType
+    : SelectedType[]
+    : JoinOpts extends { shape: 'one' }
+    ? SelectedType
+    : SelectedType[];
+
+// ============ FILTER CHAIN TYPES ============
+
+// Base filter interface for method chaining
+interface BaseFilter<
+    TClient extends Client,
+    TTable extends DatabaseTypes.GenericTable,
+    TSchema extends DatabaseTypes.GenericSchema,
+    TResult,
+    TIsSubquery extends boolean = false
+> {
+    // Comparison operators
+    eq<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    neq<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    gt<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    gte<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    lt<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    lte<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    // Text operators (only for string columns)
+    like<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> extends string ? string : never
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    ilike<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> extends string ? string : never
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    contains<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> extends string ? string : never
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    startswith<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> extends string ? string : never
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    endswith<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> extends string ? string : never
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    // Array operators
+    in<K extends TableColumns<TTable>>(
+        column: K,
+        values: ColumnType<TTable, K>[]
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    nin<K extends TableColumns<TTable>>(
+        column: K,
+        values: ColumnType<TTable, K>[]
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    // Range operators
+    between<K extends TableColumns<TTable>>(
+        column: K,
+        min: ColumnType<TTable, K>,
+        max: ColumnType<TTable, K>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    nbetween<K extends TableColumns<TTable>>(
+        column: K,
+        min: ColumnType<TTable, K>,
+        max: ColumnType<TTable, K>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    // Null operators
+    is<K extends TableColumns<TTable>>(
+        column: K,
+        value: null | boolean | 'null' | 'not_null'
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    isnot<K extends TableColumns<TTable>>(
+        column: K,
+        value: null | boolean | 'null' | 'not_null'
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    // Convenience methods
+    isNull<K extends TableColumns<TTable>>(
+        column: K
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    isNotNull<K extends TableColumns<TTable>>(
+        column: K
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    // Logical operators
+    and(
+        callback: (
+            filter: QueryFilter<TClient, TTable, TSchema, TResult, true>
+        ) => QueryFilter<TClient, TTable, TSchema, TResult, true>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    or(
+        callback: (
+            filter: QueryFilter<TClient, TTable, TSchema, TResult, true>
+        ) => QueryFilter<TClient, TTable, TSchema, TResult, true>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    not(
+        callback: (
+            filter: QueryFilter<TClient, TTable, TSchema, TResult, true>
+        ) => QueryFilter<TClient, TTable, TSchema, TResult, true>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+    // Internal method for retrieving conditions
+    getConditions(): NuvqlCondition[];
+}
+
+// Query filter type (used in subqueries)
+type QueryFilter<
+    TClient extends Client,
+    TTable extends DatabaseTypes.GenericTable,
+    TSchema extends DatabaseTypes.GenericSchema,
+    TResult,
+    TIsSubquery extends boolean = false
+> = TIsSubquery extends true
+    ? BaseFilter<TClient, TTable, TSchema, TResult, TIsSubquery>
+    : BaseFilter<TClient, TTable, TSchema, TResult, TIsSubquery> & {
+        // Selection methods (only available on main query)
+        select(): TableQueryBuilder<TClient, TTable, TSchema, TTable['Row']>;
+        select(columns: '*'): TableQueryBuilder<TClient, TTable, TSchema, TTable['Row']>;
+        select<TSelections extends readonly any[]>(
+            ...columns: TSelections
+        ): TableQueryBuilder<
+            TClient,
+            TTable,
+            TSchema,
+            MergeSelections<{
+                readonly [K in keyof TSelections]: ExtractSelectionType<TTable, TSelections[K]>
+            } & readonly Record<string, any>[]>
+        >;
+
+        // Join methods
+        join<TJoinTable extends keyof TSchema['Tables']>(
+            table: TJoinTable,
+            callback: (
+                builder: TableQueryBuilder<TClient, TSchema['Tables'][TJoinTable], TSchema>
+            ) => QueryFilter<TClient, TSchema['Tables'][TJoinTable], TSchema, any, true>
+        ): TableQueryBuilder<
+            TClient,
+            TTable,
+            TSchema,
+            TResult & ExtractJoinedType<TSchema, { table: string & TJoinTable }, any>
+        >;
+
+        join<TJoinTable extends keyof TSchema['Tables']>(
+            options: JoinOptions<TJoinTable & string>,
+            callback: (
+                builder: TableQueryBuilder<TClient, TSchema['Tables'][TJoinTable], TSchema>
+            ) => QueryFilter<TClient, TSchema['Tables'][TJoinTable], TSchema, any, true>
+        ): TableQueryBuilder<
+            TClient,
+            TTable,
+            TSchema,
+            TResult & ExtractJoinedType<TSchema, JoinOptions<TJoinTable & string>, any>
+        >;
+    };
+
+// Alias for better type inference
+type TypedQueryFilter<
+    TClient extends Client,
+    TTable extends DatabaseTypes.GenericTable,
+    TSchema extends DatabaseTypes.GenericSchema,
+    TResult,
+    TIsSubquery extends boolean = false
+> = QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery>;
+
+// ============ MAIN QUERY BUILDER ============
+
+export class TableQueryBuilder<
+    TClient extends Client,
+    TTable extends DatabaseTypes.GenericTable,
+    TSchema extends DatabaseTypes.GenericSchema,
+    TResult = TTable['Row'],
+    TIsSubquery extends boolean = false
+> implements BaseFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
+    private client: TClient;
     private tableName: string;
     private schema: string;
     private selectedColumns: string[] = [];
     private conditions: NuvqlCondition[] = [];
+    private _isJoinBuilder: boolean = false;
+    private _joins: string[] = [];
+    private _joinOptions?: JoinOptions;
 
-    constructor(client: T, { tableName, schema }: { tableName: string, schema: string }) {
+    constructor(
+        client: TClient,
+        config: {
+            tableName: string;
+            schema: string;
+            isJoinBuilder?: boolean;
+            joinOptions?: JoinOptions;
+        }
+    ) {
         this.client = client;
-        this.tableName = tableName;
-        this.schema = schema;
+        this.tableName = config.tableName;
+        this.schema = config.schema;
+        this._isJoinBuilder = config.isJoinBuilder ?? false;
+        this._joinOptions = config.joinOptions;
     }
 
-    // SELECT operations with better type safety
-    select(): TableQueryBuilder<T, Table, SchemasTypes>;
-    select(columns: '*'): TableQueryBuilder<T, Table, SchemasTypes>;
-    select<K extends string & keyof Table['Row'], A extends string, _A extends unknown, __A extends unknown>
-        (...columns: (Record<A, K> | K | RawColumn<K, _A> | ColumnBuilder<K, __A, Cast>)[]):
-        TableQueryBuilder<T, Table, SchemasTypes, { Row: Omit<Table['Row'], K> & Record<A, Table['Row'][K]> & Record<_A extends string ? _A : K, Table['Row'][K]> & Record<__A extends string ? __A : K, Table['Row'][K]> }>;
-    select<K extends keyof Table['Row']>(...columns: K[]): TableQueryBuilder<T, any, SchemasTypes> {
-        this.selectedColumns = columns as string[];
+    // ============ SELECTION METHODS ============
+
+    select(): TableQueryBuilder<TClient, TTable, TSchema, TTable['Row']>;
+    select(columns: '*'): TableQueryBuilder<TClient, TTable, TSchema, TTable['Row']>;
+    select<TSelections extends readonly SelectionInput<TTable>[]>(
+        ...columns: TSelections
+    ): TableQueryBuilder<
+        TClient,
+        TTable,
+        TSchema,
+        MergeSelections<{
+            readonly [K in keyof TSelections]: ExtractSelectionType<TTable, TSelections[K]>
+        } & readonly Record<string, any>[]>
+    >;
+    select(...columns: any[]): TableQueryBuilder<TClient, TTable, TSchema, any> {
+        // Clear previous selections
+        this.selectedColumns = [];
+
+        if (columns.length === 0 || (columns.length === 1 && columns[0] === '*')) {
+            // Select all columns
+            return this as any;
+        }
+
+        columns.forEach((column) => {
+            if (column instanceof ColumnBuilder) {
+                this.selectedColumns.push(column.toString());
+            } else if (typeof column === 'object' && column !== null) {
+                // Handle alias objects like { alias: 'column' }
+                Object.entries(column).forEach(([alias, col]) => {
+                    if (typeof col === 'string') {
+                        // Check if it's a JSON path
+                        if (col.includes('->')) {
+                            // Convert JSON path: metadata->name becomes metadata_name if no alias
+                            const processedCol = `${alias}:${col}`;
+                            this.selectedColumns.push(processedCol);
+                        } else {
+                            this.selectedColumns.push(`${alias}:${col}`);
+                        }
+                    }
+                });
+            } else if (typeof column === 'string') {
+                // Handle JSON paths: convert column->path to column_path if no alias
+                if (column.includes('->') && !column.includes(':')) {
+                    const [baseCol, ...pathParts] = column.split('->');
+                    const flattenedName = `${baseCol}_${pathParts.join('_')}`;
+                    this.selectedColumns.push(`${flattenedName}:${column}`);
+                } else {
+                    this.selectedColumns.push(column);
+                }
+            } else {
+                throw new Error(
+                    'Invalid column type. Expected string, ColumnBuilder, or alias object.'
+                );
+            }
+        });
+
         return this as any;
     }
 
-    re(): SelectTyeps {
-        return {} as any;
+    // ============ JOIN METHODS ============
+
+    join<TJoinTable extends keyof TSchema['Tables']>(
+        table: TJoinTable,
+        callback: (
+            builder: TableQueryBuilder<TClient, TSchema['Tables'][TJoinTable], TSchema>
+        ) => QueryFilter<TClient, TSchema['Tables'][TJoinTable], TSchema, any, true>
+    ): TableQueryBuilder<TClient, TTable, TSchema, TResult>;
+
+    join<TJoinTable extends keyof TSchema['Tables']>(
+        options: JoinOptions<TJoinTable & string>,
+        callback: (
+            builder: TableQueryBuilder<TClient, TSchema['Tables'][TJoinTable], TSchema>
+        ) => QueryFilter<TClient, TSchema['Tables'][TJoinTable], TSchema, any, true>
+    ): TableQueryBuilder<TClient, TTable, TSchema, TResult>;
+
+    join<TJoinTable extends keyof TSchema['Tables']>(
+        tableOrOptions: TJoinTable | JoinOptions<TJoinTable & string>,
+        callback: (
+            builder: TableQueryBuilder<TClient, TSchema['Tables'][TJoinTable], TSchema>
+        ) => QueryFilter<TClient, TSchema['Tables'][TJoinTable], TSchema, any, true>
+    ): TableQueryBuilder<TClient, TTable, TSchema, TResult> {
+        let table: TJoinTable;
+        let options: JoinOptions<string>;
+
+        if (typeof tableOrOptions === 'object') {
+            table = tableOrOptions.table as TJoinTable;
+            options = tableOrOptions;
+        } else {
+            table = tableOrOptions;
+            options = { table: table as string };
+        }
+
+        const joinBuilder = new TableQueryBuilder<TClient, TSchema['Tables'][TJoinTable], TSchema>(
+            this.client,
+            {
+                tableName: table as string,
+                schema: this.schema,
+                isJoinBuilder: true,
+                joinOptions: options
+            }
+        );
+
+        const joinQuery = callback(joinBuilder);
+        const joinString = joinQuery.toString();
+        this._joins.push(joinString);
+
+        return this;
     }
 
-    eq<C extends keyof Table['Row']>(column: C, value: Table['Row'][C]): Filter<typeof this, Sub> {
+    // ============ COMPARISON OPERATORS ============
+
+    eq<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> | ColumnReference<TTable, K>
+    ): TypedQueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'eq',
@@ -66,7 +668,10 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    neq(column: string, value: any): Filter<typeof this, Sub> {
+    neq<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> | ColumnReference<TTable, K>
+    ): TypedQueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'neq',
@@ -75,7 +680,10 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    gt(column: string, value: any): Filter<typeof this, Sub> {
+    gt<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> | ColumnReference<TTable, K>
+    ): TypedQueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'gt',
@@ -84,7 +692,10 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    gte(column: string, value: any): Filter<typeof this, Sub> {
+    gte<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> | ColumnReference<TTable, K>
+    ): TypedQueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'gte',
@@ -93,7 +704,10 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    lt(column: string, value: any): Filter<typeof this, Sub> {
+    lt<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> | ColumnReference<TTable, K>
+    ): TypedQueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'lt',
@@ -102,7 +716,10 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    lte(column: string, value: any): Filter<typeof this, Sub> {
+    lte<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> | ColumnReference<TTable, K>
+    ): TypedQueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'lte',
@@ -111,8 +728,12 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    // Text operators
-    like(column: string, value: string): Filter<typeof this, Sub> {
+    // ============ TEXT OPERATORS ============
+
+    like<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> extends string ? string : never
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'like',
@@ -121,7 +742,10 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    ilike(column: string, value: string): Filter<typeof this, Sub> {
+    ilike<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> extends string ? string : never
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'ilike',
@@ -130,7 +754,10 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    contains(column: string, value: string): Filter<typeof this, Sub> {
+    contains<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> extends string ? string : never
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'contains',
@@ -139,7 +766,10 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    startswith(column: string, value: string): Filter<typeof this, Sub> {
+    startswith<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> extends string ? string : never
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'startswith',
@@ -148,7 +778,10 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    endswith(column: string, value: string): Filter<typeof this, Sub> {
+    endswith<K extends TableColumns<TTable>>(
+        column: K,
+        value: ColumnType<TTable, K> extends string ? string : never
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'endswith',
@@ -157,8 +790,12 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    // Array operators
-    in(column: string, values: any[]): Filter<typeof this, Sub> {
+    // ============ ARRAY OPERATORS ============
+
+    in<K extends TableColumns<TTable>>(
+        column: K,
+        values: ColumnType<TTable, K>[]
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'in',
@@ -166,7 +803,10 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    nin(column: string, values: any[]): Filter<typeof this, Sub> {
+    nin<K extends TableColumns<TTable>>(
+        column: K,
+        values: ColumnType<TTable, K>[]
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'nin',
@@ -174,8 +814,13 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    // Range operators
-    between(column: string, min: any, max: any): Filter<typeof this, Sub> {
+    // ============ RANGE OPERATORS ============
+
+    between<K extends TableColumns<TTable>>(
+        column: K,
+        min: ColumnType<TTable, K>,
+        max: ColumnType<TTable, K>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'between',
@@ -183,7 +828,11 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    nbetween(column: string, min: any, max: any): Filter<typeof this, Sub> {
+    nbetween<K extends TableColumns<TTable>>(
+        column: K,
+        min: ColumnType<TTable, K>,
+        max: ColumnType<TTable, K>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'nbetween',
@@ -191,8 +840,12 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    // Null/existence operators
-    is(column: string, value: null | boolean | 'null' | 'not_null'): Filter<typeof this, Sub> {
+    // ============ NULL OPERATORS ============
+
+    is<K extends TableColumns<TTable>>(
+        column: K,
+        value: null | boolean | 'null' | 'not_null'
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'is',
@@ -200,7 +853,10 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    isnot(column: string, value: null | boolean | 'null' | 'not_null'): Filter<typeof this, Sub> {
+    isnot<K extends TableColumns<TTable>>(
+        column: K,
+        value: null | boolean | 'null' | 'not_null'
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.addCondition({
             column,
             operator: 'isnot',
@@ -208,27 +864,46 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
         });
     }
 
-    // Convenience methods
-    isNull(column: string) {
+    // ============ CONVENIENCE METHODS ============
+
+    isNull<K extends TableColumns<TTable>>(
+        column: K
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.is(column, 'null');
     }
 
-    isNotNull(column: string) {
+    isNotNull<K extends TableColumns<TTable>>(
+        column: K
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.is(column, 'not_null');
     }
 
-    isEmptyString(column: string) {
+    isEmptyString<K extends TableColumns<TTable>>(
+        column: K
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
         return this.eq(column, '' as any);
     }
 
-    isNotEmptyString(column: string) {
-        return this.neq(column, '');
+    isNotEmptyString<K extends TableColumns<TTable>>(
+        column: K
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
+        return this.neq(column, '' as any);
     }
 
-    // Logical operators - Knex-like chaining
-    and(callback: (filter: LogicalFilter<TableQueryBuilder<T, Table, SchemasTypes, true>>) => LogicalFilter<TableQueryBuilder<T, Table, SchemasTypes, true>>): Filter<typeof this, Sub> {
-        const nestedFilter = callback(new TableQueryBuilder(this.client, { tableName: this.tableName, schema: this.schema }));
-        const nestedConditions = nestedFilter.getConditions();
+    // ============ LOGICAL OPERATORS ============
+
+    and(
+        callback: (
+            filter: QueryFilter<TClient, TTable, TSchema, TResult, true>
+        ) => QueryFilter<TClient, TTable, TSchema, TResult, true>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
+        const nestedFilter = new TableQueryBuilder(
+            this.client,
+            { tableName: this.tableName, schema: this.schema }
+        );
+
+        const result = callback(nestedFilter as any);
+        const nestedConditions = result.getConditions();
 
         if (nestedConditions.length > 0) {
             const andCondition: NuvqlLogicalCondition = {
@@ -237,26 +912,46 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
             };
             this.conditions.push(andCondition);
         }
-        return this;
+
+        return this as any;
     }
 
-    or(callback: (filter: LogicalFilter<TableQueryBuilder<T, Table, SchemasTypes, true>>) => LogicalFilter<TableQueryBuilder<T, Table, SchemasTypes, true>>): Filter<typeof this, Sub> {
-        const nestedFilter = callback(new TableQueryBuilder(this.client, { tableName: this.tableName, schema: this.schema }));
-        const nestedConditions = nestedFilter.getConditions();
+    or(
+        callback: (
+            filter: QueryFilter<TClient, TTable, TSchema, TResult, true>
+        ) => QueryFilter<TClient, TTable, TSchema, TResult, true>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
+        const nestedFilter = new TableQueryBuilder(
+            this.client,
+            { tableName: this.tableName, schema: this.schema }
+        );
+
+        const result = callback(nestedFilter as any);
+        const nestedConditions = result.getConditions();
 
         if (nestedConditions.length > 0) {
             const orCondition: NuvqlLogicalCondition = {
                 operator: 'or',
                 conditions: nestedConditions
             };
-            this.conditions.push(orCondition)
+            this.conditions.push(orCondition);
         }
-        return this;
+
+        return this as any;
     }
 
-    not(callback: (filter: LogicalFilter<TableQueryBuilder<T, Table, SchemasTypes, true>>) => LogicalFilter<TableQueryBuilder<T, Table, SchemasTypes, true>>): Filter<typeof this, Sub> {
-        const nestedFilter = callback(new TableQueryBuilder(this.client, { tableName: this.tableName, schema: this.schema }));
-        const nestedConditions = nestedFilter.getConditions();
+    not(
+        callback: (
+            filter: QueryFilter<TClient, TTable, TSchema, TResult, true>
+        ) => QueryFilter<TClient, TTable, TSchema, TResult, true>
+    ): QueryFilter<TClient, TTable, TSchema, TResult, TIsSubquery> {
+        const nestedFilter = new TableQueryBuilder(
+            this.client,
+            { tableName: this.tableName, schema: this.schema }
+        );
+
+        const result = callback(nestedFilter as any);
+        const nestedConditions = result.getConditions();
 
         if (nestedConditions.length > 0) {
             const notCondition: NuvqlLogicalCondition = {
@@ -265,36 +960,74 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
             };
             this.conditions.push(notCondition);
         }
-        return this;
+
+        return this as any;
     }
 
-    // Helper methods
-    private addCondition(condition: NuvqlFilterCondition) {
+    // ============ UTILITY METHODS ============
+
+    /**
+     * Get the result type (for type inference)
+     */
+    inferResult(): TResult {
+        return {} as TResult;
+    }
+
+    /**
+     * Add a condition to the query
+     */
+    private addCondition(condition: NuvqlFilterCondition): any {
         this.conditions.push(condition);
         return this;
     }
 
+    /**
+     * Check if a value is a column reference
+     */
     private isColumnReference(value: any): boolean {
         return typeof value === 'string' && value.startsWith('"') && value.endsWith('"');
     }
 
-    // Get all conditions
+    /**
+     * Get all conditions for this query
+     */
     getConditions(): NuvqlCondition[] {
         return [...this.conditions];
     }
 
     // Convert to NUVQL filter string
     toString(): string {
-        if (this.conditions.length === 0) {
-            return '';
+        let select: string;
+        let filter: string;
+        if (this.selectedColumns.length === 0) {
+            select = '*'
+        } else {
+            select = this.selectedColumns.join(',')
         }
 
         if (this.conditions.length === 1) {
-            return this.buildCondition(this.conditions[0]);
+            filter = this.buildCondition(this.conditions[0]);
+        }
+        filter = this.conditions.map(condition => this.buildCondition(condition)).join(',');
+
+        if (this._joins.length > 0) {
+            const joins = this._joins.join(',');
+            select += `,${joins}`;
         }
 
-        // Multiple conditions are implicitly ANDed
-        return this.conditions.map(condition => this.buildCondition(condition)).join(',');
+        // Fix: check if _joinOptions exists instead of _join
+        if (this._joinOptions) {
+            if (!filter) throw new Error('Filter is required in join.') // TODO: ------------
+
+            let _type: string = this._joinOptions.type ?? 'left';
+            const _flatten = ('flatten' in this._joinOptions && this._joinOptions.flatten) ? '...' : '';
+            const _shape: string = !_flatten && 'shape' in this._joinOptions ? `.${this._joinOptions.shape ?? 'many'}` : ''
+            const _alias = this._joinOptions.as ? `${this._joinOptions.as}:` : '';
+
+            return `${_flatten}${_alias}${this.tableName}${_shape}{${filter},$.join(${_type})}(${select})`;
+        }
+
+        return `select=${select}&filter=${filter}`;
     }
 
     private buildCondition(condition: NuvqlCondition): string {
@@ -418,7 +1151,7 @@ export class TableQueryBuilder<T extends Client, Table extends DatabaseTypes.Gen
 }
 
 interface Users {
-    Row: { name: string, sduud: "gello", id: number };
+    Row: { name: string, sduud: "gello", id: number, age: number, role: string, created_at: Date, blog_id: number };
     Insert: { name: string, sduud: "gello", id: number };
     Update: { name: string, sduud: "gello", id: number };
     Delete: { name: string, sduud: "gello", id: number }
@@ -429,27 +1162,26 @@ const queryBuilder = new TableQueryBuilder<any, Users, any>({} as Client, { tabl
 
 const res = queryBuilder
     .select(
-        '_uu:id', 'name', 'alias:sduud::text',
+        'id', 'name', 'age:age::text', 'name->suu',
         { io: "name", uu: "sduud", kk: "id" },
         column('name').as('rr').cast('text'),
         column('id').as('$id'),
     )
-    // s => s('').select().filter(),
-    .or(topOr => topOr
-        .eq('sduud', 'gello')
-        .or(nestOr =>
-            nestOr.gt('age', 18)
-                .ilike('name', '%john%')
-        )
-        .not(notFilter =>
-            notFilter.in('role', ['admin', 'user'])
-        )
-        .gt('age', 18)
-        .ilike('name', '%john%')
-        .in('role', ['admin', 'user'])
-        .between('created_at', '2023-01-01', '2023-12-31')
-    ).re()
+    .join({ table: "blogs", as: 'user_blogs', flatten: true, type: 'full' }, $ => $.select('*').eq('id', '"blog_id"'))
+    .join("comments", $ => $.select('*').eq('id', '"blog_id"'))
+    .eq('sduud', 'gello')
+    .or($ =>
+        $.gt('age', 18)
+            .ilike('name', '%john%')
+    )
+    .not($ =>
+        $.in('role', ['admin', 'user'])
+    )
+    .gt('age', 18)
+    .ilike('name', '%john%')
+    .in('role', ['admin', 'user'])
+    .between('created_at', new Date('2023-01-01'), new Date('2023-12-31'))
+    .toString();
 
-    res.Row
 
 console.log(res); // For debugging, you can implement a toString method to see the query structure
