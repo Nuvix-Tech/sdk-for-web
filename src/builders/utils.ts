@@ -1,45 +1,165 @@
-export const cast = ["text", "integere"] as const;
-export type Cast = (typeof cast)[number];
+import { NuvixException } from "error";
+
+export type Cast =
+  | "text"
+  | "varchar"
+  | "char"
+  | "int"
+  | "integer"
+  | "bigint"
+  | "smallint"
+  | "float"
+  | "real"
+  | "double"
+  | "numeric"
+  | "decimal"
+  | "boolean"
+  | "bool"
+  | "date"
+  | "time"
+  | "timestamp"
+  | "timestamptz"
+  | "json"
+  | "jsonb"
+  | "uuid"
+  | string;
+
+export type ValidateCast<TColumnType, TCast extends Cast> = TCast extends
+  | "text"
+  | "varchar"
+  | "char"
+  ? string
+  : TCast extends
+        | "int"
+        | "integer"
+        | "bigint"
+        | "smallint"
+        | "float"
+        | "real"
+        | "double"
+        | "numeric"
+        | "decimal"
+    ? number
+    : TCast extends "boolean" | "bool"
+      ? boolean
+      : TCast extends "date" | "time" | "timestamp" | "timestamptz"
+        ? Date | string
+        : TCast extends "json" | "jsonb"
+          ? object | string
+          : TCast extends "uuid"
+            ? string
+            : TColumnType;
 
 export class ColumnBuilder<
-  C extends string,
-  A extends unknown,
-  CA extends unknown = Cast,
+  TColumn extends string = string,
+  TAlias extends string | unknown = unknown,
+  TCast extends Cast | unknown = unknown,
+  TColumnType = unknown,
 > {
-  private _as?: string;
-  private _cast?: string;
+  private readonly _column: TColumn;
+  private readonly _alias?: TAlias;
+  private readonly _castType?: TCast;
+  private readonly _columnType?: TColumnType;
+  private readonly _frozen: boolean = false;
 
-  constructor(private col: C) {}
+  constructor(
+    column: TColumn,
+    options: {
+      alias?: TAlias;
+      castType?: TCast;
+      columnType?: TColumnType;
+      frozen?: boolean;
+    } = {},
+  ) {
+    this._column = column;
+    this._alias = options.alias;
+    this._castType = options.castType;
+    this._columnType = options.columnType;
+    this._frozen = options.frozen ?? false;
 
-  as<_A extends string>(as: _A): ColumnBuilder<C, _A, CA> {
-    this._as = as;
-    return this as any;
+    if (this._frozen) {
+      Object.freeze(this);
+    }
   }
 
-  cast<_CA extends string>(cast: _CA): ColumnBuilder<C, A, _CA> {
-    this._cast = cast;
-    return this as any;
+  as<A extends string>(
+    alias: A,
+  ): ColumnBuilder<TColumn, A, TCast, TColumnType> {
+    this._validateNotFrozen();
+    return new ColumnBuilder(this._column, {
+      alias,
+      castType: this._castType,
+      columnType: this._columnType,
+      frozen: false,
+    });
   }
 
-  toString(): A extends string
-    ? CA extends Cast
-      ? `${A}:${C}::${CA}`
-      : `${A}:${C}`
-    : CA extends Cast
-      ? `${C}::${CA}`
-      : C {
-    const _as = this._as !== undefined ? `${this._as}:` : "";
-    const _cast = this._cast !== undefined ? `::${this._cast}` : "";
-    return `${_as}${this.col}${_cast}` as any;
+  cast<C extends Cast>(
+    castType: C,
+  ): ColumnBuilder<TColumn, TAlias, C, ValidateCast<TColumnType, C>> {
+    this._validateNotFrozen();
+    this._validateCastCompatibility(castType);
+    return new ColumnBuilder(this._column, {
+      alias: this._alias,
+      castType,
+      columnType: {} as ValidateCast<TColumnType, C>,
+      frozen: true, // Freeze after cast as type is now "finalized"
+    });
+  }
+
+  toString(): string {
+    let result = this._column as string;
+    if (this._alias && typeof this._alias === "string") {
+      result = `${result} as "${this._alias}"`;
+    }
+    if (this._castType && typeof this._castType === "string") {
+      result = `${result}::${this._castType}`;
+    }
+    return result;
+  }
+
+  getResultType(): TCast extends Cast
+    ? ValidateCast<TColumnType, TCast>
+    : TColumnType {
+    return {} as any; // Runtime value, type is for inference
+  }
+
+  getColumn(): TColumn {
+    return this._column;
+  }
+  getAlias(): TAlias {
+    return this._alias as TAlias;
+  }
+  getCast(): TCast {
+    return this._castType as TCast;
+  }
+  getColumnType(): TColumnType {
+    return this._columnType as TColumnType;
+  }
+
+  private _validateNotFrozen(): void {
+    if (this._frozen) {
+      throw new NuvixException(
+        "Cannot modify a frozen ColumnBuilder. Use the returned instance from method calls.",
+        400,
+        "FROZEN_COLUMN_BUILDER",
+      );
+    }
+  }
+
+  private _validateCastCompatibility(castType: Cast): void {
+    if (!castType || typeof castType !== "string") {
+      throw new NuvixException(
+        `Invalid cast type: ${castType}`,
+        400,
+        "INVALID_CAST_TYPE",
+      );
+    }
   }
 }
 
-export function column<T extends string>(col: T) {
-  return new ColumnBuilder(col);
+export function column<TColumn extends string>(
+  name: TColumn,
+): ColumnBuilder<TColumn, unknown, unknown, unknown> {
+  return new ColumnBuilder(name);
 }
-
-export type Column<
-  T extends string,
-  A extends unknown,
-  Ca extends Cast = Cast,
-> = ColumnBuilder<T, A, Ca>;
