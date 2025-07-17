@@ -48,19 +48,19 @@ export type QueryBuildError<T extends string> = {
 
 // ============ UTILITY TYPES ============
 
-type TableColumns<T extends DatabaseTypes.GenericTable> = keyof T["Row"];
+type TableColumns<T extends TableOrView> = keyof T["Row"];
 
 type ColumnType<
-  T extends DatabaseTypes.GenericTable,
+  T extends TableOrView,
   K extends TableColumns<T>,
 > = T["Row"][K];
 
 // Helper type for getting all available columns from current table + joined tables
 type AllAvailableColumns<
-  TTable extends DatabaseTypes.GenericTable,
+  TTable extends TableOrView,
   TJoinedTables extends Record<
     string,
-    { table: DatabaseTypes.GenericTable; options: JoinOptions<string> }
+    { table: TableOrView; options: JoinOptions<string> }
   > = {},
 > =
   | TableColumns<TTable>
@@ -74,7 +74,7 @@ type ColumnValueOrReference<
   TSchema extends DatabaseTypes.GenericSchema,
   TJoinedTables extends Record<
     string,
-    { table: DatabaseTypes.GenericTable; options: JoinOptions<string> }
+    { table: TableOrView; options: JoinOptions<string> }
   > = {},
 > =
   | TColumnType
@@ -103,10 +103,10 @@ type JsonPathString<T extends string, N extends number = 5> = N extends 0
       | `${T}->${JsonPathSegment}${JsonPathString<string, Prev[N]>}`;
 
 type JsonPath<
-  TTable extends DatabaseTypes.GenericTable,
+  TTable extends TableOrView,
   TJoinedTables extends Record<
     string,
-    { table: DatabaseTypes.GenericTable; options: JoinOptions<string> }
+    { table: TableOrView; options: JoinOptions<string> }
   > = {},
 > =
   | JsonPathString<TableColumns<TTable> & string>
@@ -121,18 +121,12 @@ export type JsonPathToFieldName<T extends string> =
         JsonPathToFieldName<`${Head}_${JsonPathToFieldName<Tail>}`>
       : T;
 
-// TODO: #remove
-function jsonPathToFieldName(path: string): string {
-  // Replace all "->" and "->>" with "_"
-  return path.replace(/->>?/g, "_");
-}
-
 // Helper to resolve column type from joined tables
 type ResolveColumnType<
-  TTable extends DatabaseTypes.GenericTable,
+  TTable extends TableOrView,
   TJoinedTables extends Record<
     string,
-    { table: DatabaseTypes.GenericTable; options: JoinOptions<string> }
+    { table: TableOrView; options: JoinOptions<string> }
   >,
   Col extends string,
 > =
@@ -153,12 +147,12 @@ type JsonValueType<TColType, TPath extends string> =
       : unknown // For deep paths beyond first level or unknown keys
     : unknown; // If not an object, JSON path extraction results in unknown
 
-// Improved selection input type with better support for complex selections
+// selection input type for complex selections
 type SelectionInput<
-  T extends DatabaseTypes.GenericTable,
+  T extends TableOrView,
   TJoinedTables extends Record<
     string,
-    { table: DatabaseTypes.GenericTable; options: JoinOptions<string> }
+    { table: TableOrView; options: JoinOptions<string> }
   > = {},
 > =
   | "*"
@@ -178,7 +172,6 @@ type SelectionInput<
   | JsonPath<T, TJoinedTables> // column->>json_path
   | `${AllAvailableColumns<T, TJoinedTables> & string}::${Cast}`; // column::cast
 
-// --- START: ADVANCED SELECTION TYPE HELPERS ---
 
 // Gets the base column from a path string, e.g., "col->a->b" -> "col"
 type GetBasePath<P extends string> = P extends `${infer Base}->${string}`
@@ -210,7 +203,7 @@ type RecursiveJsonValueType<
 
 // Resolves the final type of a column or a full JSON path
 type ResolvePathType<
-  TTable extends DatabaseTypes.GenericTable,
+  TTable extends TableOrView,
   TJoinedTables extends Record<string, any>,
   P extends string,
 > =
@@ -241,15 +234,14 @@ type ParseSelection<S extends string> = S extends `${infer Rest}::${infer C}`
     ? { Alias: Alias; Path: Path; Cast: unknown }
     : { Alias: JsonPathToFieldName<S>; Path: S; Cast: unknown };
 
-// --- END: ADVANCED SELECTION TYPE HELPERS ---
 
 type ExtractSelectionType<
-  TTable extends DatabaseTypes.GenericTable,
+  TTable extends TableOrView,
   TInput,
-  TSchema extends DatabaseTypes.GenericSchema,
+  TSchema extends DatabaseTypes.GenericSchema, // not used
   TJoinedTables extends Record<
     string,
-    { table: DatabaseTypes.GenericTable; options: JoinOptions<string> }
+    { table: TableOrView; options: JoinOptions<string> }
   > = {},
 > =
   // Case 1: ColumnBuilder
@@ -286,7 +278,7 @@ type ExtractSelectionType<
           : QueryBuildError<`Could not parse selection string: ${TInput}`>
         : QueryBuildError<"Invalid selection input">;
 
-// Improved selection merging with proper handling of overlapping keys
+// selection merging 
 type MergeSelections<T extends readonly any[]> = DatabaseTypes.SimplifyDeep<
   T extends readonly [infer First, ...infer Rest]
     ? First extends Record<string, any>
@@ -299,7 +291,7 @@ type MergeSelections<T extends readonly any[]> = DatabaseTypes.SimplifyDeep<
     : {}
 >;
 
-// ============ NEW JOIN & RESULT TYPES ============
+// ============ JOIN & RESULT TYPES ============
 
 // Utility to get the selection result from a builder instance type
 type GetSelectionResult<TBuilder> =
@@ -337,8 +329,6 @@ type CombineWithJoins<TResult, TJoinedTables> = DatabaseTypes.Prettify<
     >
 >;
 
-// ============ JOIN TYPES (Originals are mostly fine) ============
-
 type JoinType = "left" | "inner" | "right" | "full";
 
 interface FlattenJoin {
@@ -365,16 +355,18 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 
 // ============ QUERY BUILDER ============
 
+type TableOrView = DatabaseTypes.GenericTable | DatabaseTypes.GenericView | DatabaseTypes.GenericUpdatableView;
+
 export class TableQueryBuilder<
   TClient extends Client,
-  TTable extends DatabaseTypes.GenericTable,
+  TTable extends TableOrView,
   TSchema extends DatabaseTypes.GenericSchema,
   TResult = TTable["Row"],
-  TParentTable extends DatabaseTypes.GenericTable = TTable, // Not currently used, could be useful for nested queries
+  TParentTable extends TableOrView = TTable, // Not currently used, could be useful for nested queries
   TJoinedTables extends Record<
     string,
     {
-      table: DatabaseTypes.GenericTable;
+      table: TableOrView;
       options: JoinOptions<string>;
       result: any; // Tracks the selection result of the join
     }
@@ -992,7 +984,7 @@ export class TableQueryBuilder<
   getJoinedTableColumns<TJoinName extends keyof TJoinedTables>(
     joinName: TJoinName,
   ): TJoinedTables[TJoinName] extends {
-    table: infer JTable extends DatabaseTypes.GenericTable;
+    table: infer JTable extends TableOrView;
   }
     ? TableColumns<JTable>[]
     : never {

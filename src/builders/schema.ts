@@ -1,16 +1,17 @@
 import type { Client } from "../client";
 import { CollectionQueryBuilder } from "./collection";
 import { TableQueryBuilder } from "./table";
+import { DatabaseTypes } from "./types";
 
 export class SchemaQueryBuilder<
   T extends Client,
-  SchemasTypes,
-  CollectionsTypes,
+  Schema extends DatabaseTypes.GenericSchema,
+  CollectionsTypes = unknown,
 > {
   constructor(
     private client: T,
     private schema: string,
-  ) {}
+  ) { }
 
   /**
    * It is used to query a collection in the database schema.
@@ -52,9 +53,9 @@ export class SchemaQueryBuilder<
    * // perform CRUD operations on the table
    * ```
    */
-  from<Table = unknown>(tableName: string) {
-    return new TableQueryBuilder<T, Table, SchemasTypes>(this.client, {
-      tableName,
+  from<Table extends (keyof Schema['Tables'] | keyof Schema['Views'])>(tableName: Table) {
+    return new TableQueryBuilder<T, Table extends keyof Schema['Tables'] ? Schema['Tables'][Table] : Table extends keyof Schema['Views'] ? Schema['Views'][Table] : never, Schema>(this.client, {
+      tableName: tableName as string,
       schema: this.schema,
     });
   }

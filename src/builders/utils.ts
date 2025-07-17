@@ -118,25 +118,6 @@ export class ColumnBuilder<
     return result;
   }
 
-  getResultType(): TCast extends Cast
-    ? ValidateCast<TColumnType, TCast>
-    : TColumnType {
-    return {} as any; // Runtime value, type is for inference
-  }
-
-  getColumn(): TColumn {
-    return this._column;
-  }
-  getAlias(): TAlias {
-    return this._alias as TAlias;
-  }
-  getCast(): TCast {
-    return this._castType as TCast;
-  }
-  getColumnType(): TColumnType {
-    return this._columnType as TColumnType;
-  }
-
   private _validateNotFrozen(): void {
     if (this._frozen) {
       throw new NuvixException(

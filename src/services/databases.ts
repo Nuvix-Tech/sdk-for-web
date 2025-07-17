@@ -2,11 +2,12 @@ import { PromiseResponseType } from "../type";
 import { NuvixException, Client, type Payload } from "../client";
 import type { Models } from "../models";
 import { SchemaQueryBuilder } from "../builders/schema";
+import { DatabaseTypes } from "builders/types";
 
 export class Database<
-  T extends Client,
-  SchemasTypes = unknown,
-  CollectionsTypes = unknown,
+Database extends Record<string, DatabaseTypes.GenericSchema>,
+CollectionsTypes,
+T extends Client,
 > {
   client: T;
 
@@ -18,10 +19,10 @@ export class Database<
    *
    * @param schema string
    */
-  schema(schema: string) {
-    return new SchemaQueryBuilder<T, SchemasTypes, CollectionsTypes>(
+  schema<Schema extends keyof Database>(schema: Schema) {
+    return new SchemaQueryBuilder<T, Database[Schema], CollectionsTypes>(
       this.client,
-      schema,
+       schema as string,
     );
   }
 
