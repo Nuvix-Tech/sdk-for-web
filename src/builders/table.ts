@@ -65,13 +65,16 @@ type AllAvailableColumns<
 > =
   | TableColumns<TTable>
   | {
-    [K in keyof TJoinedTables]: `${string & K}.${string &
-    TableColumns<TJoinedTables[K]["table"]>}`;
+    [K in keyof TJoinedTables]: TJoinedTables[K]['options'] extends FlattenJoin
+    ? TJoinedTables[K]['options']['flatten'] extends true
+    ? `${string & K}.${string &
+    TableColumns<TJoinedTables[K]["table"]>}` : never : never;
   }[keyof TJoinedTables];
 
 type ColumnValueOrReference<
   TColumnType,
   TSchema extends DatabaseTypes.GenericSchema,
+  TParentTable extends TableOrView,
   TJoinedTables extends Record<
     string,
     { table: TableOrView; options: JoinOptions<string> }
@@ -79,12 +82,13 @@ type ColumnValueOrReference<
 > =
   | TColumnType
   | {
-    [TableName in keyof TSchema["Tables"]]: `"${string & TableName}.${string &
-    keyof TSchema["Tables"][TableName]["Row"]}"`;
+    [TableName in keyof TSchema["Tables"]]: TSchema["Tables"][TableName] extends TParentTable ? `"${string & TableName}.${string &
+    keyof TSchema["Tables"][TableName]["Row"]}"` : never;
   }[keyof TSchema["Tables"]]
   | {
-    [JoinName in keyof TJoinedTables]: `"${string & JoinName}.${string &
-    keyof TJoinedTables[JoinName]["table"]["Row"]}"`;
+    [JoinName in keyof TJoinedTables]: TJoinedTables[JoinName]['options'] extends FlattenJoin
+    ? TJoinedTables[JoinName]['options']['flatten'] extends true ? `"${string & JoinName}.${string &
+    keyof TJoinedTables[JoinName]["table"]["Row"]}"` : never : never;
   }[keyof TJoinedTables];
 
 // ============ SELECTION TYPES ============
@@ -583,11 +587,12 @@ export class TableQueryBuilder<
     } as any); // Use 'as any' to bypass the complex type checking here, since we know it's correct
   }
 
-  eq<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  eq<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<
       ResolveColumnType<TTable, TJoinedTables, K & string>,
       TSchema,
+      TParentTable,
       TJoinedTables
     >,
   ): this {
@@ -599,11 +604,12 @@ export class TableQueryBuilder<
     });
   }
 
-  neq<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  neq<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<
       ResolveColumnType<TTable, TJoinedTables, K & string>,
       TSchema,
+      TParentTable,
       TJoinedTables
     >,
   ): this {
@@ -615,11 +621,12 @@ export class TableQueryBuilder<
     });
   }
 
-  gt<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  gt<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<
       ResolveColumnType<TTable, TJoinedTables, K & string>,
       TSchema,
+      TParentTable,
       TJoinedTables
     >,
   ): this {
@@ -631,11 +638,12 @@ export class TableQueryBuilder<
     });
   }
 
-  gte<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  gte<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<
       ResolveColumnType<TTable, TJoinedTables, K & string>,
       TSchema,
+      TParentTable,
       TJoinedTables
     >,
   ): this {
@@ -647,11 +655,12 @@ export class TableQueryBuilder<
     });
   }
 
-  lt<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  lt<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<
       ResolveColumnType<TTable, TJoinedTables, K & string>,
       TSchema,
+      TParentTable,
       TJoinedTables
     >,
   ): this {
@@ -663,11 +672,12 @@ export class TableQueryBuilder<
     });
   }
 
-  lte<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  lte<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<
       ResolveColumnType<TTable, TJoinedTables, K & string>,
       TSchema,
+      TParentTable,
       TJoinedTables
     >,
   ): this {
@@ -679,9 +689,10 @@ export class TableQueryBuilder<
     });
   }
 
-  like<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  like<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
-    value: ColumnValueOrReference<string, TSchema, TJoinedTables>,
+    value: ColumnValueOrReference<string, TSchema,
+      TParentTable, TJoinedTables>,
   ): this {
     return this.addCondition({
       column: column as string,
@@ -691,9 +702,10 @@ export class TableQueryBuilder<
     });
   }
 
-  ilike<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  ilike<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
-    value: ColumnValueOrReference<string, TSchema, TJoinedTables>,
+    value: ColumnValueOrReference<string, TSchema,
+      TParentTable, TJoinedTables>,
   ): this {
     return this.addCondition({
       column: column as string,
@@ -703,9 +715,10 @@ export class TableQueryBuilder<
     });
   }
 
-  contains<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  contains<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
-    value: ColumnValueOrReference<string | any[], TSchema, TJoinedTables>,
+    value: ColumnValueOrReference<string | any[], TSchema,
+      TParentTable, TJoinedTables>,
   ): this {
     return this.addCondition({
       column: column as string,
@@ -715,9 +728,10 @@ export class TableQueryBuilder<
     });
   }
 
-  startswith<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  startswith<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
-    value: ColumnValueOrReference<string, TSchema, TJoinedTables>,
+    value: ColumnValueOrReference<string, TSchema,
+      TParentTable, TJoinedTables>,
   ): this {
     return this.addCondition({
       column: column as string,
@@ -727,9 +741,10 @@ export class TableQueryBuilder<
     });
   }
 
-  endswith<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  endswith<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
-    value: ColumnValueOrReference<string, TSchema, TJoinedTables>,
+    value: ColumnValueOrReference<string, TSchema,
+      TParentTable, TJoinedTables>,
   ): this {
     return this.addCondition({
       column: column as string,
@@ -739,9 +754,10 @@ export class TableQueryBuilder<
     });
   }
 
-  in<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  in<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
-    values: ColumnValueOrReference<any, TSchema, TJoinedTables>[],
+    values: ColumnValueOrReference<any, TSchema,
+      TParentTable, TJoinedTables>[],
   ): this {
     return this.addCondition({
       column: column as string,
@@ -750,9 +766,10 @@ export class TableQueryBuilder<
     });
   }
 
-  nin<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  nin<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
-    values: ColumnValueOrReference<any, TSchema, TJoinedTables>[],
+    values: ColumnValueOrReference<any, TSchema,
+      TParentTable, TJoinedTables>[],
   ): this {
     return this.addCondition({
       column: column as string,
@@ -761,10 +778,12 @@ export class TableQueryBuilder<
     });
   }
 
-  between<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  between<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
-    min: ColumnValueOrReference<any, TSchema, TJoinedTables>,
-    max: ColumnValueOrReference<any, TSchema, TJoinedTables>,
+    min: ColumnValueOrReference<any, TSchema,
+      TParentTable, TJoinedTables>,
+    max: ColumnValueOrReference<any, TSchema,
+      TParentTable, TJoinedTables>,
   ): this {
     return this.addCondition({
       column: column as string,
@@ -773,10 +792,12 @@ export class TableQueryBuilder<
     });
   }
 
-  nbetween<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  nbetween<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
-    min: ColumnValueOrReference<any, TSchema, TJoinedTables>,
-    max: ColumnValueOrReference<any, TSchema, TJoinedTables>,
+    min: ColumnValueOrReference<any, TSchema,
+      TParentTable, TJoinedTables>,
+    max: ColumnValueOrReference<any, TSchema,
+      TParentTable, TJoinedTables>,
   ): this {
     return this.addCondition({
       column: column as string,
@@ -785,7 +806,7 @@ export class TableQueryBuilder<
     });
   }
 
-  is<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  is<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
     value: null | boolean | "null" | "not_null",
   ): this {
@@ -796,7 +817,7 @@ export class TableQueryBuilder<
     });
   }
 
-  isnot<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  isnot<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
     value: null | boolean | "null" | "not_null",
   ): this {
@@ -807,13 +828,13 @@ export class TableQueryBuilder<
     });
   }
 
-  isNull<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  isNull<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
   ): this {
     return this.is(column, "null");
   }
 
-  isNotNull<K extends AllAvailableColumns<TTable, TJoinedTables>>(
+  isNotNull<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
     column: K,
   ): this {
     return this.is(column, "not_null");
