@@ -30,25 +30,25 @@ export type ValidateCast<TColumnType, TCast extends Cast> = TCast extends
   | "char"
   ? string
   : TCast extends
-  | "int"
-  | "integer"
-  | "bigint"
-  | "smallint"
-  | "float"
-  | "real"
-  | "double"
-  | "numeric"
-  | "decimal"
-  ? number
-  : TCast extends "boolean" | "bool"
-  ? boolean
-  : TCast extends "date" | "time" | "timestamp" | "timestamptz"
-  ? Date | string
-  : TCast extends "json" | "jsonb"
-  ? object | string
-  : TCast extends "uuid"
-  ? string
-  : TColumnType;
+        | "int"
+        | "integer"
+        | "bigint"
+        | "smallint"
+        | "float"
+        | "real"
+        | "double"
+        | "numeric"
+        | "decimal"
+    ? number
+    : TCast extends "boolean" | "bool"
+      ? boolean
+      : TCast extends "date" | "time" | "timestamp" | "timestamptz"
+        ? Date | string
+        : TCast extends "json" | "jsonb"
+          ? object | string
+          : TCast extends "uuid"
+            ? string
+            : TColumnType;
 
 export class ColumnBuilder<
   TColumn extends string = string,
@@ -109,10 +109,11 @@ export class ColumnBuilder<
 
   toString(): TAlias extends string
     ? TCast extends Cast
-    ? `${TAlias}:${TColumn}::${TCast}`
-    : `${TAlias}:${TColumn}`
+      ? `${TAlias}:${TColumn}::${TCast}`
+      : `${TAlias}:${TColumn}`
     : TCast extends Cast
-    ? `${TColumn}::${TCast}` : TColumn {
+      ? `${TColumn}::${TCast}`
+      : TColumn {
     let result = this._column as string;
     if (this._alias && typeof this._alias === "string") {
       result = `${this._alias}:${result}`;

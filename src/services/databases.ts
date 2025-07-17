@@ -5,9 +5,9 @@ import { SchemaQueryBuilder } from "../builders/schema";
 import { DatabaseTypes } from "builders/types";
 
 export class Database<
-Database extends Record<string, DatabaseTypes.GenericSchema>,
-CollectionsTypes,
-T extends Client,
+  Database extends Record<string, DatabaseTypes.GenericSchema>,
+  CollectionsTypes,
+  T extends Client,
 > {
   client: T;
 
@@ -22,7 +22,7 @@ T extends Client,
   schema<Schema extends keyof Database>(schema: Schema) {
     return new SchemaQueryBuilder<T, Database[Schema], CollectionsTypes>(
       this.client,
-       schema as string,
+      schema as string,
     );
   }
 

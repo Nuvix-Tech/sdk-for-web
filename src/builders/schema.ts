@@ -11,7 +11,7 @@ export class SchemaQueryBuilder<
   constructor(
     private client: T,
     private schema: string,
-  ) { }
+  ) {}
 
   /**
    * It is used to query a collection in the database schema.
@@ -53,8 +53,18 @@ export class SchemaQueryBuilder<
    * // perform CRUD operations on the table
    * ```
    */
-  from<Table extends (keyof Schema['Tables'] | keyof Schema['Views'])>(tableName: Table) {
-    return new TableQueryBuilder<T, Table extends keyof Schema['Tables'] ? Schema['Tables'][Table] : Table extends keyof Schema['Views'] ? Schema['Views'][Table] : never, Schema>(this.client, {
+  from<Table extends keyof Schema["Tables"] | keyof Schema["Views"]>(
+    tableName: Table,
+  ) {
+    return new TableQueryBuilder<
+      T,
+      Table extends keyof Schema["Tables"]
+        ? Schema["Tables"][Table]
+        : Table extends keyof Schema["Views"]
+          ? Schema["Views"][Table]
+          : never,
+      Schema
+    >(this.client, {
       tableName: tableName as string,
       schema: this.schema,
     });
