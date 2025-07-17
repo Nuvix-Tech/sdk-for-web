@@ -1,7 +1,8 @@
 import type { Client } from "../client";
 import { DatabaseTypes } from "./types";
 import { NuvixException } from "../error";
-import { Cast, column, ColumnBuilder, ValidateCast } from "./utils";
+import { Cast, ColumnBuilder, ValidateCast } from "./utils";
+import { ResponseType } from "type";
 
 export type NuvqlOperator =
   | "eq"
@@ -364,6 +365,7 @@ type OrderObject<TTable extends TableOrView> = {
     | "desc"
     | `${"asc" | "desc"}.${"nullsfirst" | "nullslast"}`;
 };
+
 // ============ QUERY BUILDER ============
 
 type TableOrView =
@@ -385,7 +387,9 @@ export class TableQueryBuilder<
       result: any; // Tracks the selection result of the join
     }
   > = {},
-> {
+  TResultFinal = TResult[],
+> implements PromiseLike<ResponseType<TClient, TResultFinal>>
+{
   // --- IMMUTABLE STATE ---
   private readonly _client: TClient;
   private readonly _config: {
@@ -403,6 +407,8 @@ export class TableQueryBuilder<
     limit?: number;
     orders?: string[];
   } = {};
+  private _single?: boolean = false;
+  private _maybeSingle?: boolean = false;
 
   constructor(
     client: TClient,
@@ -1001,34 +1007,88 @@ export class TableQueryBuilder<
 
   // ============ QUERY EXECUTION ============
 
-  async execute(): Promise<TResult[]> {
-    const query = new URLSearchParams(this.toString());
-    const url = new URL(
-      `${this._client.config.endpoint}/schemas/${this._config.schema}/${this._config.tableName}`,
-    );
-    url.search = query.toString();
-    const response = await this._client.call("GET", url);
-    return response;
-  }
+  protected async execute() {
+    return this._client.withSafeResponse(async () => {
+      if (this._single && this._maybeSingle) {
+        throw new Error("Cannot use both single() and maybeSingle() together.");
+      }
 
-  async single(): Promise<TResult> {
-    const results = await this.execute();
-    if (results.length === 0) {
-      throw new NuvixException("No results found", 404, "NO_RESULTS");
-    }
-    if (results.length > 1) {
-      throw new NuvixException(
-        "Multiple results found",
-        400,
-        "MULTIPLE_RESULTS",
+      // Apply limit(1) automatically when using single or maybeSingle
+      if ((this._single || this._maybeSingle) && !this._extra.limit) {
+        this._extra.limit = 1;
+      }
+      const query = new URLSearchParams(this.toString());
+      const url = new URL(
+        `${this._client.config.endpoint}/schemas/${this._config.schema}/${this._config.tableName}`,
       );
-    }
-    return results[0];
+      url.search = query.toString();
+
+      try {
+        const response = await this._client.call("GET", url);
+
+        if (this._single) {
+          return (
+            response?.[0] ??
+            (() => {
+              throw new Error("No result found");
+            })()
+          ); // TODO: ---
+        }
+
+        if (this._maybeSingle) {
+          return response?.[0] ?? null;
+        }
+        return response;
+      } catch (e) {
+        if (e instanceof NuvixException) {
+          throw e;
+        }
+        // TODO: -----------------
+      }
+    });
   }
 
-  async maybeSingle(): Promise<TResult | null> {
-    const results = await this.execute();
-    return results.length > 0 ? results[0] : null;
+  single(): TableQueryBuilder<
+    TClient,
+    TTable,
+    TSchema,
+    TResult,
+    TParentTable,
+    TJoinedTables,
+    TResult
+  > {
+    this._single = true;
+    this._maybeSingle = false;
+    return this as any;
+  }
+
+  maybeSingle(): TableQueryBuilder<
+    TClient,
+    TTable,
+    TSchema,
+    TResult,
+    TParentTable,
+    TJoinedTables,
+    TResult | null
+  > {
+    this._single = false;
+    this._maybeSingle = true;
+    return this as any;
+  }
+
+  then<TResult1 = ResponseType<TClient, TResultFinal>, TResult2 = never>(
+    onfulfilled?:
+      | ((
+          value: ResponseType<TClient, TResultFinal>,
+        ) => TResult1 | PromiseLike<TResult1>)
+      | null
+      | undefined,
+    onrejected?:
+      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+      | null
+      | undefined,
+  ): PromiseLike<TResult1 | TResult2> {
+    return this.execute().then(onfulfilled as any, onrejected);
   }
 
   // ============ QUERY STRING BUILDING ============
