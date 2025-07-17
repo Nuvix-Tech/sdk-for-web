@@ -300,27 +300,66 @@ export function joinColumn<
 
 // ============ SELECTION TYPES ============
 
+// Improved JSON path types with proper recursion
+type JsonPathSegment = string;
+type JsonPathOperator = "->" | "->>";
+
+// Support up to 5 levels of nesting for JSON paths
+type Prev = [never, 0, 1, 2, 3, 4, 5];
+
+type JsonPathString<T extends string, N extends number = 5> = N extends 0 
+  ? never 
+  : `${T}${JsonPathOperator}${JsonPathSegment}` 
+  | `${T}->${JsonPathSegment}${JsonPathString<string, Prev[N]>}`;
+
 type JsonPath<
   TTable extends DatabaseTypes.GenericTable,
   TJoinedTables extends Record<
     string,
     { table: DatabaseTypes.GenericTable; options: JoinOptions<string> }
   > = {},
-> =
-  | `${TableColumns<TTable> & string}->${string}`
-  | `${TableColumns<TTable> & string}->>${string}`
-  | `${AllAvailableColumns<TTable, TJoinedTables> & string}->${string}`
-  | `${AllAvailableColumns<TTable, TJoinedTables> & string}->>${string}`;
+> = JsonPathString<TableColumns<TTable> & string> | JsonPathString<AllAvailableColumns<TTable, TJoinedTables> & string>;
+
+// Helper to process JSON paths
+function processJsonPath(path: string): { 
+  baseColumn: string; 
+  segments: { operator: JsonPathOperator; path: string }[];
+  aliasName: string;
+} {
+  const parts = path.split(/(->>|->)/);
+  const baseColumn = parts[0];
+  const segments: { operator: JsonPathOperator; path: string }[] = [];
+  
+  for (let i = 1; i < parts.length; i += 2) {
+    const operator = parts[i] as JsonPathOperator;
+    const pathSegment = parts[i + 1];
+    if (pathSegment) {
+      segments.push({ operator, path: pathSegment.trim() });
+    }
+  }
+
+  // Generate alias name by joining with underscores
+  const aliasName = [
+    baseColumn,
+    ...segments.map(s => s.path)
+  ].join('_');
+
+  return { baseColumn, segments, aliasName };
+}
 
 // Better JSON path to field name conversion
 export type JsonPathToFieldName<T extends string> =
-  T extends `${infer Column}->>${infer Path}`
-  ? `${Column & string}_${Path & string}`
-  : T extends `${infer Column}->${infer Path}`
-  ? `${Column & string}_${Path & string}`
-  : T extends `${infer First}.${infer Rest}`
-  ? `${First & string}_${JsonPathToFieldName<Rest> & string}`
+  T extends `${infer Head}->>${infer Tail}`
+  ? `${JsonPathToFieldName<Head>}_${Tail}`
+  : T extends `${infer Head}->${infer Tail}`
+  ? // We need to handle the tail recursively as well.
+    JsonPathToFieldName<`${Head}_${JsonPathToFieldName<Tail>}`>
   : T;
+
+function jsonPathToFieldName(path: string): string {
+  // Replace all "->" and "->>" with "_"
+  return path.replace(/->>?/g, '_');
+}
 
 // Helper to resolve column type from joined tables
 type ResolveColumnType<
@@ -450,7 +489,45 @@ type MergeSelections<T extends readonly any[]> = DatabaseTypes.SimplifyDeep<
   : {}
 >;
 
-// ============ JOIN TYPES ============
+// ============ NEW JOIN & RESULT TYPES ============
+
+// Utility to get the selection result from a builder instance type
+type GetSelectionResult<TBuilder> =
+  TBuilder extends TableQueryBuilder<any, any, any, infer TResult, any, any>
+    ? TResult
+    : never;
+
+// Computes the shape of a single joined table in the final result
+type ShapedJoinResult<
+  TJoinName extends string,
+  TJoinOptions extends JoinOptions,
+  TJoinResult,
+> = TJoinOptions extends { flatten: true }
+  ? TJoinResult // Flattened properties are merged directly
+  : {
+      readonly [K in TJoinName]: TJoinOptions extends { shape: "one" }
+        ? TJoinResult | null // Shaped as a single object
+        : TJoinResult[]; // Default shape is an array of objects
+    };
+
+// Merges the main result with all joined results
+type CombineWithJoins<TResult, TJoinedTables> = DatabaseTypes.Prettify<
+  TResult &
+    UnionToIntersection<
+      {
+        [K in keyof TJoinedTables]: K extends string
+          ? TJoinedTables[K] extends {
+              options: infer O extends JoinOptions;
+              result: infer R;
+            }
+            ? ShapedJoinResult<K, O, R>
+            : never
+          : never;
+      }[keyof TJoinedTables]
+    >
+>;
+
+// ============ JOIN TYPES (Originals are mostly fine) ============
 
 type JoinType = "left" | "inner" | "right" | "full";
 
@@ -551,26 +628,67 @@ export class TableQueryBuilder<
   TSchema extends DatabaseTypes.GenericSchema,
   TResult = TTable["Row"],
   TParentTable extends DatabaseTypes.GenericTable = TTable, // Not currently used, could be useful for nested queries
-  TJoinedTables extends Record<
-    string,
-    { table: DatabaseTypes.GenericTable; options: JoinOptions<string> }
-  > = {},
+  TJoinedTables extends Record<string, {
+    table: DatabaseTypes.GenericTable,
+    options: JoinOptions<string>,
+    result: any // Tracks the selection result of the join
+  }> = {},
 > {
-  private selectedColumns: string[] = [];
-  private conditions: NuvqlCondition[] = [];
-  private joins: string[] = [];
-  private joinedTables: TJoinedTables = {} as TJoinedTables;
+  // --- IMMUTABLE STATE ---
+  private readonly _client: TClient;
+  private readonly _config: {
+    readonly tableName: string;
+    readonly schema: string;
+    readonly isJoinBuilder?: boolean;
+    readonly joinOptions?: JoinOptions<string>;
+    readonly parentTableName?: string;
+  };
+  private readonly _selectedColumns: readonly string[];
+  private readonly _conditions: readonly NuvqlCondition[];
+  private readonly _joins: readonly { name: string; query: string }[];
+  private readonly _joinedTables: TJoinedTables;
 
   constructor(
-    private client: TClient,
-    private config: {
+    client: TClient,
+    config: {
       tableName: string;
       schema: string;
       isJoinBuilder?: boolean;
       joinOptions?: JoinOptions<string>;
       parentTableName?: string;
     },
-  ) { }
+    state?: {
+      selectedColumns?: readonly string[];
+      conditions?: readonly NuvqlCondition[];
+      joins?: readonly { name: string; query: string }[];
+      joinedTables?: TJoinedTables;
+    }
+  ) {
+    this._client = client;
+    this._config = config;
+    this._selectedColumns = state?.selectedColumns ?? [];
+    this._conditions = state?.conditions ?? [];
+    this._joins = state?.joins ?? [];
+    this._joinedTables = state?.joinedTables ?? ({} as TJoinedTables);
+  }
+
+  // --- INTERNAL CLONE METHOD FOR IMMUTABILITY ---
+  private _clone<TNewResult = TResult>(
+    newState: {
+      selectedColumns?: readonly string[];
+      conditions?: readonly NuvqlCondition[];
+      joins?: readonly { name: string; query: string }[];
+      joinedTables?: TJoinedTables;
+    },
+  ): TableQueryBuilder<TClient, TTable, TSchema, TNewResult, TParentTable, TJoinedTables> {
+    return new TableQueryBuilder(this._client, this._config, {
+      selectedColumns: newState.selectedColumns ?? this._selectedColumns,
+      conditions: newState.conditions ?? this._conditions,
+      joins: newState.joins ?? this._joins,
+      joinedTables: newState.joinedTables ?? this._joinedTables,
+    });
+  }
+
 
   select(): TableQueryBuilder<
     TClient,
@@ -580,14 +698,14 @@ export class TableQueryBuilder<
     TParentTable,
     TJoinedTables
   >;
-  select<TSelections extends readonly SelectionInput<TTable, TJoinedTables>[]>(
+  select<const TSelections extends readonly SelectionInput<TTable, TJoinedTables>[]>(
     ...columns: TSelections
   ): TableQueryBuilder<
     TClient,
     TTable,
     TSchema,
     TSelections extends []
-    ? TTable["Row"] // If no columns provided, select all columns from the current table
+    ? TTable["Row"]
     : MergeSelections<{
       [I in keyof TSelections]: ExtractSelectionType<
         TTable,
@@ -600,68 +718,33 @@ export class TableQueryBuilder<
     TJoinedTables
   >;
   select(...columns: any[]): any {
-    this.selectedColumns = [];
-
     if (columns.length === 0) {
-      // Default behavior: select all columns if no arguments provided
-      return this;
+      // Reset selection to all columns of the current table
+      return this._clone({ selectedColumns: [] });
     }
 
+    const newSelectedColumns: string[] = [];
     columns.forEach((column) => {
       if (column instanceof ColumnBuilder) {
-        this.selectedColumns.push(column.toString());
+        newSelectedColumns.push(column.toString());
       } else if (typeof column === "object" && column !== null) {
-        // Handle { alias: 'column' } selections
         Object.entries(column).forEach(([alias, colDef]) => {
           if (typeof colDef === "string") {
-            this.selectedColumns.push(`${alias}:${colDef}`);
+            newSelectedColumns.push(`${alias}:${colDef}`);
           }
         });
       } else if (typeof column === "string") {
-        // Handle 'alias:column', 'column->>path', 'column::cast', etc.
-        this.selectedColumns.push(column);
+        newSelectedColumns.push(column);
       }
     });
 
-    return this;
+    return this._clone({ selectedColumns: newSelectedColumns });
   }
 
-  join<TJoinName extends keyof TSchema["Tables"] & string>(
-    table: TJoinName,
-    callback: (
-      builder: TableQueryBuilder<
-        TClient,
-        TSchema["Tables"][TJoinName],
-        TSchema,
-        TSchema["Tables"][TJoinName]["Row"],
-        TTable,
-        // Pass parent's TJoinedTables to the nested builder
-        TJoinedTables
-      >,
-    ) => any,
-  ): TableQueryBuilder<
-    TClient,
-    TTable,
-    TSchema,
-    CombinedResultType<
-      TResult,
-      AddJoinedTableWithOptions<
-        TJoinedTables,
-        TJoinName,
-        TSchema["Tables"][TJoinName],
-        { table: TJoinName; type: "inner"; shape: "many" }
-      >
-    >,
-    TParentTable,
-    TJoinedTables & AddJoinedTableWithOptions<
-      TJoinedTables,
-      TJoinName,
-      TSchema["Tables"][TJoinName],
-      { table: TJoinName; type: "inner", shape: "many" }
-    >
-  >;
-
-  join<TJoinOptions extends JoinOptions<keyof TSchema["Tables"] & string>>(
+  join<
+    const TJoinOptions extends JoinOptions<keyof TSchema["Tables"] & string>,
+    const TJoinBuilder extends TableQueryBuilder<any, any, any, any, any, any>
+  >(
     options: TJoinOptions,
     callback: (
       builder: TableQueryBuilder<
@@ -670,70 +753,63 @@ export class TableQueryBuilder<
         TSchema,
         TSchema["Tables"][TJoinOptions["table"]]["Row"],
         TTable,
-        // Pass parent's TJoinedTables to the nested builder
         TJoinedTables
       >,
-    ) => any,
+    ) => TJoinBuilder,
   ): TableQueryBuilder<
     TClient,
     TTable,
     TSchema,
-    CombinedResultType<
-      TResult,
-      AddJoinedTableWithOptions<
-        TJoinedTables,
-        TJoinOptions["as"] extends string ? TJoinOptions["as"] : TJoinOptions["table"],
-        TSchema["Tables"][TJoinOptions["table"]],
-        TJoinOptions
-      >
-    >,
+    CombineWithJoins<TResult, TJoinedTables & {
+      [K in TJoinOptions["as"] extends string ? TJoinOptions["as"] : TJoinOptions["table"]]: {
+        table: TSchema["Tables"][TJoinOptions["table"]];
+        options: TJoinOptions;
+        result: GetSelectionResult<TJoinBuilder>;
+      }
+    }>,
     TParentTable,
-    AddJoinedTableWithOptions<
-      TJoinedTables,
-      TJoinOptions["as"] extends string ? TJoinOptions["as"] : TJoinOptions["table"],
-      TSchema["Tables"][TJoinOptions["table"]],
-      TJoinOptions
-    >
-  >;
-
-  join(tableOrOptions: any, callback: any): any {
-    let table: string;
-    let options: JoinOptions<string>;
-
-    if (typeof tableOrOptions === "object" && tableOrOptions !== null && "table" in tableOrOptions) {
-      table = tableOrOptions.table;
-      options = tableOrOptions;
-    } else if (typeof tableOrOptions === "string") {
-      table = tableOrOptions;
-      options = { table, type: "inner", shape: "many" }; // Default options
-    } else {
-      throw new NuvixException("Invalid join arguments provided.", 400, "INVALID_JOIN_ARGS");
+    TJoinedTables & {
+      [K in TJoinOptions["as"] extends string ? TJoinOptions["as"] : TJoinOptions["table"]]: {
+        table: TSchema["Tables"][TJoinOptions["table"]];
+        options: TJoinOptions;
+        result: GetSelectionResult<TJoinBuilder>;
+      }
     }
+  > {
+    const table = options.table;
+    const joinName = options.as || table;
 
-    const joinBuilder = new TableQueryBuilder(this.client, {
+    const joinBuilder = new TableQueryBuilder<TClient, TSchema["Tables"][TJoinOptions["table"]], TSchema, TSchema["Tables"][TJoinOptions["table"]]["Row"], TTable, TJoinedTables>(this._client, {
       tableName: table,
-      schema: this.config.schema,
+      schema: this._config.schema,
       isJoinBuilder: true,
       joinOptions: options,
-      parentTableName: this.config.tableName,
+      parentTableName: this._config.tableName,
+    }, {
+      // Pass down the parent's joined tables for nested filtering context
+      joinedTables: this._joinedTables
     });
 
-    // Copy joined tables context to nested filter
-    // This is crucial for runtime behavior to match the type inference
-    joinBuilder.joinedTables = this.joinedTables;
+    const finalJoinBuilder = callback(joinBuilder);
+    const joinQueryString = finalJoinBuilder.toString();
 
-    // Call the callback to build the join condition
-    const joinQuery = callback(joinBuilder);
-    this.joins.push(joinQuery?.toString() || "");
-
-    // Update joined tables tracking at runtime
-    const joinName = options.as || table;
-    (this.joinedTables as any)[joinName] = {
-      table: {} as any, // Placeholder, actual type is inferred by TS
-      options: options,
+    const newJoinedTables = {
+      ...this._joinedTables,
+      [joinName]: {
+        table: {} as TSchema["Tables"][TJoinOptions["table"]], // Type-level only
+        options: options,
+        result: {} as GetSelectionResult<TJoinBuilder> // Type-level only
+      }
     };
 
-    return this as any; // Cast to 'any' to satisfy the overloaded return type, TS will correctly infer
+    const newJoins = [...this._joins, { name: joinName, query: joinQueryString }];
+
+    return new TableQueryBuilder(this._client, this._config, {
+      selectedColumns: this._selectedColumns,
+      conditions: this._conditions,
+      joins: newJoins,
+      joinedTables: newJoinedTables,
+    });
   }
 
   eq<
@@ -1015,13 +1091,12 @@ export class TableQueryBuilder<
       TResult,
       TParentTable,
       TJoinedTables
-    >(this.client, this.config);
-    // Copy joined tables context to nested filter
-    nestedFilter.joinedTables = this.joinedTables;
+    >(this._client, this._config, { joinedTables: this._joinedTables });
+    
     callback(nestedFilter);
 
-    if (nestedFilter.conditions.length > 0) {
-      this.conditions.push({
+    if (nestedFilter.getConditions().length > 0) {
+      return this.addLogicalCondition({
         operator: "and",
         conditions: nestedFilter.getConditions(),
       });
@@ -1048,13 +1123,12 @@ export class TableQueryBuilder<
       TResult,
       TParentTable,
       TJoinedTables
-    >(this.client, this.config);
-    // Copy joined tables context to nested filter
-    nestedFilter.joinedTables = this.joinedTables;
+    >(this._client, this._config, { joinedTables: this._joinedTables });
+    
     callback(nestedFilter);
 
-    if (nestedFilter.conditions.length > 0) {
-      this.conditions.push({
+    if (nestedFilter.getConditions().length > 0) {
+      return this.addLogicalCondition({
         operator: "or",
         conditions: nestedFilter.getConditions(),
       });
@@ -1081,13 +1155,12 @@ export class TableQueryBuilder<
       TResult,
       TParentTable,
       TJoinedTables
-    >(this.client, this.config);
-    // Copy joined tables context to nested filter
-    nestedFilter.joinedTables = this.joinedTables;
+    >(this._client, this._config, { joinedTables: this._joinedTables });
+    
     callback(nestedFilter);
 
-    if (nestedFilter.conditions.length > 0) {
-      this.conditions.push({
+    if (nestedFilter.getConditions().length > 0) {
+      return this.addLogicalCondition({
         operator: "not",
         conditions: nestedFilter.getConditions(),
       });
@@ -1103,17 +1176,22 @@ export class TableQueryBuilder<
     );
   }
 
-  protected addCondition(condition: NuvqlFilterCondition): this {
-    this.conditions.push(condition);
-    return this;
+  protected addCondition(condition: NuvqlFilterCondition): any {
+    const newConditions = [...this._conditions, condition];
+    return this._clone({ conditions: newConditions });
+  }
+
+  protected addLogicalCondition(condition: NuvqlLogicalCondition): any {
+    const newConditions = [...this._conditions, condition];
+    return this._clone({ conditions: newConditions });
   }
 
   getConditions(): NuvqlCondition[] {
-    return [...this.conditions];
+    return [...this._conditions];
   }
 
   getJoinedTables(): TJoinedTables {
-    return this.joinedTables;
+    return this._joinedTables;
   }
 
   // Helper method to access joined table columns with type safety
@@ -1160,30 +1238,45 @@ export class TableQueryBuilder<
   // ============ QUERY STRING BUILDING ============
 
   toString(): string {
-    const select =
-      this.selectedColumns.length === 0 ? "*" : this.selectedColumns.join(",");
-    const filter = this.conditions.map((c) => this.buildCondition(c)).join(",");
+    // Process selections to handle aliasing for JSON paths
+    const processedSelect = this._selectedColumns.map(col => {
+      if (col.includes("->") && !col.includes(":")) {
+        return `${jsonPathToFieldName(col)}:${col}`;
+      }
+      return col;
+    });
 
-    let query = `select=${select}`;
-    if (filter) {
-      query += `&filter=${filter}`;
-    }
+    const select = processedSelect.length === 0 ? "*" : processedSelect.join(",");
+    const filter = this._conditions.map((c) => this.buildCondition(c)).join(",");
+    const joins = this._joins.map(j => j.query).join(",");
 
-    // Handle joins
-    if (this.joins.length > 0) {
-      query += `,${this.joins.join(",")}`;
-    }
-
-    // Handle join options for join builders
-    if (this.config.joinOptions) {
-      const opts = this.config.joinOptions;
-      const type = opts.type ?? "left";
+    // If this is a join builder, the format is different.
+    if (this._config.isJoinBuilder && this._config.joinOptions) {
+      const opts = this._config.joinOptions;
+      const type = `$.join(${opts.type ?? "inner"})`;
       const flatten = "flatten" in opts && opts.flatten ? "..." : "";
-      const shape =
-        !flatten && "shape" in opts ? `.${opts.shape ?? "many"}` : "";
+      const shape = !flatten && "shape" in opts ? `.${opts.shape ?? "many"}` : "";
       const alias = opts.as ? `${opts.as}:` : "";
 
-      return `${flatten}${alias}${this.config.tableName}${shape}{${filter},$.join(${type})}(${select})`;
+      const conditions = [filter, type].filter(Boolean);
+
+      let query = `${flatten}${alias}${this._config.tableName}${shape}`;
+
+      if (select !== "*" || joins) {
+        const innerSelect = [select, joins].filter(s => s !== "*").join(",");
+        query += `(${innerSelect || "*"})`;
+      }
+      
+      query += `{${conditions.join(",")}}`;
+
+      return query;
+    }
+
+    // Main query format
+    const finalSelect = [select, joins].filter(Boolean).join(",");
+    let query = `select=${finalSelect}`;
+    if (filter) {
+      query += `&filter=${filter}`;
     }
 
     return query;
