@@ -2,7 +2,7 @@ import type { Client } from "../client";
 import { DatabaseTypes } from "./types";
 import { NuvixException } from "../error";
 import { Cast, ColumnBuilder, ValidateCast } from "./utils";
-import { ResponseType } from "type";
+import { ResponseType } from "../type";
 
 export type NuvqlOperator =
   | "eq"

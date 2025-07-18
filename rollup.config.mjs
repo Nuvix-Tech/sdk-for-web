@@ -1,4 +1,4 @@
-import pkg from "./package.json";
+import pkg from "./package.json" with { type: "json" };
 import typescript from "@rollup/plugin-typescript";
 
 export default {

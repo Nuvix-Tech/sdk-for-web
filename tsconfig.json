@@ -16,7 +16,7 @@
     "skipLibCheck": true,
     "strict": true,
     "module": "esnext",
-    "target": "es2024",
+    "target": "es2017",
     "traceResolution": false,
     "paths": {
       "@/*": ["src/*"]

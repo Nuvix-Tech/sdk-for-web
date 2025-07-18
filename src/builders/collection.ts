@@ -17,7 +17,7 @@ export class CollectionQueryBuilder<
 > {
   private collectionId: string;
   private schema: string;
-  private db: Database<T, CollectionsTypes>;
+  private db: Database<any, CollectionsTypes, T>;
 
   /**
    * Creates an instance of CollectionQueryBuilder.
@@ -33,7 +33,7 @@ export class CollectionQueryBuilder<
   ) {
     this.collectionId = collectionId;
     this.schema = schema;
-    this.db = new Database<T, CollectionsTypes>(client);
+    this.db = new Database<any, CollectionsTypes, T>(client);
   }
 
   /**
