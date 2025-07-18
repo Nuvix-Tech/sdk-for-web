@@ -562,6 +562,8 @@ class Client<IsSafe extends boolean = false | true> {
       return res as unknown as ResponseType<Client, Awaited<R>>;
     } catch (e) {
       if (this.safeResponse) {
+        // TODO: Handle error in a way that it returns a consistent type
+        // This is a workaround to ensure that the error is always returned in a consistent format
         return { data: null, error: e as Error } as unknown as ResponseType<
           Client,
           Awaited<R>

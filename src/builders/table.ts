@@ -63,10 +63,22 @@ type AllAvailableColumns<
 > =
   | TableColumns<TTable>
   | {
-      [K in keyof TJoinedTables]: TJoinedTables[K]["options"] extends FlattenJoin
-        ? TJoinedTables[K]["options"]["flatten"] extends true
-          ? `${string & K}.${string & TableColumns<TJoinedTables[K]["table"]>}`
-          : never
+      [K in keyof TJoinedTables]: `${string & K}.${string & TableColumns<TJoinedTables[K]["table"]>}`;
+    }[keyof TJoinedTables];
+
+type AllAvailableGroupColumns<
+  TTable extends TableOrView,
+  TJoinedTables extends Record<
+    string,
+    { table: TableOrView; options: JoinOptions<string> }
+  > = {},
+> =
+  | TableColumns<TTable>
+  | {
+      [K in keyof TJoinedTables]: TJoinedTables[K]["options"] extends {
+        flatten: true;
+      }
+        ? `${string & K}.${string & TableColumns<TJoinedTables[K]["table"]>}`
         : never;
     }[keyof TJoinedTables];
 
@@ -87,11 +99,11 @@ type ColumnValueOrReference<
         : never;
     }[keyof TSchema["Tables"]]
   | {
-      [JoinName in keyof TJoinedTables]: TJoinedTables[JoinName]["options"] extends FlattenJoin
-        ? TJoinedTables[JoinName]["options"]["flatten"] extends true
-          ? `"${string & JoinName}.${string &
-              keyof TJoinedTables[JoinName]["table"]["Row"]}"`
-          : never
+      [JoinName in keyof TJoinedTables]: TJoinedTables[JoinName]["options"] extends {
+        flatten: true;
+      }
+        ? `"${string & JoinName}.${string &
+            keyof TJoinedTables[JoinName]["table"]["Row"]}"`
         : never;
     }[keyof TJoinedTables];
 
@@ -363,7 +375,9 @@ type OrderObject<TTable extends TableOrView> = {
   [k in TableColumns<TTable> | JsonPath<TTable>]?:
     | "asc"
     | "desc"
-    | `${"asc" | "desc"}.${"nullsfirst" | "nullslast"}`;
+    | `${"asc" | "desc"}.${"nullsfirst" | "nullslast"}`
+    | "nullsfirst"
+    | "nullslast";
 };
 
 // ============ QUERY BUILDER ============
@@ -406,6 +420,8 @@ export class TableQueryBuilder<
   private _extra: {
     limit?: number;
     orders?: string[];
+    offset?: number;
+    groupBy?: string[];
   } = {};
   private _single?: boolean = false;
   private _maybeSingle?: boolean = false;
@@ -607,7 +623,7 @@ export class TableQueryBuilder<
     });
   }
 
-  eq<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
+  eq<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<
       ResolveColumnType<TTable, TJoinedTables, K & string>,
@@ -624,7 +640,7 @@ export class TableQueryBuilder<
     });
   }
 
-  neq<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
+  neq<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<
       ResolveColumnType<TTable, TJoinedTables, K & string>,
@@ -641,7 +657,7 @@ export class TableQueryBuilder<
     });
   }
 
-  gt<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
+  gt<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<
       ResolveColumnType<TTable, TJoinedTables, K & string>,
@@ -658,7 +674,7 @@ export class TableQueryBuilder<
     });
   }
 
-  gte<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
+  gte<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<
       ResolveColumnType<TTable, TJoinedTables, K & string>,
@@ -675,7 +691,7 @@ export class TableQueryBuilder<
     });
   }
 
-  lt<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
+  lt<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<
       ResolveColumnType<TTable, TJoinedTables, K & string>,
@@ -692,7 +708,7 @@ export class TableQueryBuilder<
     });
   }
 
-  lte<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
+  lte<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<
       ResolveColumnType<TTable, TJoinedTables, K & string>,
@@ -709,7 +725,7 @@ export class TableQueryBuilder<
     });
   }
 
-  like<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
+  like<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
   ): this {
@@ -721,9 +737,7 @@ export class TableQueryBuilder<
     });
   }
 
-  ilike<
-    K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>,
-  >(
+  ilike<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
   ): this {
@@ -735,9 +749,7 @@ export class TableQueryBuilder<
     });
   }
 
-  contains<
-    K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>,
-  >(
+  contains<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<
       string | any[],
@@ -754,9 +766,7 @@ export class TableQueryBuilder<
     });
   }
 
-  startswith<
-    K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>,
-  >(
+  startswith<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
   ): this {
@@ -768,9 +778,7 @@ export class TableQueryBuilder<
     });
   }
 
-  endswith<
-    K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>,
-  >(
+  endswith<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     value: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
   ): this {
@@ -782,7 +790,7 @@ export class TableQueryBuilder<
     });
   }
 
-  in<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
+  in<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     values: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>[],
   ): this {
@@ -793,7 +801,7 @@ export class TableQueryBuilder<
     });
   }
 
-  nin<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
+  nin<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     values: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>[],
   ): this {
@@ -804,9 +812,7 @@ export class TableQueryBuilder<
     });
   }
 
-  between<
-    K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>,
-  >(
+  between<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     min: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
     max: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
@@ -818,9 +824,7 @@ export class TableQueryBuilder<
     });
   }
 
-  nbetween<
-    K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>,
-  >(
+  nbetween<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     min: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
     max: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
@@ -832,7 +836,7 @@ export class TableQueryBuilder<
     });
   }
 
-  is<K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>>(
+  is<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
     value: null | boolean | "null" | "not_null",
   ): this {
@@ -843,9 +847,10 @@ export class TableQueryBuilder<
     });
   }
 
-  isnot<
-    K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>,
-  >(column: K, value: null | boolean | "null" | "not_null"): this {
+  isnot<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    value: null | boolean | "null" | "not_null",
+  ): this {
     return this.addCondition({
       column: column as string,
       operator: "isnot",
@@ -853,15 +858,15 @@ export class TableQueryBuilder<
     });
   }
 
-  isNull<
-    K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>,
-  >(column: K): this {
+  isNull<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+  ): this {
     return this.is(column, "null");
   }
 
-  isNotNull<
-    K extends AllAvailableColumns<TTable, TJoinedTables> | JsonPath<TTable>,
-  >(column: K): this {
+  isNotNull<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+  ): this {
     return this.is(column, "not_null");
   }
 
@@ -963,11 +968,73 @@ export class TableQueryBuilder<
     return this;
   }
 
+  /**
+   * Sets the maximum number of records to retrieve.
+   *
+   * @param limit - The maximum number of records to limit the query to.
+   * @returns The current instance of the builder for method chaining.
+   */
   limit(limit: number) {
     this._extra.limit = limit;
     return this;
   }
 
+  /**
+   * Sets the number of records to skip before starting to collect the result set.
+   *
+   * @param offset - The number of records to skip.
+   * @returns The current instance of the builder for method chaining.
+   */
+  offset(offset: number) {
+    this._extra.offset = offset;
+    return this;
+  }
+
+  /**
+   * Adds grouping instructions to the table query.
+   *
+   * @param columns - An array of column names to group by.
+   * @returns The current instance of the builder for method chaining.
+   */
+  groupBy(
+    ...columns: (
+      | AllAvailableGroupColumns<TTable, TJoinedTables>
+      | JsonPath<TTable, TJoinedTables>
+    )[]
+  ) {
+    const _groupBy = columns.map((col) => col.toString());
+    this._extra.groupBy = Array.from(
+      new Set([...(this._extra.groupBy ?? []), ..._groupBy]),
+    );
+    return this;
+  }
+
+  /**
+   * Sets a range for the query results.
+   *
+   * @param start - The starting index of the range (inclusive).
+   * @param end - The ending index of the range (inclusive).
+   * @returns The current instance of the builder for method chaining.
+   */
+  range(start: number, end: number) {
+    if (start < 0 || end < 0 || start > end) {
+      throw new Error(
+        "Invalid range: 'start' must be less than or equal to 'end', and both must be non-negative.",
+      );
+    }
+    this._extra.limit = end - start + 1; // Adjust limit to include both start and end
+    this._extra.offset = start; // Set offset to start
+    return this;
+  }
+
+  /**
+   * Adds ordering instructions to the table query.
+   *
+   * @param orders - An object where the keys represent column names and the values
+   *                 represent the order direction (`asc`, `desc`, `nullsfirst`, `nullslast`, `asc|desc.nullsfirst`, `asc|desc.nullslast`).
+   *                 Example: `{ columnName: 'asc', anotherColumn: 'desc' }`.
+   * @returns The current instance of the builder for method chaining.
+   */
   orderBy(orders: OrderObject<TTable>) {
     const _orders: string[] = [];
     Object.entries(orders).forEach(([column, order]) => {
@@ -1017,6 +1084,7 @@ export class TableQueryBuilder<
       if ((this._single || this._maybeSingle) && !this._extra.limit) {
         this._extra.limit = 1;
       }
+
       const query = new URLSearchParams(this.toString());
       const url = new URL(
         `${this._client.config.endpoint}/schemas/${this._config.schema}/${this._config.tableName}`,
@@ -1027,23 +1095,26 @@ export class TableQueryBuilder<
         const response = await this._client.call("GET", url);
 
         if (this._single) {
-          return (
-            response?.[0] ??
-            (() => {
-              throw new Error("No result found");
-            })()
-          ); // TODO: ---
+          if (!response || response.length === 0) {
+            throw new Error("No result found");
+          }
+          return response[0];
         }
 
         if (this._maybeSingle) {
           return response?.[0] ?? null;
         }
+
         return response;
-      } catch (e) {
-        if (e instanceof NuvixException) {
-          throw e;
+      } catch (error) {
+        if (error instanceof NuvixException) {
+          throw error;
         }
-        // TODO: -----------------
+        throw new NuvixException(
+          `Query execution failed: ${error instanceof Error ? error.message : String(error)}`,
+          400,
+          `QUERY_EXECUTION_ERROR`,
+        );
       }
     });
   }
@@ -1093,6 +1164,21 @@ export class TableQueryBuilder<
 
   // ============ QUERY STRING BUILDING ============
 
+  /**
+   * Converts the current table builder configuration into a NuvQL query string.
+   *
+   * @returns {string} The generated NuvQL query string based on the selected columns,
+   * conditions, and joins.
+   *
+   * The method constructs the query by:
+   * - Selecting columns (`*` if none are specified).
+   * - Applying conditions using the `buildCondition` method.
+   * - Including join queries if applicable.
+   *
+   * If the builder is configured as a join builder and join options are provided,
+   * it generates a join query using `_buildJoinQuery`. Otherwise, it generates
+   * the main query using `_buildMainQuery`.
+   */
   toString(): string {
     const select =
       this._selectedColumns.length === 0
@@ -1103,49 +1189,90 @@ export class TableQueryBuilder<
       .join(",");
     const joins = this._joins.map((j) => j.query).join(",");
 
-    // If this is a join builder, the format is different.
     if (this._config.isJoinBuilder && this._config.joinOptions) {
-      const opts = this._config.joinOptions;
-      const type = `$.join(${opts.type ?? "inner"})`;
-      const flatten = "flatten" in opts && opts.flatten ? "..." : "";
-      const kind = !flatten && "kind" in opts ? `.${opts.kind ?? "many"}` : "";
-      const alias = opts.as ? `${opts.as}:` : "";
-
-      const conditions = [filter, type].filter(Boolean);
-
-      let query = `${flatten}${alias}${this._config.tableName}${kind}`;
-      let extra = "";
-      typeof this._extra.limit === "number" &&
-        (extra += `,$.limit(${this._extra.limit})`);
-      if (this._extra?.orders?.length) {
-        const orders = this._extra.orders.join(",");
-        extra += `,$.order(${orders})`;
-      }
-
-      query += `{${conditions.join(",")}${extra}}`;
-
-      if (select !== "*" || joins) {
-        const innerSelect = [select, joins].filter((s) => s !== "*").join(",");
-        query += `(${innerSelect || "*"})`;
-      }
-      return query;
+      return this._buildJoinQuery(select, filter, joins);
     }
 
-    // Main query format
+    return this._buildMainQuery(select, filter, joins);
+  }
+
+  private _buildJoinQuery(
+    select: string,
+    filter: string,
+    joins: string,
+  ): string {
+    const { joinOptions, tableName } = this._config;
+    const opts = joinOptions!;
+    const type = `$.join(${opts.type ?? "inner"})`;
+    const flatten = "flatten" in opts && opts.flatten ? "..." : "";
+    const kind =
+      !flatten && "kind" in opts && opts.kind ? `.${opts.kind ?? "many"}` : "";
+    const alias = opts.as ? `${opts.as}:` : "";
+
+    const conditions = [filter, type].filter(Boolean);
+    let query = `${flatten}${alias}${tableName}${kind}`;
+    let extra = this._buildExtraJoinQueryParams();
+
+    query += `{${conditions.join(",")}${extra}}`;
+
+    if (select !== "*" || joins) {
+      const innerSelect = [select, joins].filter((s) => s !== "*").join(",");
+      query += `(${innerSelect || "*"})`;
+    }
+
+    return query;
+  }
+
+  private _buildMainQuery(
+    select: string,
+    filter: string,
+    joins: string,
+  ): string {
     const finalSelect = [select, joins].filter(Boolean).join(",");
     let query = `select=${finalSelect}`;
     if (filter) {
       query += `&filter=${filter}`;
     }
+    query += this._buildExtraQueryParams();
+    return query;
+  }
+
+  private _buildExtraQueryParams(): string {
     let extra = "";
-    typeof this._extra.limit === "number" &&
-      (extra += `&limit=${this._extra.limit}`);
+    if (typeof this._extra.limit === "number") {
+      extra += `&limit=${this._extra.limit}`;
+    }
     if (this._extra?.orders?.length) {
       const orders = this._extra.orders.join(",");
       extra += `&order=${orders}`;
     }
+    if (this._extra?.offset) {
+      extra += `&offset=${this._extra.offset}`;
+    }
+    if (this._extra?.groupBy?.length) {
+      const groupBy = this._extra.groupBy.join(",");
+      extra += `&group=${groupBy}`;
+    }
+    return extra;
+  }
 
-    return (query += extra);
+  private _buildExtraJoinQueryParams(): string {
+    let extra = "";
+    if (typeof this._extra.limit === "number") {
+      extra += `,$.limit(${this._extra.limit})`;
+    }
+    if (this._extra?.orders?.length) {
+      const orders = this._extra.orders.join(",");
+      extra += `,$.order(${orders})`;
+    }
+    if (this._extra?.offset) {
+      extra += `,$.offset(${this._extra.offset})`;
+    }
+    if (this._extra?.groupBy?.length) {
+      const groupBy = this._extra.groupBy.join(",");
+      extra += `,$.group(${groupBy})`;
+    }
+    return extra;
   }
 
   private buildCondition(condition: NuvqlCondition): string {
