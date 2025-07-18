@@ -22,6 +22,9 @@ export default {
       file: pkg.jsdelivr,
       name: "Nuvix",
       extend: true,
+      globals: {
+        'socket.io-client': 'io'
+      }
     },
   ],
 };
