@@ -1,8 +1,8 @@
 {
   "name": "nuvix",
-  "homepage": "https://nuvix.io/support",
-  "description": "Nuvix is an backend server that abstract and simplify complex and repetitive development tasks behind a very simple REST API",
-  "version": "0.0.1-alpha.8",
+  "homepage": "https://www.nuvix.in/support",
+  "description": "Nuvix is a high-performance backend platform built for modern applications—fast, scalable, and developer-first.",
+  "version": "1.0.0",
   "license": "BSD-3-Clause",
   "main": "dist/cjs/sdk.js",
   "type": "module",
@@ -18,7 +18,7 @@
   "types": "types/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nuvix-tech/sdk-for-web"
+    "url": "https://github.com/Nuvix-Tech/sdk-for-web"
   },
   "scripts": {
     "build": "npm run build:types && npm run build:libs",

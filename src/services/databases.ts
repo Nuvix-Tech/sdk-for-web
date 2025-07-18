@@ -3,6 +3,7 @@ import { NuvixException, Client, type Payload } from "../client";
 import type { Models } from "../models";
 import { SchemaQueryBuilder } from "../builders/schema";
 import { DatabaseTypes } from "builders/types";
+import { TableQueryBuilder } from "builders";
 
 export class Database<
   Database extends Record<string, DatabaseTypes.GenericSchema>,
@@ -24,6 +25,40 @@ export class Database<
       this.client,
       schema as string,
     );
+  }
+
+  /**
+   * Creates a query builder for interacting with a specific table or view in the "public" schema of the database.
+   *
+   * @template Table - The name of the table or view in the "public" schema. This can be a key of either
+   * `Database['public']["Tables"]` or `Database['public']["Views"]`.
+   *
+   * @param tableName - The name of the table or view to query. Must exist in the "public" schema.
+   *
+   * @returns A `TableQueryBuilder` instance configured for the specified table or view.
+   *
+   * @example
+   * ```typescript
+   * const queryBuilder = db.from('users');
+   * ```
+   */
+  from<
+    Table extends
+      | keyof Database["public"]["Tables"]
+      | keyof Database["public"]["Views"],
+  >(tableName: Table) {
+    return new TableQueryBuilder<
+      T,
+      Table extends keyof Database["public"]["Tables"]
+        ? Database["public"]["Tables"][Table]
+        : Table extends keyof Database["public"]["Views"]
+          ? Database["public"]["Views"][Table]
+          : never,
+      Database["public"]
+    >(this.client, {
+      tableName: tableName as string,
+      schema: "public",
+    });
   }
 
   /**

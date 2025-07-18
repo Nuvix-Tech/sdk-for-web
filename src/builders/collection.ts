@@ -1,4 +1,4 @@
-import { PromiseResponseType } from "type";
+import { PromiseResponseType } from "../type";
 import type { Client, Models, Query } from "../client";
 import { Database } from "../services/databases";
 
