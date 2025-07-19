@@ -1,7 +1,7 @@
 import type { Client } from "../client";
 import { DatabaseTypes } from "./types";
 import { NuvixException } from "../error";
-import { Cast, ColumnBuilder, ValidateCast } from "./utils";
+import { Cast, Column, ColumnBuilder, ValidateCast } from "./utils";
 import { ResponseType } from "../type";
 
 export type NuvqlOperator =
@@ -509,7 +509,7 @@ export class TableQueryBuilder<
 
     const newSelectedColumns: string[] = [];
     columns.forEach((column) => {
-      if (column instanceof ColumnBuilder) {
+      if (column instanceof Column) {
         newSelectedColumns.push(column.toString());
       } else if (typeof column === "object" && column !== null) {
         Object.entries(column).forEach(([alias, colDef]) => {

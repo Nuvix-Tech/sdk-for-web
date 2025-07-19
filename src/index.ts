@@ -35,3 +35,4 @@ export { ExecutionMethod } from "./enums/execution-method";
 export { ImageGravity } from "./enums/image-gravity";
 export { ImageFormat } from "./enums/image-format";
 export { column } from "./builders/utils";
+export * from "./builders/helpers";

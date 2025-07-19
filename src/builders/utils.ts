@@ -1,6 +1,6 @@
 import { NuvixException } from "error";
 
-export type Cast =
+type KnownCast =
   | "text"
   | "varchar"
   | "char"
@@ -21,8 +21,9 @@ export type Cast =
   | "timestamptz"
   | "json"
   | "jsonb"
-  | "uuid"
-  | string;
+  | "uuid";
+
+export type Cast = KnownCast | string;
 
 export type ValidateCast<TColumnType, TCast extends Cast> = TCast extends
   | "text"
@@ -50,17 +51,42 @@ export type ValidateCast<TColumnType, TCast extends Cast> = TCast extends
             ? string
             : TColumnType;
 
-export class ColumnBuilder<
+export interface ColumnBuilder<
   TColumn extends string = string,
   TAlias extends string | unknown = unknown,
   TCast extends Cast | unknown = unknown,
   TColumnType = unknown,
 > {
-  private readonly _column: TColumn;
+  as<A extends string>(alias: A): ColumnBuilder<TColumn, A, TCast, TColumnType>;
+
+  cast<C extends KnownCast>(
+    castType: C,
+  ): ColumnBuilder<TColumn, TAlias, C, ValidateCast<TColumnType, C>>;
+  cast<C extends Cast>(
+    castType: C,
+  ): ColumnBuilder<TColumn, TAlias, C, ValidateCast<TColumnType, C>>;
+
+  toString(): TAlias extends string
+    ? TCast extends Cast
+      ? `${TAlias}:${TColumn}::${TCast}`
+      : `${TAlias}:${TColumn}`
+    : TCast extends Cast
+      ? `${TColumn}::${TCast}`
+      : TColumn;
+}
+
+export class Column<
+  TColumn extends string = string,
+  TAlias extends string | unknown = unknown,
+  TCast extends Cast | unknown = unknown,
+  TColumnType = unknown,
+> implements ColumnBuilder
+{
+  protected readonly _column: TColumn;
   private readonly _alias?: TAlias;
   private readonly _castType?: TCast;
   private readonly _columnType?: TColumnType;
-  private readonly _frozen: boolean = false;
+  protected readonly _frozen: boolean = false;
 
   constructor(
     column: TColumn,
@@ -86,7 +112,7 @@ export class ColumnBuilder<
     alias: A,
   ): ColumnBuilder<TColumn, A, TCast, TColumnType> {
     this._validateNotFrozen();
-    return new ColumnBuilder(this._column, {
+    return new Column(this._column, {
       alias,
       castType: this._castType,
       columnType: this._columnType,
@@ -99,7 +125,7 @@ export class ColumnBuilder<
   ): ColumnBuilder<TColumn, TAlias, C, ValidateCast<TColumnType, C>> {
     this._validateNotFrozen();
     this._validateCastCompatibility(castType);
-    return new ColumnBuilder(this._column, {
+    return new Column(this._column, {
       alias: this._alias,
       castType,
       columnType: {} as ValidateCast<TColumnType, C>,
@@ -148,5 +174,5 @@ export class ColumnBuilder<
 export function column<TColumn extends string>(
   name: TColumn,
 ): ColumnBuilder<TColumn, unknown, unknown, unknown> {
-  return new ColumnBuilder(name);
+  return new Column(name);
 }

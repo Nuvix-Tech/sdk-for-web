@@ -23,8 +23,8 @@ export default {
       name: "Nuvix",
       extend: true,
       globals: {
-        'socket.io-client': 'io'
-      }
+        "socket.io-client": "io",
+      },
     },
   ],
 };
