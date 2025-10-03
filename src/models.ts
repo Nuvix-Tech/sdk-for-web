@@ -13,7 +13,7 @@ export namespace Models {
     /**
      * List of documents.
      */
-    documents: Document[];
+    data: Document[];
   };
   /**
    * Sessions List
@@ -26,7 +26,7 @@ export namespace Models {
     /**
      * List of sessions.
      */
-    sessions: Session[];
+    data: Session[];
   };
   /**
    * Identities List
@@ -39,7 +39,7 @@ export namespace Models {
     /**
      * List of identities.
      */
-    identities: Identity[];
+    data: Identity[];
   };
   /**
    * Logs List
@@ -52,7 +52,7 @@ export namespace Models {
     /**
      * List of logs.
      */
-    logs: Log[];
+    data: Log[];
   };
   /**
    * Files List
@@ -65,7 +65,7 @@ export namespace Models {
     /**
      * List of files.
      */
-    files: File[];
+    data: File[];
   };
   /**
    * Teams List
@@ -78,7 +78,7 @@ export namespace Models {
     /**
      * List of teams.
      */
-    teams: Team<Preferences>[];
+    data: Team<Preferences>[];
   };
   /**
    * Memberships List
@@ -91,7 +91,7 @@ export namespace Models {
     /**
      * List of memberships.
      */
-    memberships: Membership[];
+    data: Membership[];
   };
   /**
    * Executions List
@@ -104,7 +104,7 @@ export namespace Models {
     /**
      * List of executions.
      */
-    executions: Execution[];
+    data: Execution[];
   };
   /**
    * Countries List
@@ -117,7 +117,7 @@ export namespace Models {
     /**
      * List of countries.
      */
-    countries: Country[];
+    data: Country[];
   };
   /**
    * Continents List
@@ -130,7 +130,7 @@ export namespace Models {
     /**
      * List of continents.
      */
-    continents: Continent[];
+    data: Continent[];
   };
   /**
    * Languages List
@@ -143,7 +143,7 @@ export namespace Models {
     /**
      * List of languages.
      */
-    languages: Language[];
+    data: Language[];
   };
   /**
    * Currencies List
@@ -156,7 +156,7 @@ export namespace Models {
     /**
      * List of currencies.
      */
-    currencies: Currency[];
+    data: Currency[];
   };
   /**
    * Phones List
@@ -169,7 +169,7 @@ export namespace Models {
     /**
      * List of phones.
      */
-    phones: Phone[];
+    data: Phone[];
   };
   /**
    * Locale codes list
@@ -182,7 +182,7 @@ export namespace Models {
     /**
      * List of localeCodes.
      */
-    localeCodes: LocaleCode[];
+    data: LocaleCode[];
   };
   /**
    * Document

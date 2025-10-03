@@ -29,11 +29,11 @@ export type RealtimeResponse = {
    * Data associated with the response based on the response type.
    */
   data:
-    | RealtimeResponseAuthenticated
-    | RealtimeResponseConnected
-    | RealtimeResponseError
-    | RealtimeResponseEvent<unknown>
-    | undefined;
+  | RealtimeResponseAuthenticated
+  | RealtimeResponseConnected
+  | RealtimeResponseError
+  | RealtimeResponseEvent<unknown>
+  | undefined;
 };
 
 /**
@@ -285,7 +285,7 @@ interface ErrorResponse {
   error: NuvixException;
 }
 
-export type SafeResponse<T> = SuccessResponse<T> | ErrorResponse;
+export type SafeResponse<T> = (T extends { data: any[], total: number } ? T & { error: null; } : SuccessResponse<T>) | ErrorResponse;
 
 export type ResponseType<T extends Client, R> = T["safeResponse"] extends true
   ? SafeResponse<R>

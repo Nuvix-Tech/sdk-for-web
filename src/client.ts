@@ -230,7 +230,7 @@ class Client<IsSafe extends boolean = false | true> {
             !this.realtime.reconnect ||
             (this.realtime?.lastMessage?.type === "error" &&
               (<RealtimeResponseError>this.realtime?.lastMessage.data).code ===
-                1008)
+              1008)
           ) {
             this.realtime.reconnect = true;
             return;
@@ -554,6 +554,9 @@ class Client<IsSafe extends boolean = false | true> {
     try {
       const res = await callback();
       if (this.safeResponse) {
+        if (res && typeof res === "object" && "data" in res && "total" in res) {
+          return { ...res, error: null }
+        }
         return { data: res, error: null } as unknown as ResponseType<
           Client,
           Awaited<R>
