@@ -5,23 +5,58 @@ import { Cast, Column, ColumnBuilder, ValidateCast } from "./utils";
 import { ResponseType } from "../type";
 
 export type NuvqlOperator =
-  | "eq"
-  | "neq"
-  | "gt"
-  | "gte"
-  | "lt"
-  | "lte"
-  | "like"
-  | "ilike"
-  | "in"
-  | "nin"
-  | "is"
-  | "isnot"
-  | "between"
-  | "nbetween"
-  | "contains"
-  | "startswith"
-  | "endswith";
+  // Comparison operators
+  | "eq"      // =
+  | "neq"     // <> or !=
+  | "gt"      // >
+  | "gte"     // >=
+  | "lt"      // <
+  | "lte"     // <=
+  // Comparison with quantifiers
+  | "eqAny" | "eqAll"
+  | "neqAny" | "neqAll"
+  | "gtAny" | "gtAll"
+  | "gteAny" | "gteAll"
+  | "ltAny" | "ltAll"
+  | "lteAny" | "lteAll"
+  // String operators
+  | "like"    // LIKE
+  | "ilike"   // ILIKE
+  | "match"   // ~ (regex match)
+  | "imatch"  // ~* (case-insensitive regex match)
+  // String with quantifiers
+  | "likeAny" | "likeAll"
+  | "ilikeAny" | "ilikeAll"
+  | "matchAny" | "matchAll"
+  | "imatchAny" | "imatchAll"
+  // Array/List operators
+  | "in"      // IN
+  | "notin"   // NOT IN
+  | "ov"      // && (overlaps)
+  | "cs"      // @> (contains)
+  | "cd"      // <@ (contained by)
+  // Range operators
+  | "between" // BETWEEN
+  | "nbetween" // NOT BETWEEN
+  | "sl"      // << (strictly left of)
+  | "sr"      // >> (strictly right of)
+  | "nxr"     // &< (does not extend right of)
+  | "nxl"     // &> (does not extend left of)
+  | "adj"     // -|- (adjacent to)
+  // Null operators
+  | "is"      // IS
+  | "isnot"   // IS NOT
+  | "null"    // IS NULL
+  | "notnull" // IS NOT NULL
+  | "isdistinct" // IS DISTINCT FROM
+  // Full-Text Search
+  | "fts"     // @@ (to_tsquery)
+  | "plfts"   // @@ (plainto_tsquery)
+  | "phfts"   // @@ (phraseto_tsquery)
+  | "wfts"    // @@ (websearch_to_tsquery)
+  // Misc operators
+  | "all"     // ALL
+  | "any"     // ANY
 
 export type NuvqlLogicalOperator = "and" | "or" | "not";
 
@@ -63,8 +98,8 @@ type AllAvailableColumns<
 > =
   | TableColumns<TTable>
   | {
-      [K in keyof TJoinedTables]: `${string & K}.${string & TableColumns<TJoinedTables[K]["table"]>}`;
-    }[keyof TJoinedTables];
+    [K in keyof TJoinedTables]: `${string & K}.${string & TableColumns<TJoinedTables[K]["table"]>}`;
+  }[keyof TJoinedTables];
 
 type AllAvailableGroupColumns<
   TTable extends TableOrView,
@@ -75,12 +110,12 @@ type AllAvailableGroupColumns<
 > =
   | TableColumns<TTable>
   | {
-      [K in keyof TJoinedTables]: TJoinedTables[K]["options"] extends {
-        flatten: true;
-      }
-        ? `${string & K}.${string & TableColumns<TJoinedTables[K]["table"]>}`
-        : never;
-    }[keyof TJoinedTables];
+    [K in keyof TJoinedTables]: TJoinedTables[K]["options"] extends {
+      flatten: true;
+    }
+    ? `${string & K}.${string & TableColumns<TJoinedTables[K]["table"]>}`
+    : never;
+  }[keyof TJoinedTables];
 
 type ColumnValueOrReference<
   TColumnType,
@@ -93,19 +128,19 @@ type ColumnValueOrReference<
 > =
   | TColumnType
   | {
-      [TableName in keyof TSchema["Tables"]]: TSchema["Tables"][TableName] extends TParentTable
-        ? `"${string & TableName}.${string &
-            keyof TSchema["Tables"][TableName]["Row"]}"`
-        : never;
-    }[keyof TSchema["Tables"]]
+    [TableName in keyof TSchema["Tables"]]: TSchema["Tables"][TableName] extends TParentTable
+    ? `"${string & TableName}.${string &
+    keyof TSchema["Tables"][TableName]["Row"]}"`
+    : never;
+  }[keyof TSchema["Tables"]]
   | {
-      [JoinName in keyof TJoinedTables]: TJoinedTables[JoinName]["options"] extends {
-        flatten: true;
-      }
-        ? `"${string & JoinName}.${string &
-            keyof TJoinedTables[JoinName]["table"]["Row"]}"`
-        : never;
-    }[keyof TJoinedTables];
+    [JoinName in keyof TJoinedTables]: TJoinedTables[JoinName]["options"] extends {
+      flatten: true;
+    }
+    ? `"${string & JoinName}.${string &
+    keyof TJoinedTables[JoinName]["table"]["Row"]}"`
+    : never;
+  }[keyof TJoinedTables];
 
 // ============ SELECTION TYPES ============
 
@@ -119,8 +154,8 @@ type Prev = [never, 0, 1, 2, 3, 4, 5];
 type JsonPathString<T extends string, N extends number = 5> = N extends 0
   ? never
   :
-      | `${T}${JsonPathOperator}${JsonPathSegment}`
-      | `${T}->${JsonPathSegment}${JsonPathString<string, Prev[N]>}`;
+  | `${T}${JsonPathOperator}${JsonPathSegment}`
+  | `${T}->${JsonPathSegment}${JsonPathString<string, Prev[N]>}`;
 
 type JsonPath<
   TTable extends TableOrView,
@@ -135,11 +170,11 @@ type JsonPath<
 // Better JSON path to field name conversion
 export type JsonPathToFieldName<T extends string> =
   T extends `${infer Head}->>${infer Tail}`
-    ? `${JsonPathToFieldName<Head>}_${Tail}`
-    : T extends `${infer Head}->${infer Tail}`
-      ? // We need to handle the tail recursively as well.
-        JsonPathToFieldName<`${Head}_${JsonPathToFieldName<Tail>}`>
-      : T;
+  ? `${JsonPathToFieldName<Head>}_${Tail}`
+  : T extends `${infer Head}->${infer Tail}`
+  ? // We need to handle the tail recursively as well.
+  JsonPathToFieldName<`${Head}_${JsonPathToFieldName<Tail>}`>
+  : T;
 
 // Helper to resolve column type from joined tables
 type ResolveColumnType<
@@ -151,21 +186,21 @@ type ResolveColumnType<
   Col extends string,
 > =
   Col extends TableColumns<TTable>
-    ? ColumnType<TTable, Col>
-    : Col extends `${infer JoinName}.${infer JoinCol}`
-      ? JoinName extends keyof TJoinedTables
-        ? JoinCol extends TableColumns<TJoinedTables[JoinName]["table"]>
-          ? ColumnType<TJoinedTables[JoinName]["table"], JoinCol>
-          : unknown
-        : unknown
-      : unknown;
+  ? ColumnType<TTable, Col>
+  : Col extends `${infer JoinName}.${infer JoinCol}`
+  ? JoinName extends keyof TJoinedTables
+  ? JoinCol extends TableColumns<TJoinedTables[JoinName]["table"]>
+  ? ColumnType<TJoinedTables[JoinName]["table"], JoinCol>
+  : unknown
+  : unknown
+  : unknown;
 
 type JsonValueType<TColType, TPath extends string> =
   TColType extends Record<string, any>
-    ? TPath extends keyof TColType
-      ? TColType[TPath]
-      : unknown // For deep paths beyond first level or unknown keys
-    : unknown; // If not an object, JSON path extraction results in unknown
+  ? TPath extends keyof TColType
+  ? TColType[TPath]
+  : unknown // For deep paths beyond first level or unknown keys
+  : unknown; // If not an object, JSON path extraction results in unknown
 
 // selection input type for complex selections
 type SelectionInput<
@@ -178,17 +213,17 @@ type SelectionInput<
   | "*"
   | AllAvailableColumns<T, TJoinedTables> // Direct column or joined column
   | ColumnBuilder<
-      (TableColumns<T> & string) | JsonPath<T, TJoinedTables>,
-      any,
-      any,
-      any
-    > // ColumnBuilder instance
+    (TableColumns<T> & string) | JsonPath<T, TJoinedTables>,
+    any,
+    any,
+    any
+  > // ColumnBuilder instance
   | `${string}:${AllAvailableColumns<T, TJoinedTables> & string}` // alias:column
   | `${string}:${(
-      | JsonPath<T, TJoinedTables>
-      | `${AllAvailableColumns<T, TJoinedTables> & string}::${Cast}`
-    ) &
-      string}` // alias:json_path or alias:column::cast
+    | JsonPath<T, TJoinedTables>
+    | `${AllAvailableColumns<T, TJoinedTables> & string}::${Cast}`
+  ) &
+  string}` // alias:json_path or alias:column::cast
   | JsonPath<T, TJoinedTables> // column->>json_path
   | `${AllAvailableColumns<T, TJoinedTables> & string}::${Cast}`; // column::cast
 
@@ -209,16 +244,16 @@ type RecursiveJsonValueType<
 > = TSubPath extends `${infer Key}->>${string}`
   ? string // Operator ->> always returns text
   : TSubPath extends `${infer Key}->${infer Rest}`
-    ? TBase extends Record<string, any>
-      ? Key extends keyof TBase
-        ? RecursiveJsonValueType<TBase[Key], Rest>
-        : unknown
-      : unknown
-    : TBase extends Record<string, any>
-      ? TSubPath extends keyof TBase
-        ? TBase[TSubPath]
-        : unknown
-      : unknown;
+  ? TBase extends Record<string, any>
+  ? Key extends keyof TBase
+  ? RecursiveJsonValueType<TBase[Key], Rest>
+  : unknown
+  : unknown
+  : TBase extends Record<string, any>
+  ? TSubPath extends keyof TBase
+  ? TBase[TSubPath]
+  : unknown
+  : unknown;
 
 // Resolves the final type of a column or a full JSON path
 type ResolvePathType<
@@ -227,31 +262,31 @@ type ResolvePathType<
   P extends string,
 > =
   GetBasePath<P> extends infer BasePath
-    ? BasePath extends AllAvailableColumns<TTable, TJoinedTables>
-      ? ResolveColumnType<
-          TTable,
-          TJoinedTables,
-          BasePath & string
-        > extends infer ColType
-        ? P extends `${string}->${string}`
-          ? RecursiveJsonValueType<ColType, GetJsonSubPath<P>>
-          : ColType // This was a simple column path
-        : unknown
-      : unknown
-    : never;
+  ? BasePath extends AllAvailableColumns<TTable, TJoinedTables>
+  ? ResolveColumnType<
+    TTable,
+    TJoinedTables,
+    BasePath & string
+  > extends infer ColType
+  ? P extends `${string}->${string}`
+  ? RecursiveJsonValueType<ColType, GetJsonSubPath<P>>
+  : ColType // This was a simple column path
+  : unknown
+  : unknown
+  : never;
 
 // Parses a selection string into its constituent parts: Alias, Path, and Cast
 type ParseSelection<S extends string> = S extends `${infer Rest}::${infer C}`
   ? Rest extends `${infer Alias}:${infer Path}`
-    ? C extends Cast
-      ? { Alias: Alias; Path: Path; Cast: C }
-      : { Alias: Alias; Path: Path; Cast: unknown }
-    : C extends Cast
-      ? { Alias: JsonPathToFieldName<Rest>; Path: Rest; Cast: C }
-      : { Alias: JsonPathToFieldName<Rest>; Path: Rest; Cast: unknown }
+  ? C extends Cast
+  ? { Alias: Alias; Path: Path; Cast: C }
+  : { Alias: Alias; Path: Path; Cast: unknown }
+  : C extends Cast
+  ? { Alias: JsonPathToFieldName<Rest>; Path: Rest; Cast: C }
+  : { Alias: JsonPathToFieldName<Rest>; Path: Rest; Cast: unknown }
   : S extends `${infer Alias}:${infer Path}`
-    ? { Alias: Alias; Path: Path; Cast: unknown }
-    : { Alias: JsonPathToFieldName<S>; Path: S; Cast: unknown };
+  ? { Alias: Alias; Path: Path; Cast: unknown }
+  : { Alias: JsonPathToFieldName<S>; Path: S; Cast: unknown };
 
 type ExtractSelectionType<
   TTable extends TableOrView,
@@ -264,49 +299,49 @@ type ExtractSelectionType<
 > =
   // Case 1: ColumnBuilder
   TInput extends "*"
-    ? Readonly<TTable["Row"]>
-    : TInput extends ColumnBuilder<infer C, infer A, infer Cast, any>
-      ? C extends string
-        ? {
-            readonly [K in A extends string
-              ? A
-              : JsonPathToFieldName<C>]: Cast extends Cast & string
-              ? ValidateCast<ResolvePathType<TTable, TJoinedTables, C>, Cast>
-              : ResolvePathType<TTable, TJoinedTables, C>;
-          }
-        : QueryBuildError<"Invalid ColumnBuilder">
-      : // Case 2: String literal
-        TInput extends string
-        ? ParseSelection<TInput> extends {
-            Alias: infer A;
-            Path: infer P;
-            Cast: infer C;
-          }
-          ? P extends string
-            ? ResolvePathType<TTable, TJoinedTables, P> extends infer PathType
-              ? PathType extends QueryBuildError<any>
-                ? PathType
-                : {
-                    readonly [K in A extends string ? A : never]: C extends Cast
-                      ? ValidateCast<PathType, C & string>
-                      : PathType;
-                  }
-              : QueryBuildError<`Could not resolve path type for '${P}'`>
-            : QueryBuildError<`Invalid path in selection: ${TInput}`>
-          : QueryBuildError<`Could not parse selection string: ${TInput}`>
-        : QueryBuildError<"Invalid selection input">;
+  ? Readonly<TTable["Row"]>
+  : TInput extends ColumnBuilder<infer C, infer A, infer Cast, any>
+  ? C extends string
+  ? {
+    readonly [K in A extends string
+    ? A
+    : JsonPathToFieldName<C>]: Cast extends Cast & string
+    ? ValidateCast<ResolvePathType<TTable, TJoinedTables, C>, Cast>
+    : ResolvePathType<TTable, TJoinedTables, C>;
+  }
+  : QueryBuildError<"Invalid ColumnBuilder">
+  : // Case 2: String literal
+  TInput extends string
+  ? ParseSelection<TInput> extends {
+    Alias: infer A;
+    Path: infer P;
+    Cast: infer C;
+  }
+  ? P extends string
+  ? ResolvePathType<TTable, TJoinedTables, P> extends infer PathType
+  ? PathType extends QueryBuildError<any>
+  ? PathType
+  : {
+    readonly [K in A extends string ? A : never]: C extends Cast
+    ? ValidateCast<PathType, C & string>
+    : PathType;
+  }
+  : QueryBuildError<`Could not resolve path type for '${P}'`>
+  : QueryBuildError<`Invalid path in selection: ${TInput}`>
+  : QueryBuildError<`Could not parse selection string: ${TInput}`>
+  : QueryBuildError<"Invalid selection input">;
 
 // selection merging
 type MergeSelections<T extends readonly any[]> = DatabaseTypes.SimplifyDeep<
   T extends readonly [infer First, ...infer Rest]
-    ? First extends Record<string, any>
-      ? Rest extends readonly any[]
-        ? DatabaseTypes.Prettify<First & MergeSelections<Rest>>
-        : First
-      : Rest extends readonly any[]
-        ? MergeSelections<Rest>
-        : {}
-    : {}
+  ? First extends Record<string, any>
+  ? Rest extends readonly any[]
+  ? DatabaseTypes.Prettify<First & MergeSelections<Rest>>
+  : First
+  : Rest extends readonly any[]
+  ? MergeSelections<Rest>
+  : {}
+  : {}
 >;
 
 // ============ JOIN & RESULT TYPES ============
@@ -314,8 +349,8 @@ type MergeSelections<T extends readonly any[]> = DatabaseTypes.SimplifyDeep<
 // Utility to get the selection result from a builder instance type
 type GetSelectionResult<TBuilder> =
   TBuilder extends TableQueryBuilder<any, any, any, infer TResult, any, any>
-    ? TResult
-    : never;
+  ? TResult
+  : never;
 
 // Computes the kind of a single joined table in the final result
 type ShapedJoinResult<
@@ -325,26 +360,26 @@ type ShapedJoinResult<
 > = TJoinOptions extends { flatten: true }
   ? TJoinResult // Flattened properties are merged directly
   : {
-      readonly [K in TJoinName]: TJoinOptions extends { kind: "one" }
-        ? TJoinResult | null // Shaped as a single object
-        : TJoinResult[]; // Default kind is an array of objects
-    };
+    readonly [K in TJoinName]: TJoinOptions extends { kind: "one" }
+    ? TJoinResult | null // Shaped as a single object
+    : TJoinResult[]; // Default kind is an array of objects
+  };
 
 // Merges the main result with all joined results
 type CombineWithJoins<TResult, TJoinedTables> = DatabaseTypes.Prettify<
   TResult &
-    UnionToIntersection<
-      {
-        [K in keyof TJoinedTables]: K extends string
-          ? TJoinedTables[K] extends {
-              options: infer O extends JoinOptions;
-              result: infer R;
-            }
-            ? ShapedJoinResult<K, O, R>
-            : never
-          : never;
-      }[keyof TJoinedTables]
-    >
+  UnionToIntersection<
+    {
+      [K in keyof TJoinedTables]: K extends string
+      ? TJoinedTables[K] extends {
+        options: infer O extends JoinOptions;
+        result: infer R;
+      }
+      ? ShapedJoinResult<K, O, R>
+      : never
+      : never;
+    }[keyof TJoinedTables]
+  >
 >;
 
 type JoinType = "left" | "inner" | "right" | "full";
@@ -373,11 +408,11 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 
 type OrderObject<TTable extends TableOrView> = {
   [k in TableColumns<TTable> | JsonPath<TTable>]?:
-    | "asc"
-    | "desc"
-    | `${"asc" | "desc"}.${"nullsfirst" | "nullslast"}`
-    | "nullsfirst"
-    | "nullslast";
+  | "asc"
+  | "desc"
+  | `${"asc" | "desc"}.${"nullsfirst" | "nullslast"}`
+  | "nullsfirst"
+  | "nullslast";
 };
 
 // ============ QUERY BUILDER ============
@@ -402,8 +437,7 @@ export class TableQueryBuilder<
     }
   > = {},
   TResultFinal = TResult[],
-> implements PromiseLike<ResponseType<TClient, TResultFinal>>
-{
+> implements PromiseLike<ResponseType<TClient, TResultFinal>> {
   // --- IMMUTABLE STATE ---
   private readonly _client: TClient;
   private readonly _config: {
@@ -489,15 +523,15 @@ export class TableQueryBuilder<
     TTable,
     TSchema,
     TSelections extends []
-      ? TTable["Row"]
-      : MergeSelections<{
-          [I in keyof TSelections]: ExtractSelectionType<
-            TTable,
-            TSelections[I],
-            TSchema,
-            TJoinedTables
-          >;
-        }>,
+    ? TTable["Row"]
+    : MergeSelections<{
+      [I in keyof TSelections]: ExtractSelectionType<
+        TTable,
+        TSelections[I],
+        TSchema,
+        TJoinedTables
+      >;
+    }>,
     TParentTable,
     TJoinedTables
   >;
@@ -554,8 +588,8 @@ export class TableQueryBuilder<
       TResult,
       TJoinedTables & {
         [K in TJoinOptions["as"] extends string
-          ? TJoinOptions["as"]
-          : TJoinOptions["table"]]: {
+        ? TJoinOptions["as"]
+        : TJoinOptions["table"]]: {
           table: TSchema["Tables"][TJoinOptions["table"]];
           options: TJoinOptions;
           result: GetSelectionResult<TJoinBuilder>;
@@ -565,8 +599,8 @@ export class TableQueryBuilder<
     TParentTable,
     TJoinedTables & {
       [K in TJoinOptions["as"] extends string
-        ? TJoinOptions["as"]
-        : TJoinOptions["table"]]: {
+      ? TJoinOptions["as"]
+      : TJoinOptions["table"]]: {
         table: TSchema["Tables"][TJoinOptions["table"]];
         options: TJoinOptions;
         result: GetSelectionResult<TJoinBuilder>;
@@ -727,66 +761,23 @@ export class TableQueryBuilder<
 
   like<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
-    value: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+    value: string,
   ): this {
     return this.addCondition({
       column: column as string,
       operator: "like",
       value,
-      isColumnReference: this.isColumnReference(value),
     });
   }
 
   ilike<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
-    value: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+    value: string,
   ): this {
     return this.addCondition({
       column: column as string,
       operator: "ilike",
       value,
-      isColumnReference: this.isColumnReference(value),
-    });
-  }
-
-  contains<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
-    column: K,
-    value: ColumnValueOrReference<
-      string | any[],
-      TSchema,
-      TParentTable,
-      TJoinedTables
-    >,
-  ): this {
-    return this.addCondition({
-      column: column as string,
-      operator: "contains",
-      value,
-      isColumnReference: this.isColumnReference(value),
-    });
-  }
-
-  startswith<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
-    column: K,
-    value: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
-  ): this {
-    return this.addCondition({
-      column: column as string,
-      operator: "startswith",
-      value,
-      isColumnReference: this.isColumnReference(value),
-    });
-  }
-
-  endswith<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
-    column: K,
-    value: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
-  ): this {
-    return this.addCondition({
-      column: column as string,
-      operator: "endswith",
-      value,
-      isColumnReference: this.isColumnReference(value),
     });
   }
 
@@ -797,17 +788,6 @@ export class TableQueryBuilder<
     return this.addCondition({
       column: column as string,
       operator: "in",
-      value: values,
-    });
-  }
-
-  nin<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
-    column: K,
-    values: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>[],
-  ): this {
-    return this.addCondition({
-      column: column as string,
-      operator: "nin",
       value: values,
     });
   }
@@ -868,6 +848,763 @@ export class TableQueryBuilder<
     column: K,
   ): this {
     return this.is(column, "not_null");
+  }
+
+  // ============ COMPARISON OPERATORS WITH QUANTIFIERS ============
+
+  /**
+   * Filter resources where column equals ANY of the provided values.
+   * Generates: column.eq(any,value1,value2,...)
+   */
+  eqAny<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...values: ColumnValueOrReference<
+      ResolveColumnType<TTable, TJoinedTables, K & string>,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "eqAny",
+      value: values,
+    });
+  }
+
+  /**
+   * Filter resources where column equals ALL of the provided values.
+   * Generates: column.eq(all,value1,value2,...)
+   */
+  eqAll<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...values: ColumnValueOrReference<
+      ResolveColumnType<TTable, TJoinedTables, K & string>,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "eqAll",
+      value: values,
+    });
+  }
+
+  /**
+   * Filter resources where column not equals ANY of the provided values.
+   * Generates: column.neq(any,value1,value2,...)
+   */
+  neqAny<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...values: ColumnValueOrReference<
+      ResolveColumnType<TTable, TJoinedTables, K & string>,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "neqAny",
+      value: values,
+    });
+  }
+
+  /**
+   * Filter resources where column not equals ALL of the provided values.
+   * Generates: column.neq(all,value1,value2,...)
+   */
+  neqAll<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...values: ColumnValueOrReference<
+      ResolveColumnType<TTable, TJoinedTables, K & string>,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "neqAll",
+      value: values,
+    });
+  }
+
+  /**
+   * Filter resources where column is greater than ANY of the provided values.
+   * Generates: column.gt(any,value1,value2,...)
+   */
+  gtAny<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...values: ColumnValueOrReference<
+      ResolveColumnType<TTable, TJoinedTables, K & string>,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "gtAny",
+      value: values,
+    });
+  }
+
+  /**
+   * Filter resources where column is greater than ALL of the provided values.
+   * Generates: column.gt(all,value1,value2,...)
+   */
+  gtAll<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...values: ColumnValueOrReference<
+      ResolveColumnType<TTable, TJoinedTables, K & string>,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "gtAll",
+      value: values,
+    });
+  }
+
+  /**
+   * Filter resources where column is greater than or equal to ANY of the provided values.
+   * Generates: column.gte(any,value1,value2,...)
+   */
+  gteAny<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...values: ColumnValueOrReference<
+      ResolveColumnType<TTable, TJoinedTables, K & string>,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "gteAny",
+      value: values,
+    });
+  }
+
+  /**
+   * Filter resources where column is greater than or equal to ALL of the provided values.
+   * Generates: column.gte(all,value1,value2,...)
+   */
+  gteAll<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...values: ColumnValueOrReference<
+      ResolveColumnType<TTable, TJoinedTables, K & string>,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "gteAll",
+      value: values,
+    });
+  }
+
+  /**
+   * Filter resources where column is less than ANY of the provided values.
+   * Generates: column.lt(any,value1,value2,...)
+   */
+  ltAny<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...values: ColumnValueOrReference<
+      ResolveColumnType<TTable, TJoinedTables, K & string>,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "ltAny",
+      value: values,
+    });
+  }
+
+  /**
+   * Filter resources where column is less than ALL of the provided values.
+   * Generates: column.lt(all,value1,value2,...)
+   */
+  ltAll<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...values: ColumnValueOrReference<
+      ResolveColumnType<TTable, TJoinedTables, K & string>,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "ltAll",
+      value: values,
+    });
+  }
+
+  /**
+   * Filter resources where column is less than or equal to ANY of the provided values.
+   * Generates: column.lte(any,value1,value2,...)
+   */
+  lteAny<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...values: ColumnValueOrReference<
+      ResolveColumnType<TTable, TJoinedTables, K & string>,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "lteAny",
+      value: values,
+    });
+  }
+
+  /**
+   * Filter resources where column is less than or equal to ALL of the provided values.
+   * Generates: column.lte(all,value1,value2,...)
+   */
+  lteAll<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...values: ColumnValueOrReference<
+      ResolveColumnType<TTable, TJoinedTables, K & string>,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "lteAll",
+      value: values,
+    });
+  }
+
+  // ============ STRING OPERATORS ============
+
+  /**
+   * Filter resources where attribute matches the regex pattern.
+   * Uses PostgreSQL ~ operator for case-sensitive regex matching.
+   *
+   * @param column - The column to filter on
+   * @param pattern - The regex pattern to match
+   */
+  match<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    pattern: string,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "match",
+      value: pattern,
+    });
+  }
+
+  /**
+   * Filter resources where attribute matches the regex pattern (case-insensitive).
+   * Uses PostgreSQL ~* operator for case-insensitive regex matching.
+   *
+   * @param column - The column to filter on
+   * @param pattern - The regex pattern to match
+   */
+  imatch<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    pattern: string,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "imatch",
+      value: pattern,
+    });
+  }
+
+  // ============ STRING OPERATORS WITH QUANTIFIERS ============
+
+  /**
+   * Filter resources where column LIKE ANY of the provided patterns.
+   * Generates: column.like(any,pattern1,pattern2,...)
+   */
+  likeAny<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...patterns: string[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "likeAny",
+      value: patterns,
+    });
+  }
+
+  /**
+   * Filter resources where column LIKE ALL of the provided patterns.
+   * Generates: column.like(all,pattern1,pattern2,...)
+   */
+  likeAll<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...patterns: string[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "likeAll",
+      value: patterns,
+    });
+  }
+
+  /**
+   * Filter resources where column ILIKE ANY of the provided patterns.
+   * Generates: column.ilike(any,pattern1,pattern2,...)
+   */
+  ilikeAny<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...patterns: string[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "ilikeAny",
+      value: patterns,
+    });
+  }
+
+  /**
+   * Filter resources where column ILIKE ALL of the provided patterns.
+   * Generates: column.ilike(all,pattern1,pattern2,...)
+   */
+  ilikeAll<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...patterns: string[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "ilikeAll",
+      value: patterns,
+    });
+  }
+
+  /**
+   * Filter resources where column matches ANY of the provided regex patterns.
+   * Generates: column.match(any,pattern1,pattern2,...)
+   */
+  matchAny<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...patterns: string[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "matchAny",
+      value: patterns,
+    });
+  }
+
+  /**
+   * Filter resources where column matches ALL of the provided regex patterns.
+   * Generates: column.match(all,pattern1,pattern2,...)
+   */
+  matchAll<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...patterns: string[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "matchAll",
+      value: patterns,
+    });
+  }
+
+  /**
+   * Filter resources where column matches ANY of the provided regex patterns (case-insensitive).
+   * Generates: column.imatch(any,pattern1,pattern2,...)
+   */
+  imatchAny<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...patterns: string[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "imatchAny",
+      value: patterns,
+    });
+  }
+
+  /**
+   * Filter resources where column matches ALL of the provided regex patterns (case-insensitive).
+   * Generates: column.imatch(all,pattern1,pattern2,...)
+   */
+  imatchAll<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    ...patterns: string[]
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "imatchAll",
+      value: patterns,
+    });
+  }
+
+  // ============ ARRAY/LIST OPERATORS ============
+
+  /**
+   * Filter resources where attribute is NOT in the list of values.
+   *
+   * @param column - The column to filter on
+   * @param values - The list of values to exclude
+   */
+  notin<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    values: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>[],
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "notin",
+      value: values,
+    });
+  }
+
+  /**
+   * Filter resources where arrays overlap (have elements in common).
+   * Uses PostgreSQL && operator.
+   *
+   * @param column - The column to filter on
+   * @param values - The array values to check for overlap
+   */
+  ov<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    values: ColumnValueOrReference<any[], TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "ov",
+      value: values,
+    });
+  }
+
+  /**
+   * Filter resources where the column array/jsonb contains the specified value(s).
+   * Uses PostgreSQL @> operator.
+   *
+   * @param column - The column to filter on
+   * @param value - The value(s) that should be contained
+   */
+  cs<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    value: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "cs",
+      value,
+      isColumnReference: this.isColumnReference(value),
+    });
+  }
+
+  /**
+   * Filter resources where the column array/jsonb is contained by the specified value(s).
+   * Uses PostgreSQL <@ operator.
+   *
+   * @param column - The column to filter on
+   * @param value - The value(s) that should contain the column
+   */
+  cd<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    value: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "cd",
+      value,
+      isColumnReference: this.isColumnReference(value),
+    });
+  }
+
+  // ============ RANGE OPERATORS ============
+
+  /**
+   * Filter resources where the range is strictly left of another range.
+   * Uses PostgreSQL << operator.
+   *
+   * @param column - The column to filter on
+   * @param range1 - The first range value
+   * @param range2 - The second range value
+   */
+  sl<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    range1: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+    range2: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "sl",
+      value: [range1, range2],
+    });
+  }
+
+  /**
+   * Filter resources where the range is strictly right of another range.
+   * Uses PostgreSQL >> operator.
+   *
+   * @param column - The column to filter on
+   * @param range1 - The first range value
+   * @param range2 - The second range value
+   */
+  sr<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    range1: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+    range2: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "sr",
+      value: [range1, range2],
+    });
+  }
+
+  /**
+   * Filter resources where the range does not extend to the right of another range.
+   * Uses PostgreSQL &< operator.
+   *
+   * @param column - The column to filter on
+   * @param range1 - The first range value
+   * @param range2 - The second range value
+   */
+  nxr<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    range1: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+    range2: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "nxr",
+      value: [range1, range2],
+    });
+  }
+
+  /**
+   * Filter resources where the range does not extend to the left of another range.
+   * Uses PostgreSQL &> operator.
+   *
+   * @param column - The column to filter on
+   * @param range1 - The first range value
+   * @param range2 - The second range value
+   */
+  nxl<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    range1: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+    range2: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "nxl",
+      value: [range1, range2],
+    });
+  }
+
+  /**
+   * Filter resources where the ranges are adjacent.
+   * Uses PostgreSQL -|- operator.
+   *
+   * @param column - The column to filter on
+   * @param range1 - The first range value
+   * @param range2 - The second range value
+   */
+  adj<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    range1: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+    range2: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "adj",
+      value: [range1, range2],
+    });
+  }
+
+  // ============ NULL OPERATORS ============
+
+  /**
+   * Filter resources where the column IS NULL.
+   *
+   * @param column - The column to filter on
+   */
+  null<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "null",
+      value: null,
+    });
+  }
+
+  /**
+   * Filter resources where the column IS NOT NULL.
+   *
+   * @param column - The column to filter on
+   */
+  notnull<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "notnull",
+      value: null,
+    });
+  }
+
+  /**
+   * Filter resources where the column IS DISTINCT FROM the value.
+   * This is different from neq because it handles NULL differently.
+   *
+   * @param column - The column to filter on
+   * @param value - Optional: The value to check distinctness against
+   */
+  isdistinct<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    value?: ColumnValueOrReference<
+      ResolveColumnType<TTable, TJoinedTables, K & string>,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "isdistinct",
+      value,
+      isColumnReference: value !== undefined ? this.isColumnReference(value) : false,
+    });
+  }
+
+  // ============ FULL-TEXT SEARCH OPERATORS ============
+
+  /**
+   * Full-text search using to_tsquery.
+   * Uses PostgreSQL @@ operator with to_tsquery.
+   *
+   * @param column - The column to search in (must have a text search index)
+   * @param queryOrLang - The tsquery string or language code
+   * @param query - Optional: The tsquery string if first param is language
+   */
+  fts<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    queryOrLang: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+    query?: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "fts",
+      value: query !== undefined ? [queryOrLang, query] : queryOrLang,
+    });
+  }
+
+  /**
+   * Full-text search using plainto_tsquery.
+   * Uses PostgreSQL @@ operator with plainto_tsquery.
+   *
+   * @param column - The column to search in (must have a text search index)
+   * @param queryOrLang - The plain text query string or language code
+   * @param query - Optional: The plain text query string if first param is language
+   */
+  plfts<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    queryOrLang: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+    query?: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "plfts",
+      value: query !== undefined ? [queryOrLang, query] : queryOrLang,
+    });
+  }
+
+  /**
+   * Full-text search using phraseto_tsquery.
+   * Uses PostgreSQL @@ operator with phraseto_tsquery.
+   *
+   * @param column - The column to search in (must have a text search index)
+   * @param queryOrLang - The phrase query string or language code
+   * @param query - Optional: The phrase query string if first param is language
+   */
+  phfts<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    queryOrLang: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+    query?: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "phfts",
+      value: query !== undefined ? [queryOrLang, query] : queryOrLang,
+    });
+  }
+
+  /**
+   * Full-text search using websearch_to_tsquery.
+   * Uses PostgreSQL @@ operator with websearch_to_tsquery.
+   *
+   * @param column - The column to search in (must have a text search index)
+   * @param queryOrLang - The web search query string or language code
+   * @param query - Optional: The web search query string if first param is language
+   */
+  wfts<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    queryOrLang: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+    query?: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "wfts",
+      value: query !== undefined ? [queryOrLang, query] : queryOrLang,
+    });
+  }
+
+  // ============ MISC OPERATORS ============
+
+  /**
+   * Filter resources where ALL values in the array satisfy the condition.
+   * Uses PostgreSQL ALL operator.
+   *
+   * @param column - The column to filter on
+   * @param value - The value to compare with all elements
+   */
+  all<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    value: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "all",
+      value,
+      isColumnReference: this.isColumnReference(value),
+    });
+  }
+
+  /**
+   * Filter resources where ANY value in the array satisfies the condition.
+   * Uses PostgreSQL ANY operator.
+   *
+   * @param column - The column to filter on
+   * @param value - The value to compare with any element
+   */
+  any<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
+    column: K,
+    value: ColumnValueOrReference<any, TSchema, TParentTable, TJoinedTables>,
+  ): this {
+    return this.addCondition({
+      column: column as string,
+      operator: "any",
+      value,
+      isColumnReference: this.isColumnReference(value),
+    });
   }
 
   // ============ LOGICAL OPERATORS ============
@@ -1150,8 +1887,8 @@ export class TableQueryBuilder<
   then<TResult1 = ResponseType<TClient, TResultFinal>, TResult2 = never>(
     onfulfilled?:
       | ((
-          value: ResponseType<TClient, TResultFinal>,
-        ) => TResult1 | PromiseLike<TResult1>)
+        value: ResponseType<TClient, TResultFinal>,
+      ) => TResult1 | PromiseLike<TResult1>)
       | null
       | undefined,
     onrejected?:
@@ -1310,36 +2047,206 @@ export class TableQueryBuilder<
           return `${column}.lt(${this.formatValue(value, isColumnReference)})`;
         case "lte":
           return `${column}.lte(${this.formatValue(value, isColumnReference)})`;
+        // Comparison operators with ANY quantifier
+        case "eqAny":
+          const eqAnyValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.eq(any,${eqAnyValues})`;
+        case "neqAny":
+          const neqAnyValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.neq(any,${neqAnyValues})`;
+        case "gtAny":
+          const gtAnyValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.gt(any,${gtAnyValues})`;
+        case "gteAny":
+          const gteAnyValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.gte(any,${gteAnyValues})`;
+        case "ltAny":
+          const ltAnyValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.lt(any,${ltAnyValues})`;
+        case "lteAny":
+          const lteAnyValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.lte(any,${lteAnyValues})`;
+        // Comparison operators with ALL quantifier
+        case "eqAll":
+          const eqAllValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.eq(all,${eqAllValues})`;
+        case "neqAll":
+          const neqAllValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.neq(all,${neqAllValues})`;
+        case "gtAll":
+          const gtAllValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.gt(all,${gtAllValues})`;
+        case "gteAll":
+          const gteAllValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.gte(all,${gteAllValues})`;
+        case "ltAll":
+          const ltAllValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.lt(all,${ltAllValues})`;
+        case "lteAll":
+          const lteAllValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.lte(all,${lteAllValues})`;
         case "like":
-          return `${column}.like(${this.formatValue(value, isColumnReference)})`;
+          return `${column}.like(${this.formatValue(value)})`;
         case "ilike":
-          return `${column}.ilike(${this.formatValue(value, isColumnReference)})`;
-        case "contains":
-          return `${column}.contains(${this.formatValue(value, isColumnReference)})`;
-        case "startswith":
-          return `${column}.startswith(${this.formatValue(value, isColumnReference)})`;
-        case "endswith":
-          return `${column}.endswith(${this.formatValue(value, isColumnReference)})`;
+          return `${column}.ilike(${this.formatValue(value)})`;
+        case "match":
+          return `${column}.match(${this.formatValue(value)})`;
+        case "imatch":
+          return `${column}.imatch(${this.formatValue(value)})`;
+        // String operators with ANY quantifier
+        case "likeAny":
+          const likeAnyValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.like(any,${likeAnyValues})`;
+        case "ilikeAny":
+          const ilikeAnyValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.ilike(any,${ilikeAnyValues})`;
+        case "matchAny":
+          const matchAnyValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.match(any,${matchAnyValues})`;
+        case "imatchAny":
+          const imatchAnyValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.imatch(any,${imatchAnyValues})`;
+        // String operators with ALL quantifier
+        case "likeAll":
+          const likeAllValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.like(all,${likeAllValues})`;
+        case "ilikeAll":
+          const ilikeAllValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.ilike(all,${ilikeAllValues})`;
+        case "matchAll":
+          const matchAllValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.match(all,${matchAllValues})`;
+        case "imatchAll":
+          const imatchAllValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.imatch(all,${imatchAllValues})`;
         case "in":
           const inValues = Array.isArray(value)
             ? value.map((v) => this.formatValue(v)).join(",")
-            : this.formatValue(value, isColumnReference);
-          return `${column}.in[${inValues}]`;
-        case "nin":
+            : this.formatValue(value);
+          return `${column}.in(${inValues})`;
+        case "notin":
           const ninValues = Array.isArray(value)
             ? value.map((v) => this.formatValue(v)).join(",")
-            : this.formatValue(value, isColumnReference);
-          return `${column}.nin[${ninValues}]`;
+            : this.formatValue(value);
+          return `${column}.notin(${ninValues})`;
+        case "ov":
+          const ovValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.ov(${ovValues})`;
+        case "cs":
+          const csValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.cs(${csValues})`;
+        case "cd":
+          const cdValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.cd(${cdValues})`;
         case "between":
           const [min, max] = Array.isArray(value) ? value : [value, value];
-          return `${column}.between[${this.formatValue(min)},${this.formatValue(max)}]`;
+          return `${column}.between(${this.formatValue(min)},${this.formatValue(max)})`;
         case "nbetween":
           const [nMin, nMax] = Array.isArray(value) ? value : [value, value];
-          return `${column}.nbetween[${this.formatValue(nMin)},${this.formatValue(nMax)}]`;
+          return `${column}.nbetween(${this.formatValue(nMin)},${this.formatValue(nMax)})`;
+        case "sl":
+          const [slMin, slMax] = Array.isArray(value) ? value : [value, value];
+          return `${column}.sl(${this.formatValue(slMin)},${this.formatValue(slMax)})`;
+        case "sr":
+          const [srMin, srMax] = Array.isArray(value) ? value : [value, value];
+          return `${column}.sr(${this.formatValue(srMin)},${this.formatValue(srMax)})`;
+        case "nxr":
+          const [nxrMin, nxrMax] = Array.isArray(value) ? value : [value, value];
+          return `${column}.nxr(${this.formatValue(nxrMin)},${this.formatValue(nxrMax)})`;
+        case "nxl":
+          const [nxlMin, nxlMax] = Array.isArray(value) ? value : [value, value];
+          return `${column}.nxl(${this.formatValue(nxlMin)},${this.formatValue(nxlMax)})`;
+        case "adj":
+          const [adjMin, adjMax] = Array.isArray(value) ? value : [value, value];
+          return `${column}.adj(${this.formatValue(adjMin)},${this.formatValue(adjMax)})`;
         case "is":
           return `${column}.is(${this.formatSpecialValue(value)})`;
         case "isnot":
           return `${column}.isnot(${this.formatSpecialValue(value)})`;
+        case "null":
+          return `${column}.null()`;
+        case "notnull":
+          return `${column}.notnull()`;
+        case "isdistinct":
+          return value !== undefined
+            ? `${column}.isdistinct(${this.formatValue(value)})`
+            : `${column}.isdistinct()`;
+        case "fts":
+          const ftsArgs = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.fts(${ftsArgs})`;
+        case "plfts":
+          const plftsArgs = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.plfts(${plftsArgs})`;
+        case "phfts":
+          const phftsArgs = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.phfts(${phftsArgs})`;
+        case "wfts":
+          const wftsArgs = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.wfts(${wftsArgs})`;
+        case "all":
+          const allValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.all(${allValues})`;
+        case "any":
+          const anyValues = Array.isArray(value)
+            ? value.map((v) => this.formatValue(v)).join(",")
+            : this.formatValue(value);
+          return `${column}.any(${anyValues})`;
         default:
           return `${column}.eq(${this.formatValue(value, isColumnReference)})`;
       }

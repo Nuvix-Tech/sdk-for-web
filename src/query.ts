@@ -1,6 +1,6 @@
 type QueryTypesSingle = string | number | boolean;
 export type QueryTypesList = string[] | number[] | boolean[] | Query[];
-export type QueryTypes = QueryTypesSingle | QueryTypesList;
+export type QueryTypes = QueryTypesSingle | QueryTypesList | any;
 type AttributesTypes = string | string[];
 
 /**

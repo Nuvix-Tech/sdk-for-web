@@ -7,7 +7,7 @@ import { TableQueryBuilder } from "builders";
 
 export class Database<
   Database extends Record<string, DatabaseTypes.GenericSchema>,
-  CollectionsTypes,
+  CollectionsTypes extends Record<string, Models.Document>,
   T extends BaseClient,
 > {
   client: T;

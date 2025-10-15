@@ -189,17 +189,21 @@ export namespace Models {
    */
   export type Document = {
     /**
+     * Document sequence number.
+     */
+    $sequence: number;
+    /**
      * Document ID.
      */
     $id: string;
     /**
      * Collection ID.
      */
-    $collectionId: string;
+    $collection: string;
     /**
-     * Database ID.
+     * Schema ID.
      */
-    $databaseId: string;
+    $schema: string;
     /**
      * Document creation date in ISO 8601 format.
      */
@@ -209,10 +213,10 @@ export namespace Models {
      */
     $updatedAt: string;
     /**
-     * Document permissions. [Learn more about permissions](https://nuvix.io/docs/permissions).
+     * Document permissions. [Learn more about permissions](https://docs.nuvix.in/permissions).
      */
     $permissions: string[];
-    [key: string]: any;
+    // [key: string]: any;
   };
   /**
    * Log

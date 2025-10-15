@@ -1,4 +1,4 @@
-import type { BaseClient } from "../base-client";
+import type { BaseClient, Models } from "../base-client";
 import { CollectionQueryBuilder } from "./collection";
 import { TableQueryBuilder } from "./table";
 import { DatabaseTypes } from "./types";
@@ -6,7 +6,7 @@ import { DatabaseTypes } from "./types";
 export class SchemaQueryBuilder<
   T extends BaseClient,
   Schema extends DatabaseTypes.GenericSchema,
-  CollectionsTypes = unknown,
+  CollectionsTypes extends Record<string, Models.Document>,
 > {
   constructor(
     private client: T,
@@ -29,8 +29,8 @@ export class SchemaQueryBuilder<
    * // perform CRUD operations on the collection
    * ```
    */
-  collection<Schema = unknown>(collectionId: string) {
-    return new CollectionQueryBuilder<T, Schema, CollectionsTypes>(
+  collection<Collection extends string & keyof CollectionsTypes>(collectionId: Collection) {
+    return new CollectionQueryBuilder<T, Collection, CollectionsTypes>(
       this.client,
       { collectionId, schema: this.schema },
     );

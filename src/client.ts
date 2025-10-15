@@ -1,5 +1,5 @@
 import { Account } from "services/account";
-import { BaseClient } from "./base-client";
+import { BaseClient, Models } from "./base-client";
 import { Avatars } from "services/avatars";
 import { Locale } from "services/locale";
 import { Messaging } from "services/messaging";
@@ -37,7 +37,7 @@ import type { DatabaseTypes } from "builders/types";
  */
 export class Client<
   DB extends Record<string, DatabaseTypes.GenericSchema>,
-  CollectionsTypes extends Record<string, any>,
+  CollectionsTypes extends Record<string, Models.Document>,
   IsSafe extends boolean,
 > extends BaseClient<IsSafe> {
   // Lazy private fields
