@@ -1,5 +1,5 @@
 import { PromiseResponseType } from "../type";
-import { NuvixException, Client, type Payload } from "../client";
+import { NuvixException, BaseClient, type Payload } from "../base-client";
 import type { Models } from "../models";
 import { SchemaQueryBuilder } from "../builders/schema";
 import { DatabaseTypes } from "builders/types";
@@ -8,7 +8,7 @@ import { TableQueryBuilder } from "builders";
 export class Database<
   Database extends Record<string, DatabaseTypes.GenericSchema>,
   CollectionsTypes,
-  T extends Client,
+  T extends BaseClient,
 > {
   client: T;
 

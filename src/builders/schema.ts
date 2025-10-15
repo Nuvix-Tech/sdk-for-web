@@ -1,10 +1,10 @@
-import type { Client } from "../client";
+import type { BaseClient } from "../base-client";
 import { CollectionQueryBuilder } from "./collection";
 import { TableQueryBuilder } from "./table";
 import { DatabaseTypes } from "./types";
 
 export class SchemaQueryBuilder<
-  T extends Client,
+  T extends BaseClient,
   Schema extends DatabaseTypes.GenericSchema,
   CollectionsTypes = unknown,
 > {
@@ -20,9 +20,9 @@ export class SchemaQueryBuilder<
    *
    * @example
    * ```ts
-   * import {Client} from 'nuvix';
+   * import {BaseClient} from 'nuvix';
    *
-   * const client = new Client({ project: <project-id> })
+   * const client = new BaseClient({ project: <project-id> })
    * const db = new Database(client)
    *
    * const collection = db.schema(<schema>).collection(<collectionId>)
@@ -44,9 +44,9 @@ export class SchemaQueryBuilder<
    *
    * @example
    * ```ts
-   * import { Client } from 'nuvix';
+   * import { BaseClient } from 'nuvix';
    *
-   * const client = new Client({ project: <project-id> })
+   * const client = new BaseClient({ project: <project-id> })
    * const db = new Database(client)
    *
    * const table = db.schema(<schema>).from(<table>)

@@ -5,10 +5,10 @@
  * For older versions, please check
  * [previous releases](https://github.com/nuvix-tech/sdk-for-web/releases).
  */
-export { Client, Query, NuvixException } from "./client";
+export { BaseClient, Query, NuvixException } from "./base-client";
 export { Account } from "./services/account";
 export { Avatars } from "./services/avatars";
-export { Database } from "./services/databases";
+export { Database } from "./services/database";
 // export { Functions } from './services/functions';
 // export { Graphql } from './services/graphql';
 export { Locale } from "./services/locale";
@@ -20,7 +20,7 @@ export type {
   Payload,
   RealtimeResponseEvent,
   UploadProgress,
-} from "./client";
+} from "./base-client";
 export type { QueryTypes, QueryTypesList } from "./query";
 export { Permission } from "./permission";
 export { Role } from "./role";

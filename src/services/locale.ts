@@ -1,8 +1,8 @@
 import { PromiseResponseType } from "../type";
-import { Client, type Payload } from "../client";
+import { BaseClient, type Payload } from "../base-client";
 import type { Models } from "../models";
 
-export class Locale<T extends Client = Client> {
+export class Locale<T extends BaseClient = BaseClient> {
   client: T;
 
   constructor(client: T) {

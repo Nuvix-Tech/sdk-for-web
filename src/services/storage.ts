@@ -1,16 +1,16 @@
 import { Service } from "../service";
 import {
   NuvixException,
-  type Client,
+  type BaseClient,
   type Payload,
   UploadProgress,
-} from "../client";
+} from "../base-client";
 import type { Models } from "../models";
 import { ImageGravity } from "../enums/image-gravity";
 import { ImageFormat } from "../enums/image-format";
 import { PromiseResponseType, ResponseType } from "../type";
 
-export class Storage<T extends Client> {
+export class Storage<T extends BaseClient> {
   client: T;
 
   constructor(client: T) {

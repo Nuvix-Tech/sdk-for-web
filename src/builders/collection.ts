@@ -1,6 +1,6 @@
 import { PromiseResponseType } from "../type";
-import type { Client, Models, Query } from "../client";
-import { Database } from "../services/databases";
+import type { BaseClient, Models, Query } from "../base-client";
+import { Database } from "../services/database";
 
 /**
  * A builder class for managing and interacting with a specific collection in a database.
@@ -11,7 +11,7 @@ import { Database } from "../services/databases";
  * @template CollectionsTypes - The type mapping for all collections in the database.
  */
 export class CollectionQueryBuilder<
-  T extends Client,
+  T extends BaseClient,
   Collection,
   CollectionsTypes,
 > {

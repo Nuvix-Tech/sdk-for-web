@@ -1,12 +1,12 @@
 import { Service } from "../service";
-import { NuvixException, Client, type Payload } from "../client";
+import { NuvixException, BaseClient, type Payload } from "../base-client";
 import type { Models } from "../models";
 import { AuthenticatorType } from "../enums/authenticator-type";
 import { AuthenticationFactor } from "../enums/authentication-factor";
 import { OAuthProvider } from "../enums/o-auth-provider";
 import { PromiseResponseType, ResponseType } from "../type";
 
-export class Account<T extends Client> {
+export class Account<T extends BaseClient> {
   client: T;
 
   constructor(client: T) {

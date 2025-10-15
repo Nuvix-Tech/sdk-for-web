@@ -1,4 +1,4 @@
-import type { Client } from "../client";
+import type { BaseClient } from "../base-client";
 import { DatabaseTypes } from "./types";
 import { NuvixException } from "../error";
 import { Cast, Column, ColumnBuilder, ValidateCast } from "./utils";
@@ -388,7 +388,7 @@ type TableOrView =
   | DatabaseTypes.GenericUpdatableView;
 
 export class TableQueryBuilder<
-  TClient extends Client,
+  TClient extends BaseClient,
   TTable extends TableOrView,
   TSchema extends DatabaseTypes.GenericSchema,
   TResult = TTable["Row"],
@@ -1087,7 +1087,7 @@ export class TableQueryBuilder<
 
       const query = new URLSearchParams(this.toString());
       const url = new URL(
-        `${this._client.config.endpoint}/schemas/${this._config.schema}/${this._config.tableName}`,
+        `${this._client.config.endpoint}/schemas/${this._config.schema}/tables/${this._config.tableName}`,
       );
       url.search = query.toString();
 

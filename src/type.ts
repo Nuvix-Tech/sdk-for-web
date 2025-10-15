@@ -1,4 +1,4 @@
-import type { Client } from "./client";
+import type { BaseClient } from "./base-client";
 import { NuvixException } from "./error";
 import { Socket } from "socket.io-client";
 
@@ -29,11 +29,11 @@ export type RealtimeResponse = {
    * Data associated with the response based on the response type.
    */
   data:
-  | RealtimeResponseAuthenticated
-  | RealtimeResponseConnected
-  | RealtimeResponseError
-  | RealtimeResponseEvent<unknown>
-  | undefined;
+    | RealtimeResponseAuthenticated
+    | RealtimeResponseConnected
+    | RealtimeResponseError
+    | RealtimeResponseEvent<unknown>
+    | undefined;
 };
 
 /**
@@ -264,7 +264,7 @@ export type UploadProgress = {
 };
 
 /**
- * Client configuration
+ * BaseClient configuration
  */
 export interface Config {
   endpoint: string;
@@ -285,11 +285,16 @@ interface ErrorResponse {
   error: NuvixException;
 }
 
-export type SafeResponse<T> = (T extends { data: any[], total: number } ? T & { error: null; } : SuccessResponse<T>) | ErrorResponse;
+export type SafeResponse<T> =
+  | (T extends { data: any[]; total: number }
+      ? T & { error: null }
+      : SuccessResponse<T>)
+  | ErrorResponse;
 
-export type ResponseType<T extends Client, R> = T["safeResponse"] extends true
-  ? SafeResponse<R>
-  : R;
-export type PromiseResponseType<T extends Client, R> = Promise<
+export type ResponseType<
+  T extends BaseClient,
+  R,
+> = T["safeResponse"] extends true ? SafeResponse<R> : R;
+export type PromiseResponseType<T extends BaseClient, R> = Promise<
   T["safeResponse"] extends true ? SafeResponse<R> : R
 >;

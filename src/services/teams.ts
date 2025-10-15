@@ -1,8 +1,8 @@
-import { NuvixException, Client, type Payload } from "../client";
+import { NuvixException, BaseClient, type Payload } from "../base-client";
 import type { Models } from "../models";
 import { PromiseResponseType } from "../type";
 
-export class Teams<T extends Client> {
+export class Teams<T extends BaseClient> {
   client: T;
 
   constructor(client: T) {
@@ -205,7 +205,7 @@ export class Teams<T extends Client> {
   /**
      * Create team membership
      *
-     * Invite a new member to join your team. Provide an ID for existing users, or invite unregistered users using an email or phone number. If initiated from a Client SDK, Nuvix will send an email or sms with a link to join the team to the invited user, and an account will be created for them if one doesn&#039;t exist. If initiated from a Server SDK, the new member will be added automatically to the team.
+     * Invite a new member to join your team. Provide an ID for existing users, or invite unregistered users using an email or phone number. If initiated from a BaseClient SDK, Nuvix will send an email or sms with a link to join the team to the invited user, and an account will be created for them if one doesn&#039;t exist. If initiated from a Server SDK, the new member will be added automatically to the team.
 
 You only need to provide one of a user ID, email, or phone number. Nuvix will prioritize accepting the user ID &gt; email &gt; phone number if you provide more than one of these parameters.
 

@@ -1,8 +1,8 @@
-import { NuvixException, Client, type Payload } from "../client";
+import { NuvixException, BaseClient, type Payload } from "../base-client";
 import type { Models } from "../models";
 import { PromiseResponseType } from "../type";
 
-export class Messaging<T extends Client> {
+export class Messaging<T extends BaseClient> {
   client: T;
 
   constructor(client: T) {

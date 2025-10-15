@@ -1,5 +1,5 @@
-import { Client } from "./client";
-import type { Payload } from "./client";
+import { BaseClient } from "./base-client";
+import type { Payload } from "./base-client";
 
 export class Service {
   /**
@@ -7,9 +7,9 @@ export class Service {
    */
   static CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
 
-  client: Client;
+  client: BaseClient;
 
-  constructor(client: Client) {
+  constructor(client: BaseClient) {
     this.client = client;
   }
 

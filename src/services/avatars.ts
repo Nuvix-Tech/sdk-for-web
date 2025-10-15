@@ -1,11 +1,11 @@
 import { Service } from "../service";
-import { NuvixException, Client, type Payload } from "../client";
+import { NuvixException, BaseClient, type Payload } from "../base-client";
 import { Browser } from "../enums/browser";
 import { CreditCard } from "../enums/credit-card";
 import { Flag } from "../enums/flag";
 import { ResponseType } from "../type";
 
-export class Avatars<T extends Client> {
+export class Avatars<T extends BaseClient> {
   client: T;
 
   constructor(client: T) {

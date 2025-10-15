@@ -20,7 +20,7 @@ npm install nuvix --save
 If you're using a bundler (like [Rollup](https://rollupjs.org/) or [webpack](https://webpack.js.org/)), you can import the Nuvix module when you need it:
 
 ```js
-import { Client, Account } from "nuvix";
+import { BaseClient, Account } from "nuvix";
 ```
 
 ### CDN
@@ -45,7 +45,7 @@ Initialize your SDK with your Nuvix server API endpoint and project ID which can
 
 ```js
 // Init your Web SDK
-const client = new Client();
+const client = new BaseClient();
 
 client
   .setEndpoint("http://localhost/v1") // Your Nuvix Endpoint
@@ -76,7 +76,7 @@ account
 
 ```js
 // Init your Web SDK
-const client = new Client();
+const client = new BaseClient();
 
 client
   .setEndpoint("http://localhost/v1") // Your Nuvix Endpoint
