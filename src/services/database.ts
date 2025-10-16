@@ -8,6 +8,7 @@ import { NuvixException, BaseClient, type Payload } from "../base-client";
 import type { Models } from "../models";
 import { SchemaQueryBuilder } from "../builders/schema";
 import { TableQueryBuilder } from "builders";
+import { CreateInput, UpdateInput } from "builders/collection";
 
 export class Database<Schemas extends _Schemas, T extends BaseClient> {
   client: T;
@@ -62,27 +63,26 @@ export class Database<Schemas extends _Schemas, T extends BaseClient> {
    *
    * Get a list of all the user&#039;s documents in a given collection. You can use the query params to filter your results.
    *
-   * @param {string} databaseId
+   * @param {string} schema
    * @param {string} collectionId
    * @param {string[]} queries
    * @returns {PromiseResponseType<T, Models.DocumentList<Document>>}
    */
   async listDocuments<Document extends Models.Document>(
-    databaseId: string,
+    schema: string,
     collectionId: string,
     queries?: string[],
   ): PromiseResponseType<T, Models.DocumentList<Document>> {
     return this.client.withSafeResponse(async () => {
-      if (typeof databaseId === "undefined") {
-        throw new NuvixException('Missing required parameter: "databaseId"');
+      if (typeof schema === "undefined") {
+        throw new NuvixException('Missing required parameter: "schema"');
       }
       if (typeof collectionId === "undefined") {
         throw new NuvixException('Missing required parameter: "collectionId"');
       }
-      const apiPath =
-        "/schemas/{databaseId}/collections/{collectionId}/documents"
-          .replace("{databaseId}", databaseId)
-          .replace("{collectionId}", collectionId);
+      const apiPath = "/schemas/{schema}/collections/{collectionId}/documents"
+        .replace("{schema}", schema)
+        .replace("{collectionId}", collectionId);
       const payload: Payload = {};
       if (typeof queries !== "undefined") {
         payload["queries"] = queries;
@@ -101,7 +101,7 @@ export class Database<Schemas extends _Schemas, T extends BaseClient> {
    *
    * Create a new Document. Before using this route, you should create a new collection resource using either a [server integration](https://nuvix.io/docs/server/schemas#databasesCreateCollection) API or directly from your database console.
    *
-   * @param {string} databaseId
+   * @param {string} schema
    * @param {string} collectionId
    * @param {string} documentId
    * @param {Omit<Document, keyof Models.Document>} data
@@ -109,15 +109,15 @@ export class Database<Schemas extends _Schemas, T extends BaseClient> {
    * @returns {PromiseResponseType<T, Document>}
    */
   async createDocument<Document extends Models.Document>(
-    databaseId: string,
+    schema: string,
     collectionId: string,
     documentId: string,
-    data: Omit<Document, keyof Models.Document>,
+    data: CreateInput<Document>,
     permissions?: string[],
   ): PromiseResponseType<T, Document> {
     return this.client.withSafeResponse(async () => {
-      if (typeof databaseId === "undefined") {
-        throw new NuvixException('Missing required parameter: "databaseId"');
+      if (typeof schema === "undefined") {
+        throw new NuvixException('Missing required parameter: "schema"');
       }
       if (typeof collectionId === "undefined") {
         throw new NuvixException('Missing required parameter: "collectionId"');
@@ -128,10 +128,9 @@ export class Database<Schemas extends _Schemas, T extends BaseClient> {
       if (typeof data === "undefined") {
         throw new NuvixException('Missing required parameter: "data"');
       }
-      const apiPath =
-        "/schemas/{databaseId}/collections/{collectionId}/documents"
-          .replace("{databaseId}", databaseId)
-          .replace("{collectionId}", collectionId);
+      const apiPath = "/schemas/{schema}/collections/{collectionId}/documents"
+        .replace("{schema}", schema)
+        .replace("{collectionId}", collectionId);
       const payload: Payload = {};
       if (typeof documentId !== "undefined") {
         payload["documentId"] = documentId;
@@ -156,21 +155,21 @@ export class Database<Schemas extends _Schemas, T extends BaseClient> {
    *
    * Get a document by its unique ID. This endpoint response returns a JSON object with the document data.
    *
-   * @param {string} databaseId
+   * @param {string} schema
    * @param {string} collectionId
    * @param {string} documentId
    * @param {string[]} queries
    * @returns {PromiseResponseType<T, Document>}
    */
   async getDocument<Document extends Models.Document>(
-    databaseId: string,
+    schema: string,
     collectionId: string,
     documentId: string,
     queries?: string[],
   ): PromiseResponseType<T, Document> {
     return this.client.withSafeResponse(async () => {
-      if (typeof databaseId === "undefined") {
-        throw new NuvixException('Missing required parameter: "databaseId"');
+      if (typeof schema === "undefined") {
+        throw new NuvixException('Missing required parameter: "schema"');
       }
       if (typeof collectionId === "undefined") {
         throw new NuvixException('Missing required parameter: "collectionId"');
@@ -179,8 +178,8 @@ export class Database<Schemas extends _Schemas, T extends BaseClient> {
         throw new NuvixException('Missing required parameter: "documentId"');
       }
       const apiPath =
-        "/schemas/{databaseId}/collections/{collectionId}/documents/{documentId}"
-          .replace("{databaseId}", databaseId)
+        "/schemas/{schema}/collections/{collectionId}/documents/{documentId}"
+          .replace("{schema}", schema)
           .replace("{collectionId}", collectionId)
           .replace("{documentId}", documentId);
       const payload: Payload = {};
@@ -201,7 +200,7 @@ export class Database<Schemas extends _Schemas, T extends BaseClient> {
    *
    * Update a document by its unique ID. Using the patch method you can pass only specific fields that will get updated.
    *
-   * @param {string} databaseId
+   * @param {string} schema
    * @param {string} collectionId
    * @param {string} documentId
    * @param {Partial<Omit<Document, keyof Models.Document>>} data
@@ -209,15 +208,15 @@ export class Database<Schemas extends _Schemas, T extends BaseClient> {
    * @returns {PromiseResponseType<T, Document>}
    */
   async updateDocument<Document extends Models.Document>(
-    databaseId: string,
+    schema: string,
     collectionId: string,
     documentId: string,
-    data?: Partial<Omit<Document, keyof Models.Document>>,
+    data?: UpdateInput<Document>,
     permissions?: string[],
   ): PromiseResponseType<T, Document> {
     return this.client.withSafeResponse(async () => {
-      if (typeof databaseId === "undefined") {
-        throw new NuvixException('Missing required parameter: "databaseId"');
+      if (typeof schema === "undefined") {
+        throw new NuvixException('Missing required parameter: "schema"');
       }
       if (typeof collectionId === "undefined") {
         throw new NuvixException('Missing required parameter: "collectionId"');
@@ -226,8 +225,8 @@ export class Database<Schemas extends _Schemas, T extends BaseClient> {
         throw new NuvixException('Missing required parameter: "documentId"');
       }
       const apiPath =
-        "/schemas/{databaseId}/collections/{collectionId}/documents/{documentId}"
-          .replace("{databaseId}", databaseId)
+        "/schemas/{schema}/collections/{collectionId}/documents/{documentId}"
+          .replace("{schema}", schema)
           .replace("{collectionId}", collectionId)
           .replace("{documentId}", documentId);
       const payload: Payload = {};
@@ -251,19 +250,19 @@ export class Database<Schemas extends _Schemas, T extends BaseClient> {
    *
    * Delete a document by its unique ID.
    *
-   * @param {string} databaseId
+   * @param {string} schema
    * @param {string} collectionId
    * @param {string} documentId
    * @returns {PromiseResponseType<T, {}>}
    */
   async deleteDocument(
-    databaseId: string,
+    schema: string,
     collectionId: string,
     documentId: string,
   ): PromiseResponseType<T, {}> {
     return this.client.withSafeResponse(async () => {
-      if (typeof databaseId === "undefined") {
-        throw new NuvixException('Missing required parameter: "databaseId"');
+      if (typeof schema === "undefined") {
+        throw new NuvixException('Missing required parameter: "schema"');
       }
       if (typeof collectionId === "undefined") {
         throw new NuvixException('Missing required parameter: "collectionId"');
@@ -272,8 +271,8 @@ export class Database<Schemas extends _Schemas, T extends BaseClient> {
         throw new NuvixException('Missing required parameter: "documentId"');
       }
       const apiPath =
-        "/schemas/{databaseId}/collections/{collectionId}/documents/{documentId}"
-          .replace("{databaseId}", databaseId)
+        "/schemas/{schema}/collections/{collectionId}/documents/{documentId}"
+          .replace("{schema}", schema)
           .replace("{collectionId}", collectionId)
           .replace("{documentId}", documentId);
       const payload: Payload = {};

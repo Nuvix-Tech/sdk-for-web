@@ -552,9 +552,9 @@ export class CollectionQueryBuilder<
 
   async create<Document extends CollectionsTypes[CollectionName]>(
     documentId: string,
-    data: Omit<Document, keyof Models.Document>,
+    data: CreateInput<Document>,
     permissions?: string[],
-  ): PromiseResponseType<T, Document> {
+  ): PromiseResponseType<T, Omit<Document, RelationKeys<Document>>> {
     return this.db.createDocument<Document>(
       this.schema,
       String(this.collectionId),
@@ -566,9 +566,9 @@ export class CollectionQueryBuilder<
 
   async update<Document extends CollectionsTypes[CollectionName]>(
     documentId: string,
-    data: Partial<Omit<Document, keyof Models.Document>>,
+    data: UpdateInput<Document>,
     permissions?: string[],
-  ): PromiseResponseType<T, Document> {
+  ): PromiseResponseType<T, Omit<Document, RelationKeys<Document>>> {
     return this.db.updateDocument<Document>(
       this.schema,
       String(this.collectionId),
@@ -586,3 +586,62 @@ export class CollectionQueryBuilder<
     );
   }
 }
+
+/* ===========================
+  Create & Update Utility Types
+  =========================== */
+
+/** Base type excluding Models.Document fields */
+type BaseData<Doc extends Models.Document> = Omit<Doc, keyof Models.Document>;
+
+/** Handle single relation field for create */
+type CreateRelationSingle<FieldType> = FieldType extends Models.Document
+  ? string // For single relations, accept documentId string
+  : FieldType;
+
+/** Handle array relation field for create */
+type CreateRelationArray<FieldType> = FieldType extends Models.Document[]
+  ? { set: string[] } // For array relations, accept { set: string[] }
+  : FieldType;
+
+/** Create input type transforming relations */
+export type CreateInput<Doc extends Models.Document> = {
+  [K in keyof BaseData<Doc> as BaseData<Doc>[K] extends
+    | Models.Document
+    | Models.Document[]
+    ? never
+    : K]: BaseData<Doc>[K];
+} & {
+  [K in keyof BaseData<Doc> as BaseData<Doc>[K] extends
+    | Models.Document
+    | Models.Document[]
+    ? K
+    : never]?: BaseData<Doc>[K] extends Models.Document
+    ? CreateRelationSingle<BaseData<Doc>[K]>
+    : BaseData<Doc>[K] extends Models.Document[]
+      ? CreateRelationArray<BaseData<Doc>[K]>
+      : never;
+};
+
+/** Handle single relation field for update */
+type UpdateRelationSingle<FieldType> = FieldType extends Models.Document
+  ? string | undefined // For single relations, accept documentId string or undefined
+  : FieldType;
+
+/** Handle array relation field for update */
+type UpdateRelationArray<FieldType> = FieldType extends Models.Document[]
+  ? {
+      set?: string[] | null;
+      connect?: string[];
+      disconnect?: string[];
+    }
+  : FieldType;
+
+/** Update input type transforming relations */
+export type UpdateInput<Doc extends Models.Document> = {
+  [K in keyof BaseData<Doc>]?: BaseData<Doc>[K] extends Models.Document
+    ? UpdateRelationSingle<BaseData<Doc>[K]>
+    : BaseData<Doc>[K] extends Models.Document[]
+      ? UpdateRelationArray<BaseData<Doc>[K]>
+      : BaseData<Doc>[K];
+};
