@@ -10,13 +10,7 @@ import { Query } from "../query";
 /** Base fields that are always present */
 type BaseFields = Pick<
   Models.Document,
-  | "$sequence"
-  | "$id"
-  | "$collection"
-  | "$schema"
-  | "$createdAt"
-  | "$updatedAt"
-  | "$permissions"
+  "$sequence" | "$id" | "$collection" | "$schema" | "$permissions"
 >;
 
 /** Extract custom attribute keys (excluding Models.Document base fields) */
@@ -33,6 +27,8 @@ type RelationKeys<Doc> = {
 
 /** Non-relation custom keys */
 type NonRelationKeys<Doc> = Exclude<CustomKeys<Doc>, RelationKeys<Doc>>;
+
+type SelectionKeys<Doc> = NonRelationKeys<Doc> | "$createdAt" | "$updatedAt";
 
 /** Extract document type from a relation field */
 type ExtractRelationDoc<T> = T extends Models.Document[]
@@ -68,6 +64,13 @@ type PopulateAllRelations<Doc extends Models.Document> = {
       ? BuildResultType<ExtractRelationDoc<Doc[K]>, readonly ["*"], {}>
       : never;
 };
+
+type FilterKeys<Doc> =
+  | NonRelationKeys<Doc>
+  | "$id"
+  | "$updatedAt"
+  | "$createdAt"
+  | "$sequence";
 
 /* ===========================
   Internal descriptor
@@ -107,7 +110,7 @@ class MiniBuilder<
   }
 
   // Query methods (all except limit & offset as per your requirement)
-  equal<K extends CustomKeys<Doc>>(
+  equal<K extends FilterKeys<Doc>>(
     attr: K,
     value: Doc[K],
   ): MiniBuilder<Doc, CollectionsTypes, Selected, Populated> {
@@ -115,7 +118,7 @@ class MiniBuilder<
     return this._clone([...this.descriptors, { kind: "query", payload: q }]);
   }
 
-  notEqual<K extends CustomKeys<Doc>>(
+  notEqual<K extends FilterKeys<Doc>>(
     attr: K,
     value: Doc[K],
   ): MiniBuilder<Doc, CollectionsTypes, Selected, Populated> {
@@ -123,7 +126,7 @@ class MiniBuilder<
     return this._clone([...this.descriptors, { kind: "query", payload: q }]);
   }
 
-  contains<K extends CustomKeys<Doc>>(
+  contains<K extends FilterKeys<Doc>>(
     attr: K,
     value: string | string[],
   ): MiniBuilder<Doc, CollectionsTypes, Selected, Populated> {
@@ -131,7 +134,7 @@ class MiniBuilder<
     return this._clone([...this.descriptors, { kind: "query", payload: q }]);
   }
 
-  startsWith<K extends CustomKeys<Doc>>(
+  startsWith<K extends FilterKeys<Doc>>(
     attr: K,
     value: string,
   ): MiniBuilder<Doc, CollectionsTypes, Selected, Populated> {
@@ -139,7 +142,7 @@ class MiniBuilder<
     return this._clone([...this.descriptors, { kind: "query", payload: q }]);
   }
 
-  endsWith<K extends CustomKeys<Doc>>(
+  endsWith<K extends FilterKeys<Doc>>(
     attr: K,
     value: string,
   ): MiniBuilder<Doc, CollectionsTypes, Selected, Populated> {
@@ -147,21 +150,21 @@ class MiniBuilder<
     return this._clone([...this.descriptors, { kind: "query", payload: q }]);
   }
 
-  orderAsc<K extends CustomKeys<Doc>>(
+  orderAsc<K extends FilterKeys<Doc>>(
     attr: K,
   ): MiniBuilder<Doc, CollectionsTypes, Selected, Populated> {
     const q = new Query("orderAsc", attr).toString();
     return this._clone([...this.descriptors, { kind: "query", payload: q }]);
   }
 
-  orderDesc<K extends CustomKeys<Doc>>(
+  orderDesc<K extends FilterKeys<Doc>>(
     attr: K,
   ): MiniBuilder<Doc, CollectionsTypes, Selected, Populated> {
     const q = new Query("orderDesc", attr).toString();
     return this._clone([...this.descriptors, { kind: "query", payload: q }]);
   }
 
-  select<K extends readonly (NonRelationKeys<Doc> | "*")[]>(
+  select<K extends readonly (SelectionKeys<Doc> | "*")[]>(
     ...attrs: K
   ): MiniBuilder<Doc, CollectionsTypes, K, Populated> {
     const mapped =
@@ -226,7 +229,7 @@ export class CollectionQueryBuilder<
 > {
   private collectionId: CollectionName;
   private schema: string;
-  private db: Database<any, CollectionsTypes, T>;
+  private db: Database<any, T>;
   private descriptors: Descriptor[] = [];
 
   constructor(
@@ -239,7 +242,7 @@ export class CollectionQueryBuilder<
   ) {
     this.collectionId = opts.collectionId;
     this.schema = opts.schema;
-    this.db = new Database<any, CollectionsTypes, T>(client);
+    this.db = new Database<any, T>(client);
     if (opts.descriptors) this.descriptors = [...opts.descriptors];
   }
 
@@ -272,7 +275,7 @@ export class CollectionQueryBuilder<
     Query methods
     ========================= */
 
-  equal<K extends CustomKeys<CollectionsTypes[CollectionName]>>(
+  equal<K extends FilterKeys<CollectionsTypes[CollectionName]>>(
     attr: K,
     value: CollectionsTypes[CollectionName][K],
   ): CollectionQueryBuilder<
@@ -286,7 +289,7 @@ export class CollectionQueryBuilder<
     return this._clone([...this.descriptors, { kind: "query", payload: q }]);
   }
 
-  notEqual<K extends CustomKeys<CollectionsTypes[CollectionName]>>(
+  notEqual<K extends FilterKeys<CollectionsTypes[CollectionName]>>(
     attr: K,
     value: CollectionsTypes[CollectionName][K],
   ): CollectionQueryBuilder<
@@ -300,7 +303,7 @@ export class CollectionQueryBuilder<
     return this._clone([...this.descriptors, { kind: "query", payload: q }]);
   }
 
-  contains<K extends CustomKeys<CollectionsTypes[CollectionName]>>(
+  contains<K extends FilterKeys<CollectionsTypes[CollectionName]>>(
     attr: K,
     value: string | string[],
   ): CollectionQueryBuilder<
@@ -314,7 +317,7 @@ export class CollectionQueryBuilder<
     return this._clone([...this.descriptors, { kind: "query", payload: q }]);
   }
 
-  startsWith<K extends CustomKeys<CollectionsTypes[CollectionName]>>(
+  startsWith<K extends FilterKeys<CollectionsTypes[CollectionName]>>(
     attr: K,
     value: string,
   ): CollectionQueryBuilder<
@@ -328,7 +331,7 @@ export class CollectionQueryBuilder<
     return this._clone([...this.descriptors, { kind: "query", payload: q }]);
   }
 
-  endsWith<K extends CustomKeys<CollectionsTypes[CollectionName]>>(
+  endsWith<K extends FilterKeys<CollectionsTypes[CollectionName]>>(
     attr: K,
     value: string,
   ): CollectionQueryBuilder<
@@ -342,7 +345,7 @@ export class CollectionQueryBuilder<
     return this._clone([...this.descriptors, { kind: "query", payload: q }]);
   }
 
-  orderAsc<K extends CustomKeys<CollectionsTypes[CollectionName]>>(
+  orderAsc<K extends FilterKeys<CollectionsTypes[CollectionName]>>(
     attr: K,
   ): CollectionQueryBuilder<
     T,
@@ -355,7 +358,7 @@ export class CollectionQueryBuilder<
     return this._clone([...this.descriptors, { kind: "query", payload: q }]);
   }
 
-  orderDesc<K extends CustomKeys<CollectionsTypes[CollectionName]>>(
+  orderDesc<K extends FilterKeys<CollectionsTypes[CollectionName]>>(
     attr: K,
   ): CollectionQueryBuilder<
     T,
@@ -400,7 +403,7 @@ export class CollectionQueryBuilder<
 
   select<
     K extends readonly (
-      | NonRelationKeys<CollectionsTypes[CollectionName]>
+      | SelectionKeys<CollectionsTypes[CollectionName]>
       | "*"
     )[],
   >(
@@ -523,11 +526,13 @@ export class CollectionQueryBuilder<
   async find(): PromiseResponseType<
     T,
     Models.DocumentList<
+      // @ts-ignore
       BuildResultType<CollectionsTypes[CollectionName], Selected, Populated>
     >
   > {
     const qs = this.buildQueryStrings();
     return this.db.listDocuments<
+      // @ts-ignore
       BuildResultType<CollectionsTypes[CollectionName], Selected, Populated>
     >(this.schema, String(this.collectionId), qs);
   }
@@ -540,6 +545,7 @@ export class CollectionQueryBuilder<
   > {
     const qs = this.buildQueryStrings();
     return this.db.getDocument<
+      // @ts-ignore
       BuildResultType<CollectionsTypes[CollectionName], Selected, Populated>
     >(this.schema, String(this.collectionId), id, qs);
   }

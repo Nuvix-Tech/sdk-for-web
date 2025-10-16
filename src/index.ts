@@ -6,11 +6,10 @@
  * [previous releases](https://github.com/nuvix-tech/sdk-for-web/releases).
  */
 export { BaseClient, Query, NuvixException } from "./base-client";
+export { Client } from "./client";
 export { Account } from "./services/account";
 export { Avatars } from "./services/avatars";
 export { Database } from "./services/database";
-// export { Functions } from './services/functions';
-// export { Graphql } from './services/graphql';
 export { Locale } from "./services/locale";
 export { Messaging } from "./services/messaging";
 export { Storage } from "./services/storage";

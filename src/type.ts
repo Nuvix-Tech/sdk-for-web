@@ -1,4 +1,5 @@
-import type { BaseClient } from "./base-client";
+import { DatabaseTypes } from "builders/types";
+import type { BaseClient, Models } from "./base-client";
 import { NuvixException } from "./error";
 import { Socket } from "socket.io-client";
 
@@ -29,11 +30,11 @@ export type RealtimeResponse = {
    * Data associated with the response based on the response type.
    */
   data:
-  | RealtimeResponseAuthenticated
-  | RealtimeResponseConnected
-  | RealtimeResponseError
-  | RealtimeResponseEvent<unknown>
-  | undefined;
+    | RealtimeResponseAuthenticated
+    | RealtimeResponseConnected
+    | RealtimeResponseError
+    | RealtimeResponseEvent<unknown>
+    | undefined;
 };
 
 /**
@@ -287,10 +288,11 @@ interface ErrorResponse {
 
 export type SafeResponse<T> =
   | (T extends { data: any[]; total: number }
-    ? T & { error: null }
-    : SuccessResponse<T>)
+      ? T & { error: null }
+      : SuccessResponse<T>)
   | (T extends { data: any[]; total: number }
-    ? ErrorResponse & { total: undefined } : ErrorResponse);
+      ? ErrorResponse & { total: undefined }
+      : ErrorResponse);
 
 export type ResponseType<
   T extends BaseClient,
@@ -299,3 +301,48 @@ export type ResponseType<
 export type PromiseResponseType<T extends BaseClient, R> = Promise<
   T["safeResponse"] extends true ? SafeResponse<R> : R
 >;
+
+export interface CollectionSchema {
+  __type: "document";
+  Types: Record<string, Models.Document>;
+}
+
+export interface OtherSchema {
+  __type: "managed" | "unmanaged";
+  Types: DatabaseTypes.GenericSchema;
+}
+
+export type Schemas = Record<string, CollectionSchema | OtherSchema>;
+
+export type GetTableOrView<
+  T extends Schemas,
+  Schema extends keyof T,
+  Table,
+> = T[Schema] extends {
+  __type: "managed" | "unmanaged";
+  Types: infer U extends DatabaseTypes.GenericSchema;
+}
+  ? Table extends keyof U["Tables"]
+    ? U["Tables"][Table]
+    : Table extends keyof U["Views"]
+      ? U["Views"][Table]
+      : never
+  : never;
+
+export type GetSchemaType<
+  T extends Schemas,
+  Schema extends keyof T,
+  isDoc extends boolean,
+> = isDoc extends true
+  ? T[Schema] extends {
+      __type: "document";
+      Types: infer U extends Record<string, Models.Document>;
+    }
+    ? U
+    : never
+  : T[Schema] extends {
+        __type: "managed" | "unmanaged";
+        Types: infer U extends DatabaseTypes.GenericSchema;
+      }
+    ? U
+    : never;

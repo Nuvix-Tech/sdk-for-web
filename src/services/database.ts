@@ -1,15 +1,15 @@
-import { PromiseResponseType } from "../type";
+import {
+  GetSchemaType,
+  GetTableOrView,
+  PromiseResponseType,
+  Schemas as _Schemas,
+} from "../type";
 import { NuvixException, BaseClient, type Payload } from "../base-client";
 import type { Models } from "../models";
 import { SchemaQueryBuilder } from "../builders/schema";
-import { DatabaseTypes } from "builders/types";
 import { TableQueryBuilder } from "builders";
 
-export class Database<
-  Database extends Record<string, DatabaseTypes.GenericSchema>,
-  CollectionsTypes extends Record<string, Models.Document>,
-  T extends BaseClient,
-> {
+export class Database<Schemas extends _Schemas, T extends BaseClient> {
   client: T;
 
   constructor(client: T) {
@@ -20,8 +20,8 @@ export class Database<
    *
    * @param schema string
    */
-  schema<Schema extends keyof Database>(schema: Schema) {
-    return new SchemaQueryBuilder<T, Database[Schema], CollectionsTypes>(
+  schema<Schema extends keyof Schemas>(schema: Schema) {
+    return new SchemaQueryBuilder<T, Schema, Schemas>(
       this.client,
       schema as string,
     );
@@ -44,17 +44,13 @@ export class Database<
    */
   from<
     Table extends
-      | keyof Database["public"]["Tables"]
-      | keyof Database["public"]["Views"],
+      | keyof GetSchemaType<Schemas, "public", false>["Tables"]
+      | keyof GetSchemaType<Schemas, "public", false>["Views"],
   >(tableName: Table) {
     return new TableQueryBuilder<
       T,
-      Table extends keyof Database["public"]["Tables"]
-        ? Database["public"]["Tables"][Table]
-        : Table extends keyof Database["public"]["Views"]
-          ? Database["public"]["Views"][Table]
-          : never,
-      Database["public"]
+      GetTableOrView<Schemas, "public", Table>,
+      GetSchemaType<Schemas, "public", false>
     >(this.client, {
       tableName: tableName as string,
       schema: "public",

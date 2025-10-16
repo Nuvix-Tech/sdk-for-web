@@ -1,12 +1,12 @@
-import type { BaseClient, Models } from "../base-client";
+import { Schemas as _Schemas, GetSchemaType, GetTableOrView } from "type";
+import type { BaseClient } from "../base-client";
 import { CollectionQueryBuilder } from "./collection";
 import { TableQueryBuilder } from "./table";
-import { DatabaseTypes } from "./types";
 
 export class SchemaQueryBuilder<
   T extends BaseClient,
-  Schema extends DatabaseTypes.GenericSchema,
-  CollectionsTypes extends Record<string, Models.Document>,
+  Schema extends keyof Schemas,
+  Schemas extends _Schemas,
 > {
   constructor(
     private client: T,
@@ -29,13 +29,14 @@ export class SchemaQueryBuilder<
    * // perform CRUD operations on the collection
    * ```
    */
-  collection<Collection extends string & keyof CollectionsTypes>(
-    collectionId: Collection,
-  ) {
-    return new CollectionQueryBuilder<T, Collection, CollectionsTypes>(
-      this.client,
-      { collectionId, schema: this.schema },
-    );
+  collection<
+    Collection extends string & keyof GetSchemaType<Schemas, Schema, true>,
+  >(collectionId: Collection) {
+    return new CollectionQueryBuilder<
+      T,
+      Collection,
+      GetSchemaType<Schemas, Schema, true>
+    >(this.client, { collectionId, schema: this.schema });
   }
 
   /**
@@ -55,17 +56,15 @@ export class SchemaQueryBuilder<
    * // perform CRUD operations on the table
    * ```
    */
-  from<Table extends keyof Schema["Tables"] | keyof Schema["Views"]>(
-    tableName: Table,
-  ) {
+  from<
+    Table extends
+      | keyof GetSchemaType<Schemas, Schema, false>["Tables"]
+      | keyof GetSchemaType<Schemas, Schema, false>["Views"],
+  >(tableName: Table) {
     return new TableQueryBuilder<
       T,
-      Table extends keyof Schema["Tables"]
-        ? Schema["Tables"][Table]
-        : Table extends keyof Schema["Views"]
-          ? Schema["Views"][Table]
-          : never,
-      Schema
+      GetTableOrView<Schemas, Schema, Table>,
+      GetSchemaType<Schemas, Schema, false>
     >(this.client, {
       tableName: tableName as string,
       schema: this.schema,

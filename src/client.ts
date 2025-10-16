@@ -6,7 +6,7 @@ import { Messaging } from "services/messaging";
 import { Storage } from "services/storage";
 import { Teams } from "services/teams";
 import { Database } from "services/database";
-import type { DatabaseTypes } from "builders/types";
+import { Schemas } from "type";
 
 /**
  * Client
@@ -36,8 +36,7 @@ import type { DatabaseTypes } from "builders/types";
  * const users = await client2.db.from('users').select('id', 'name'); // users is directly typed array
  */
 export class Client<
-  DB extends Record<string, DatabaseTypes.GenericSchema>,
-  CollectionsTypes extends Record<string, Models.Document>,
+  DB extends Schemas,
   IsSafe extends boolean,
 > extends BaseClient<IsSafe> {
   // Lazy private fields
@@ -47,7 +46,7 @@ export class Client<
   private _messaging?: Messaging<any>;
   private _storage?: Storage<any>;
   private _teams?: Teams<any>;
-  private _database?: Database<DB, CollectionsTypes, this>;
+  private _database?: Database<DB, this>;
 
   // Lazy getters
   public get account(): Account<BaseClient<IsSafe>> {
@@ -80,9 +79,8 @@ export class Client<
     return this._teams;
   }
 
-  public get database(): Database<DB, CollectionsTypes, BaseClient<IsSafe>> {
-    if (!this._database)
-      this._database = new Database<DB, CollectionsTypes, this>(this);
+  public get database(): Database<DB, BaseClient<IsSafe>> {
+    if (!this._database) this._database = new Database<DB, this>(this);
     return this._database;
   }
 
