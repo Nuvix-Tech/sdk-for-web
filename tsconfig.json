@@ -19,7 +19,9 @@
     "target": "es2024",
     "traceResolution": false,
     "paths": {
-      "@/*": ["src/*"]
+      "services": ["src/services"],
+      "builders": ["src/builders"],
+      "@/": ["src/*"]
     }
   },
   "compileOnSave": false,

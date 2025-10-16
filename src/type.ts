@@ -1,4 +1,4 @@
-import { DatabaseTypes } from "builders/types";
+import { DatabaseTypes } from "./builders/types";
 import type { BaseClient, Models } from "./base-client";
 import { NuvixException } from "./error";
 import { Socket } from "socket.io-client";

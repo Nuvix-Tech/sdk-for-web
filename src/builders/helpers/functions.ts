@@ -1,4 +1,4 @@
-import { Column, ColumnBuilder } from "builders/utils";
+import { Column, ColumnBuilder } from "../utils";
 
 function funcToString(func: string, selector: string) {
   return `${func}(${selector})`;

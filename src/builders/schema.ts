@@ -1,4 +1,4 @@
-import { Schemas as _Schemas, GetSchemaType, GetTableOrView } from "type";
+import { Schemas as _Schemas, GetSchemaType, GetTableOrView } from "../type";
 import type { BaseClient } from "../base-client";
 import { CollectionQueryBuilder } from "./collection";
 import { TableQueryBuilder } from "./table";

@@ -7,8 +7,8 @@ import {
 import { NuvixException, BaseClient, type Payload } from "../base-client";
 import type { Models } from "../models";
 import { SchemaQueryBuilder } from "../builders/schema";
-import { TableQueryBuilder } from "builders";
-import { CreateInput, UpdateInput } from "builders/collection";
+import { TableQueryBuilder } from "../builders";
+import { CreateInput, UpdateInput } from "../builders/collection";
 
 export class Database<Schemas extends _Schemas, T extends BaseClient> {
   client: T;

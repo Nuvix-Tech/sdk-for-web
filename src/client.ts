@@ -1,12 +1,12 @@
-import { Account } from "services/account";
+import { Account } from "./services/account";
 import { BaseClient, Models } from "./base-client";
-import { Avatars } from "services/avatars";
-import { Locale } from "services/locale";
-import { Messaging } from "services/messaging";
-import { Storage } from "services/storage";
-import { Teams } from "services/teams";
-import { Database } from "services/database";
-import { Schemas } from "type";
+import { Avatars } from "./services/avatars";
+import { Locale } from "./services/locale";
+import { Messaging } from "./services/messaging";
+import { Storage } from "./services/storage";
+import { Teams } from "./services/teams";
+import { Database } from "./services/database";
+import { Schemas } from "./type";
 
 /**
  * Client

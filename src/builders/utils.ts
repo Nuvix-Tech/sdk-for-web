@@ -1,4 +1,4 @@
-import { NuvixException } from "error";
+import { NuvixException } from "../error";
 
 type KnownCast =
   | "text"

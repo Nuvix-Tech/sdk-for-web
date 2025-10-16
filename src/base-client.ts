@@ -14,7 +14,7 @@ import {
 } from "./type";
 import { Models } from "./models";
 import { io } from "socket.io-client";
-import { NuvixException } from "error";
+import { NuvixException } from "./error";
 
 /**
  * BaseClient that handles requests to Nuvix

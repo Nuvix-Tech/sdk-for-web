@@ -1,48 +1,42 @@
 {
-  "name": "nuvix",
+  "name": "@nuvix/client",
   "homepage": "https://www.nuvix.in/support",
-  "description": "Nuvix is a high-performance backend platform built for modern applications—fast, scalable, and developer-first.",
+  "description": "Nuvix is a Open Source high-performance backend platform built for modern applications—fast, scalable, and developer-first.",
   "version": "1.0.0",
   "license": "BSD-3-Clause",
-  "main": "dist/cjs/sdk.js",
+  "main": "dist/index.cjs",
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/esm/sdk.js",
-      "require": "./dist/cjs/sdk.js",
-      "types": "./types/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./package.json": "./package.json"
   },
-  "module": "dist/esm/sdk.js",
-  "types": "types/index.d.ts",
+  "module": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/Nuvix-Tech/sdk-for-web"
   },
   "scripts": {
-    "build": "npm run build:types && npm run build:libs",
-    "build:types": "tsc --declaration --emitDeclarationOnly --outDir types",
-    "build:libs": "rollup -c",
+    "build": "tsup",
     "prepublishOnly": "npm run build",
     "format": "prettier --write ."
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "12.1.4",
-    "biome": "^0.3.3",
     "playwright": "1.54.1",
     "prettier": "^3.6.2",
-    "rollup": "4.45.1",
-    "serve-handler": "6.1.6",
     "tslib": "2.8.1",
+    "tsup": "^8.5.0",
     "typescript": "5.8.3"
   },
   "files": [
     "dist",
     "types"
   ],
-  "jsdelivr": "dist/iife/sdk.js",
-  "unpkg": "dist/iife/sdk.js",
+  "jsdelivr": "dist/index.global.js",
+  "unpkg": "dist/index.global.js",
   "dependencies": {
     "socket.io-client": "^4.8.1"
   }
