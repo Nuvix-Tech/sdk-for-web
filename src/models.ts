@@ -216,7 +216,6 @@ export namespace Models {
      * Document permissions. [Learn more about permissions](https://docs.nuvix.in/permissions).
      */
     $permissions: string[];
-    // [key: string]: any;
   };
   /**
    * Log

@@ -1,6 +1,6 @@
 type QueryTypesSingle = string | number | boolean;
 export type QueryTypesList = string[] | number[] | boolean[] | Query[];
-export type QueryTypes = QueryTypesSingle | QueryTypesList | any;
+export type QueryTypes = QueryTypesSingle | QueryTypesList;
 type AttributesTypes = string | string[];
 
 /**
@@ -251,7 +251,7 @@ export class Query {
    * @param {string[]} queries
    * @returns {string}
    */
-  static or = (queries: string[]): string =>
+  static or = (queries: string[]) =>
     new Query(
       "or",
       undefined,
@@ -264,10 +264,17 @@ export class Query {
    * @param {string[]} queries
    * @returns {string}
    */
-  static and = (queries: string[]): string =>
+  static and = (queries: string[]) =>
     new Query(
       "and",
       undefined,
       queries.map((query) => JSON.parse(query)),
+    ).toString();
+
+  static populate = (attr: string, queries?: string[]) =>
+    new Query(
+      "populate",
+      attr,
+      queries?.map((query) => JSON.parse(query)),
     ).toString();
 }

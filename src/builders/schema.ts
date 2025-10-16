@@ -29,7 +29,9 @@ export class SchemaQueryBuilder<
    * // perform CRUD operations on the collection
    * ```
    */
-  collection<Collection extends string & keyof CollectionsTypes>(collectionId: Collection) {
+  collection<Collection extends string & keyof CollectionsTypes>(
+    collectionId: Collection,
+  ) {
     return new CollectionQueryBuilder<T, Collection, CollectionsTypes>(
       this.client,
       { collectionId, schema: this.schema },

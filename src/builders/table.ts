@@ -6,57 +6,67 @@ import { ResponseType } from "../type";
 
 export type NuvqlOperator =
   // Comparison operators
-  | "eq"      // =
-  | "neq"     // <> or !=
-  | "gt"      // >
-  | "gte"     // >=
-  | "lt"      // <
-  | "lte"     // <=
+  | "eq" // =
+  | "neq" // <> or !=
+  | "gt" // >
+  | "gte" // >=
+  | "lt" // <
+  | "lte" // <=
   // Comparison with quantifiers
-  | "eqAny" | "eqAll"
-  | "neqAny" | "neqAll"
-  | "gtAny" | "gtAll"
-  | "gteAny" | "gteAll"
-  | "ltAny" | "ltAll"
-  | "lteAny" | "lteAll"
+  | "eqAny"
+  | "eqAll"
+  | "neqAny"
+  | "neqAll"
+  | "gtAny"
+  | "gtAll"
+  | "gteAny"
+  | "gteAll"
+  | "ltAny"
+  | "ltAll"
+  | "lteAny"
+  | "lteAll"
   // String operators
-  | "like"    // LIKE
-  | "ilike"   // ILIKE
-  | "match"   // ~ (regex match)
-  | "imatch"  // ~* (case-insensitive regex match)
+  | "like" // LIKE
+  | "ilike" // ILIKE
+  | "match" // ~ (regex match)
+  | "imatch" // ~* (case-insensitive regex match)
   // String with quantifiers
-  | "likeAny" | "likeAll"
-  | "ilikeAny" | "ilikeAll"
-  | "matchAny" | "matchAll"
-  | "imatchAny" | "imatchAll"
+  | "likeAny"
+  | "likeAll"
+  | "ilikeAny"
+  | "ilikeAll"
+  | "matchAny"
+  | "matchAll"
+  | "imatchAny"
+  | "imatchAll"
   // Array/List operators
-  | "in"      // IN
-  | "notin"   // NOT IN
-  | "ov"      // && (overlaps)
-  | "cs"      // @> (contains)
-  | "cd"      // <@ (contained by)
+  | "in" // IN
+  | "notin" // NOT IN
+  | "ov" // && (overlaps)
+  | "cs" // @> (contains)
+  | "cd" // <@ (contained by)
   // Range operators
   | "between" // BETWEEN
   | "nbetween" // NOT BETWEEN
-  | "sl"      // << (strictly left of)
-  | "sr"      // >> (strictly right of)
-  | "nxr"     // &< (does not extend right of)
-  | "nxl"     // &> (does not extend left of)
-  | "adj"     // -|- (adjacent to)
+  | "sl" // << (strictly left of)
+  | "sr" // >> (strictly right of)
+  | "nxr" // &< (does not extend right of)
+  | "nxl" // &> (does not extend left of)
+  | "adj" // -|- (adjacent to)
   // Null operators
-  | "is"      // IS
-  | "isnot"   // IS NOT
-  | "null"    // IS NULL
+  | "is" // IS
+  | "isnot" // IS NOT
+  | "null" // IS NULL
   | "notnull" // IS NOT NULL
   | "isdistinct" // IS DISTINCT FROM
   // Full-Text Search
-  | "fts"     // @@ (to_tsquery)
-  | "plfts"   // @@ (plainto_tsquery)
-  | "phfts"   // @@ (phraseto_tsquery)
-  | "wfts"    // @@ (websearch_to_tsquery)
+  | "fts" // @@ (to_tsquery)
+  | "plfts" // @@ (plainto_tsquery)
+  | "phfts" // @@ (phraseto_tsquery)
+  | "wfts" // @@ (websearch_to_tsquery)
   // Misc operators
-  | "all"     // ALL
-  | "any"     // ANY
+  | "all" // ALL
+  | "any"; // ANY
 
 export type NuvqlLogicalOperator = "and" | "or" | "not";
 
@@ -98,8 +108,8 @@ type AllAvailableColumns<
 > =
   | TableColumns<TTable>
   | {
-    [K in keyof TJoinedTables]: `${string & K}.${string & TableColumns<TJoinedTables[K]["table"]>}`;
-  }[keyof TJoinedTables];
+      [K in keyof TJoinedTables]: `${string & K}.${string & TableColumns<TJoinedTables[K]["table"]>}`;
+    }[keyof TJoinedTables];
 
 type AllAvailableGroupColumns<
   TTable extends TableOrView,
@@ -110,12 +120,12 @@ type AllAvailableGroupColumns<
 > =
   | TableColumns<TTable>
   | {
-    [K in keyof TJoinedTables]: TJoinedTables[K]["options"] extends {
-      flatten: true;
-    }
-    ? `${string & K}.${string & TableColumns<TJoinedTables[K]["table"]>}`
-    : never;
-  }[keyof TJoinedTables];
+      [K in keyof TJoinedTables]: TJoinedTables[K]["options"] extends {
+        flatten: true;
+      }
+        ? `${string & K}.${string & TableColumns<TJoinedTables[K]["table"]>}`
+        : never;
+    }[keyof TJoinedTables];
 
 type ColumnValueOrReference<
   TColumnType,
@@ -128,19 +138,19 @@ type ColumnValueOrReference<
 > =
   | TColumnType
   | {
-    [TableName in keyof TSchema["Tables"]]: TSchema["Tables"][TableName] extends TParentTable
-    ? `"${string & TableName}.${string &
-    keyof TSchema["Tables"][TableName]["Row"]}"`
-    : never;
-  }[keyof TSchema["Tables"]]
+      [TableName in keyof TSchema["Tables"]]: TSchema["Tables"][TableName] extends TParentTable
+        ? `"${string & TableName}.${string &
+            keyof TSchema["Tables"][TableName]["Row"]}"`
+        : never;
+    }[keyof TSchema["Tables"]]
   | {
-    [JoinName in keyof TJoinedTables]: TJoinedTables[JoinName]["options"] extends {
-      flatten: true;
-    }
-    ? `"${string & JoinName}.${string &
-    keyof TJoinedTables[JoinName]["table"]["Row"]}"`
-    : never;
-  }[keyof TJoinedTables];
+      [JoinName in keyof TJoinedTables]: TJoinedTables[JoinName]["options"] extends {
+        flatten: true;
+      }
+        ? `"${string & JoinName}.${string &
+            keyof TJoinedTables[JoinName]["table"]["Row"]}"`
+        : never;
+    }[keyof TJoinedTables];
 
 // ============ SELECTION TYPES ============
 
@@ -154,8 +164,8 @@ type Prev = [never, 0, 1, 2, 3, 4, 5];
 type JsonPathString<T extends string, N extends number = 5> = N extends 0
   ? never
   :
-  | `${T}${JsonPathOperator}${JsonPathSegment}`
-  | `${T}->${JsonPathSegment}${JsonPathString<string, Prev[N]>}`;
+      | `${T}${JsonPathOperator}${JsonPathSegment}`
+      | `${T}->${JsonPathSegment}${JsonPathString<string, Prev[N]>}`;
 
 type JsonPath<
   TTable extends TableOrView,
@@ -170,11 +180,11 @@ type JsonPath<
 // Better JSON path to field name conversion
 export type JsonPathToFieldName<T extends string> =
   T extends `${infer Head}->>${infer Tail}`
-  ? `${JsonPathToFieldName<Head>}_${Tail}`
-  : T extends `${infer Head}->${infer Tail}`
-  ? // We need to handle the tail recursively as well.
-  JsonPathToFieldName<`${Head}_${JsonPathToFieldName<Tail>}`>
-  : T;
+    ? `${JsonPathToFieldName<Head>}_${Tail}`
+    : T extends `${infer Head}->${infer Tail}`
+      ? // We need to handle the tail recursively as well.
+        JsonPathToFieldName<`${Head}_${JsonPathToFieldName<Tail>}`>
+      : T;
 
 // Helper to resolve column type from joined tables
 type ResolveColumnType<
@@ -186,21 +196,21 @@ type ResolveColumnType<
   Col extends string,
 > =
   Col extends TableColumns<TTable>
-  ? ColumnType<TTable, Col>
-  : Col extends `${infer JoinName}.${infer JoinCol}`
-  ? JoinName extends keyof TJoinedTables
-  ? JoinCol extends TableColumns<TJoinedTables[JoinName]["table"]>
-  ? ColumnType<TJoinedTables[JoinName]["table"], JoinCol>
-  : unknown
-  : unknown
-  : unknown;
+    ? ColumnType<TTable, Col>
+    : Col extends `${infer JoinName}.${infer JoinCol}`
+      ? JoinName extends keyof TJoinedTables
+        ? JoinCol extends TableColumns<TJoinedTables[JoinName]["table"]>
+          ? ColumnType<TJoinedTables[JoinName]["table"], JoinCol>
+          : unknown
+        : unknown
+      : unknown;
 
 type JsonValueType<TColType, TPath extends string> =
   TColType extends Record<string, any>
-  ? TPath extends keyof TColType
-  ? TColType[TPath]
-  : unknown // For deep paths beyond first level or unknown keys
-  : unknown; // If not an object, JSON path extraction results in unknown
+    ? TPath extends keyof TColType
+      ? TColType[TPath]
+      : unknown // For deep paths beyond first level or unknown keys
+    : unknown; // If not an object, JSON path extraction results in unknown
 
 // selection input type for complex selections
 type SelectionInput<
@@ -213,17 +223,17 @@ type SelectionInput<
   | "*"
   | AllAvailableColumns<T, TJoinedTables> // Direct column or joined column
   | ColumnBuilder<
-    (TableColumns<T> & string) | JsonPath<T, TJoinedTables>,
-    any,
-    any,
-    any
-  > // ColumnBuilder instance
+      (TableColumns<T> & string) | JsonPath<T, TJoinedTables>,
+      any,
+      any,
+      any
+    > // ColumnBuilder instance
   | `${string}:${AllAvailableColumns<T, TJoinedTables> & string}` // alias:column
   | `${string}:${(
-    | JsonPath<T, TJoinedTables>
-    | `${AllAvailableColumns<T, TJoinedTables> & string}::${Cast}`
-  ) &
-  string}` // alias:json_path or alias:column::cast
+      | JsonPath<T, TJoinedTables>
+      | `${AllAvailableColumns<T, TJoinedTables> & string}::${Cast}`
+    ) &
+      string}` // alias:json_path or alias:column::cast
   | JsonPath<T, TJoinedTables> // column->>json_path
   | `${AllAvailableColumns<T, TJoinedTables> & string}::${Cast}`; // column::cast
 
@@ -244,16 +254,16 @@ type RecursiveJsonValueType<
 > = TSubPath extends `${infer Key}->>${string}`
   ? string // Operator ->> always returns text
   : TSubPath extends `${infer Key}->${infer Rest}`
-  ? TBase extends Record<string, any>
-  ? Key extends keyof TBase
-  ? RecursiveJsonValueType<TBase[Key], Rest>
-  : unknown
-  : unknown
-  : TBase extends Record<string, any>
-  ? TSubPath extends keyof TBase
-  ? TBase[TSubPath]
-  : unknown
-  : unknown;
+    ? TBase extends Record<string, any>
+      ? Key extends keyof TBase
+        ? RecursiveJsonValueType<TBase[Key], Rest>
+        : unknown
+      : unknown
+    : TBase extends Record<string, any>
+      ? TSubPath extends keyof TBase
+        ? TBase[TSubPath]
+        : unknown
+      : unknown;
 
 // Resolves the final type of a column or a full JSON path
 type ResolvePathType<
@@ -262,31 +272,31 @@ type ResolvePathType<
   P extends string,
 > =
   GetBasePath<P> extends infer BasePath
-  ? BasePath extends AllAvailableColumns<TTable, TJoinedTables>
-  ? ResolveColumnType<
-    TTable,
-    TJoinedTables,
-    BasePath & string
-  > extends infer ColType
-  ? P extends `${string}->${string}`
-  ? RecursiveJsonValueType<ColType, GetJsonSubPath<P>>
-  : ColType // This was a simple column path
-  : unknown
-  : unknown
-  : never;
+    ? BasePath extends AllAvailableColumns<TTable, TJoinedTables>
+      ? ResolveColumnType<
+          TTable,
+          TJoinedTables,
+          BasePath & string
+        > extends infer ColType
+        ? P extends `${string}->${string}`
+          ? RecursiveJsonValueType<ColType, GetJsonSubPath<P>>
+          : ColType // This was a simple column path
+        : unknown
+      : unknown
+    : never;
 
 // Parses a selection string into its constituent parts: Alias, Path, and Cast
 type ParseSelection<S extends string> = S extends `${infer Rest}::${infer C}`
   ? Rest extends `${infer Alias}:${infer Path}`
-  ? C extends Cast
-  ? { Alias: Alias; Path: Path; Cast: C }
-  : { Alias: Alias; Path: Path; Cast: unknown }
-  : C extends Cast
-  ? { Alias: JsonPathToFieldName<Rest>; Path: Rest; Cast: C }
-  : { Alias: JsonPathToFieldName<Rest>; Path: Rest; Cast: unknown }
+    ? C extends Cast
+      ? { Alias: Alias; Path: Path; Cast: C }
+      : { Alias: Alias; Path: Path; Cast: unknown }
+    : C extends Cast
+      ? { Alias: JsonPathToFieldName<Rest>; Path: Rest; Cast: C }
+      : { Alias: JsonPathToFieldName<Rest>; Path: Rest; Cast: unknown }
   : S extends `${infer Alias}:${infer Path}`
-  ? { Alias: Alias; Path: Path; Cast: unknown }
-  : { Alias: JsonPathToFieldName<S>; Path: S; Cast: unknown };
+    ? { Alias: Alias; Path: Path; Cast: unknown }
+    : { Alias: JsonPathToFieldName<S>; Path: S; Cast: unknown };
 
 type ExtractSelectionType<
   TTable extends TableOrView,
@@ -299,49 +309,49 @@ type ExtractSelectionType<
 > =
   // Case 1: ColumnBuilder
   TInput extends "*"
-  ? Readonly<TTable["Row"]>
-  : TInput extends ColumnBuilder<infer C, infer A, infer Cast, any>
-  ? C extends string
-  ? {
-    readonly [K in A extends string
-    ? A
-    : JsonPathToFieldName<C>]: Cast extends Cast & string
-    ? ValidateCast<ResolvePathType<TTable, TJoinedTables, C>, Cast>
-    : ResolvePathType<TTable, TJoinedTables, C>;
-  }
-  : QueryBuildError<"Invalid ColumnBuilder">
-  : // Case 2: String literal
-  TInput extends string
-  ? ParseSelection<TInput> extends {
-    Alias: infer A;
-    Path: infer P;
-    Cast: infer C;
-  }
-  ? P extends string
-  ? ResolvePathType<TTable, TJoinedTables, P> extends infer PathType
-  ? PathType extends QueryBuildError<any>
-  ? PathType
-  : {
-    readonly [K in A extends string ? A : never]: C extends Cast
-    ? ValidateCast<PathType, C & string>
-    : PathType;
-  }
-  : QueryBuildError<`Could not resolve path type for '${P}'`>
-  : QueryBuildError<`Invalid path in selection: ${TInput}`>
-  : QueryBuildError<`Could not parse selection string: ${TInput}`>
-  : QueryBuildError<"Invalid selection input">;
+    ? Readonly<TTable["Row"]>
+    : TInput extends ColumnBuilder<infer C, infer A, infer Cast, any>
+      ? C extends string
+        ? {
+            readonly [K in A extends string
+              ? A
+              : JsonPathToFieldName<C>]: Cast extends Cast & string
+              ? ValidateCast<ResolvePathType<TTable, TJoinedTables, C>, Cast>
+              : ResolvePathType<TTable, TJoinedTables, C>;
+          }
+        : QueryBuildError<"Invalid ColumnBuilder">
+      : // Case 2: String literal
+        TInput extends string
+        ? ParseSelection<TInput> extends {
+            Alias: infer A;
+            Path: infer P;
+            Cast: infer C;
+          }
+          ? P extends string
+            ? ResolvePathType<TTable, TJoinedTables, P> extends infer PathType
+              ? PathType extends QueryBuildError<any>
+                ? PathType
+                : {
+                    readonly [K in A extends string ? A : never]: C extends Cast
+                      ? ValidateCast<PathType, C & string>
+                      : PathType;
+                  }
+              : QueryBuildError<`Could not resolve path type for '${P}'`>
+            : QueryBuildError<`Invalid path in selection: ${TInput}`>
+          : QueryBuildError<`Could not parse selection string: ${TInput}`>
+        : QueryBuildError<"Invalid selection input">;
 
 // selection merging
 type MergeSelections<T extends readonly any[]> = DatabaseTypes.SimplifyDeep<
   T extends readonly [infer First, ...infer Rest]
-  ? First extends Record<string, any>
-  ? Rest extends readonly any[]
-  ? DatabaseTypes.Prettify<First & MergeSelections<Rest>>
-  : First
-  : Rest extends readonly any[]
-  ? MergeSelections<Rest>
-  : {}
-  : {}
+    ? First extends Record<string, any>
+      ? Rest extends readonly any[]
+        ? DatabaseTypes.Prettify<First & MergeSelections<Rest>>
+        : First
+      : Rest extends readonly any[]
+        ? MergeSelections<Rest>
+        : {}
+    : {}
 >;
 
 // ============ JOIN & RESULT TYPES ============
@@ -349,8 +359,8 @@ type MergeSelections<T extends readonly any[]> = DatabaseTypes.SimplifyDeep<
 // Utility to get the selection result from a builder instance type
 type GetSelectionResult<TBuilder> =
   TBuilder extends TableQueryBuilder<any, any, any, infer TResult, any, any>
-  ? TResult
-  : never;
+    ? TResult
+    : never;
 
 // Computes the kind of a single joined table in the final result
 type ShapedJoinResult<
@@ -360,26 +370,26 @@ type ShapedJoinResult<
 > = TJoinOptions extends { flatten: true }
   ? TJoinResult // Flattened properties are merged directly
   : {
-    readonly [K in TJoinName]: TJoinOptions extends { kind: "one" }
-    ? TJoinResult | null // Shaped as a single object
-    : TJoinResult[]; // Default kind is an array of objects
-  };
+      readonly [K in TJoinName]: TJoinOptions extends { kind: "one" }
+        ? TJoinResult | null // Shaped as a single object
+        : TJoinResult[]; // Default kind is an array of objects
+    };
 
 // Merges the main result with all joined results
 type CombineWithJoins<TResult, TJoinedTables> = DatabaseTypes.Prettify<
   TResult &
-  UnionToIntersection<
-    {
-      [K in keyof TJoinedTables]: K extends string
-      ? TJoinedTables[K] extends {
-        options: infer O extends JoinOptions;
-        result: infer R;
-      }
-      ? ShapedJoinResult<K, O, R>
-      : never
-      : never;
-    }[keyof TJoinedTables]
-  >
+    UnionToIntersection<
+      {
+        [K in keyof TJoinedTables]: K extends string
+          ? TJoinedTables[K] extends {
+              options: infer O extends JoinOptions;
+              result: infer R;
+            }
+            ? ShapedJoinResult<K, O, R>
+            : never
+          : never;
+      }[keyof TJoinedTables]
+    >
 >;
 
 type JoinType = "left" | "inner" | "right" | "full";
@@ -408,11 +418,11 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 
 type OrderObject<TTable extends TableOrView> = {
   [k in TableColumns<TTable> | JsonPath<TTable>]?:
-  | "asc"
-  | "desc"
-  | `${"asc" | "desc"}.${"nullsfirst" | "nullslast"}`
-  | "nullsfirst"
-  | "nullslast";
+    | "asc"
+    | "desc"
+    | `${"asc" | "desc"}.${"nullsfirst" | "nullslast"}`
+    | "nullsfirst"
+    | "nullslast";
 };
 
 // ============ QUERY BUILDER ============
@@ -437,7 +447,8 @@ export class TableQueryBuilder<
     }
   > = {},
   TResultFinal = TResult[],
-> implements PromiseLike<ResponseType<TClient, TResultFinal>> {
+> implements PromiseLike<ResponseType<TClient, TResultFinal>>
+{
   // --- IMMUTABLE STATE ---
   private readonly _client: TClient;
   private readonly _config: {
@@ -523,15 +534,15 @@ export class TableQueryBuilder<
     TTable,
     TSchema,
     TSelections extends []
-    ? TTable["Row"]
-    : MergeSelections<{
-      [I in keyof TSelections]: ExtractSelectionType<
-        TTable,
-        TSelections[I],
-        TSchema,
-        TJoinedTables
-      >;
-    }>,
+      ? TTable["Row"]
+      : MergeSelections<{
+          [I in keyof TSelections]: ExtractSelectionType<
+            TTable,
+            TSelections[I],
+            TSchema,
+            TJoinedTables
+          >;
+        }>,
     TParentTable,
     TJoinedTables
   >;
@@ -588,8 +599,8 @@ export class TableQueryBuilder<
       TResult,
       TJoinedTables & {
         [K in TJoinOptions["as"] extends string
-        ? TJoinOptions["as"]
-        : TJoinOptions["table"]]: {
+          ? TJoinOptions["as"]
+          : TJoinOptions["table"]]: {
           table: TSchema["Tables"][TJoinOptions["table"]];
           options: TJoinOptions;
           result: GetSelectionResult<TJoinBuilder>;
@@ -599,8 +610,8 @@ export class TableQueryBuilder<
     TParentTable,
     TJoinedTables & {
       [K in TJoinOptions["as"] extends string
-      ? TJoinOptions["as"]
-      : TJoinOptions["table"]]: {
+        ? TJoinOptions["as"]
+        : TJoinOptions["table"]]: {
         table: TSchema["Tables"][TJoinOptions["table"]];
         options: TJoinOptions;
         result: GetSelectionResult<TJoinBuilder>;
@@ -1481,7 +1492,8 @@ export class TableQueryBuilder<
       column: column as string,
       operator: "isdistinct",
       value,
-      isColumnReference: value !== undefined ? this.isColumnReference(value) : false,
+      isColumnReference:
+        value !== undefined ? this.isColumnReference(value) : false,
     });
   }
 
@@ -1497,8 +1509,18 @@ export class TableQueryBuilder<
    */
   fts<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
-    queryOrLang: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
-    query?: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+    queryOrLang: ColumnValueOrReference<
+      string,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >,
+    query?: ColumnValueOrReference<
+      string,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >,
   ): this {
     return this.addCondition({
       column: column as string,
@@ -1517,8 +1539,18 @@ export class TableQueryBuilder<
    */
   plfts<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
-    queryOrLang: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
-    query?: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+    queryOrLang: ColumnValueOrReference<
+      string,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >,
+    query?: ColumnValueOrReference<
+      string,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >,
   ): this {
     return this.addCondition({
       column: column as string,
@@ -1537,8 +1569,18 @@ export class TableQueryBuilder<
    */
   phfts<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
-    queryOrLang: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
-    query?: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+    queryOrLang: ColumnValueOrReference<
+      string,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >,
+    query?: ColumnValueOrReference<
+      string,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >,
   ): this {
     return this.addCondition({
       column: column as string,
@@ -1557,8 +1599,18 @@ export class TableQueryBuilder<
    */
   wfts<K extends AllAvailableColumns<TTable, never> | JsonPath<TTable>>(
     column: K,
-    queryOrLang: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
-    query?: ColumnValueOrReference<string, TSchema, TParentTable, TJoinedTables>,
+    queryOrLang: ColumnValueOrReference<
+      string,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >,
+    query?: ColumnValueOrReference<
+      string,
+      TSchema,
+      TParentTable,
+      TJoinedTables
+    >,
   ): this {
     return this.addCondition({
       column: column as string,
@@ -1887,8 +1939,8 @@ export class TableQueryBuilder<
   then<TResult1 = ResponseType<TClient, TResultFinal>, TResult2 = never>(
     onfulfilled?:
       | ((
-        value: ResponseType<TClient, TResultFinal>,
-      ) => TResult1 | PromiseLike<TResult1>)
+          value: ResponseType<TClient, TResultFinal>,
+        ) => TResult1 | PromiseLike<TResult1>)
       | null
       | undefined,
     onrejected?:
@@ -2197,13 +2249,19 @@ export class TableQueryBuilder<
           const [srMin, srMax] = Array.isArray(value) ? value : [value, value];
           return `${column}.sr(${this.formatValue(srMin)},${this.formatValue(srMax)})`;
         case "nxr":
-          const [nxrMin, nxrMax] = Array.isArray(value) ? value : [value, value];
+          const [nxrMin, nxrMax] = Array.isArray(value)
+            ? value
+            : [value, value];
           return `${column}.nxr(${this.formatValue(nxrMin)},${this.formatValue(nxrMax)})`;
         case "nxl":
-          const [nxlMin, nxlMax] = Array.isArray(value) ? value : [value, value];
+          const [nxlMin, nxlMax] = Array.isArray(value)
+            ? value
+            : [value, value];
           return `${column}.nxl(${this.formatValue(nxlMin)},${this.formatValue(nxlMax)})`;
         case "adj":
-          const [adjMin, adjMax] = Array.isArray(value) ? value : [value, value];
+          const [adjMin, adjMax] = Array.isArray(value)
+            ? value
+            : [value, value];
           return `${column}.adj(${this.formatValue(adjMin)},${this.formatValue(adjMax)})`;
         case "is":
           return `${column}.is(${this.formatSpecialValue(value)})`;

@@ -29,11 +29,11 @@ export type RealtimeResponse = {
    * Data associated with the response based on the response type.
    */
   data:
-    | RealtimeResponseAuthenticated
-    | RealtimeResponseConnected
-    | RealtimeResponseError
-    | RealtimeResponseEvent<unknown>
-    | undefined;
+  | RealtimeResponseAuthenticated
+  | RealtimeResponseConnected
+  | RealtimeResponseError
+  | RealtimeResponseEvent<unknown>
+  | undefined;
 };
 
 /**
@@ -287,9 +287,10 @@ interface ErrorResponse {
 
 export type SafeResponse<T> =
   | (T extends { data: any[]; total: number }
-      ? T & { error: null }
-      : SuccessResponse<T>)
-  | ErrorResponse;
+    ? T & { error: null }
+    : SuccessResponse<T>)
+  | (T extends { data: any[]; total: number }
+    ? ErrorResponse & { total: undefined } : ErrorResponse);
 
 export type ResponseType<
   T extends BaseClient,
