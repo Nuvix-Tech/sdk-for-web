@@ -2,7 +2,7 @@
   "name": "@nuvix/client",
   "homepage": "https://www.nuvix.in/support",
   "description": "Nuvix is a Open Source high-performance backend platform built for modern applications—fast, scalable, and developer-first.",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "license": "BSD-3-Clause",
   "main": "dist/index.cjs",
   "type": "module",
