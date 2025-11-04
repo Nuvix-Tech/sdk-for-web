@@ -2336,4 +2336,101 @@ export class TableQueryBuilder<
     if (typeof value === "boolean") return value ? "true" : "false";
     return this.formatValue(value);
   }
+
+  async insert(
+    data: InsertRow<TTable> | InsertRow<TTable>[],
+  ): Promise<ResponseType<TClient, TResultFinal>> {
+    return this._client.withSafeResponse(async () => {
+      const url = new URL(
+        `${this._client.config.endpoint}/schemas/${this._config.schema}/tables/${this._config.tableName}`,
+      );
+      const headers = {
+        "content-type": "application/json",
+      };
+      try {
+        const response = await this._client.call(
+          "POST",
+          url,
+          headers,
+          data as any,
+        );
+        return response;
+      } catch (error) {
+        if (error instanceof NuvixException) {
+          throw error;
+        }
+        throw new NuvixException(
+          `Insert operation failed: ${error instanceof Error ? error.message : String(error)}`,
+          400,
+          `INSERT_OPERATION_ERROR`,
+        );
+      }
+    });
+  }
+
+  async update(
+    data: Partial<TResult>,
+    options?: { force?: boolean },
+  ): Promise<ResponseType<TClient, TResultFinal>> {
+    return this._client.withSafeResponse(async () => {
+      const query = new URLSearchParams(this.toString());
+      const url = new URL(
+        `${this._client.config.endpoint}/schemas/${this._config.schema}/tables/${this._config.tableName}`,
+      );
+      url.search = query.toString();
+      if (options?.force) {
+        url.searchParams.append("force", "true");
+      }
+      const headers = {
+        "content-type": "application/json",
+      };
+
+      try {
+        const response = await this._client.call("PATCH", url, headers, data);
+        return response;
+      } catch (error) {
+        if (error instanceof NuvixException) {
+          throw error;
+        }
+        throw new NuvixException(
+          `Update operation failed: ${error instanceof Error ? error.message : String(error)}`,
+          400,
+          `UPDATE_OPERATION_ERROR`,
+        );
+      }
+    });
+  }
+
+  async delete({ force }: { force?: boolean } = {}): Promise<
+    ResponseType<TClient, TResultFinal>
+  > {
+    return this._client.withSafeResponse(async () => {
+      const query = new URLSearchParams(this.toString());
+      const url = new URL(
+        `${this._client.config.endpoint}/schemas/${this._config.schema}/tables/${this._config.tableName}`,
+      );
+      url.search = query.toString();
+      if (force) {
+        url.searchParams.append("force", "true");
+      }
+      const headers = {
+        "content-type": "application/json",
+      };
+      try {
+        const response = await this._client.call("DELETE", url, headers);
+        return response;
+      } catch (error) {
+        if (error instanceof NuvixException) {
+          throw error;
+        }
+        throw new NuvixException(
+          `Delete operation failed: ${error instanceof Error ? error.message : String(error)}`,
+          400,
+          `DELETE_OPERATION_ERROR`,
+        );
+      }
+    });
+  }
 }
+
+type InsertRow<T> = T extends { Insert: infer U } ? U : never;

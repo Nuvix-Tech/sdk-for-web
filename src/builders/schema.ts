@@ -2,6 +2,7 @@ import { Schemas as _Schemas, GetSchemaType, GetTableOrView } from "../type";
 import type { BaseClient } from "../base-client";
 import { CollectionQueryBuilder } from "./collection";
 import { TableQueryBuilder } from "./table";
+import { FnQueryBuilder } from "./fn";
 
 export class SchemaQueryBuilder<
   T extends BaseClient,
@@ -20,12 +21,11 @@ export class SchemaQueryBuilder<
    *
    * @example
    * ```ts
-   * import {BaseClient} from 'nuvix';
+   * import {Client} from 'nuvix';
    *
-   * const client = new BaseClient({ project: <project-id> })
-   * const db = new Database(client)
+   * const nx = new Client({ project: <project-id> })
    *
-   * const collection = db.schema(<schema>).collection(<collectionId>)
+   * const collection = nx.db.schema(<schema>).collection(<collectionId>)
    * // perform CRUD operations on the collection
    * ```
    */
@@ -47,12 +47,11 @@ export class SchemaQueryBuilder<
    *
    * @example
    * ```ts
-   * import { BaseClient } from 'nuvix';
+   * import { Client } from 'nuvix';
    *
-   * const client = new BaseClient({ project: <project-id> })
-   * const db = new Database(client)
+   * const nx = new Client({ project: <project-id> })
    *
-   * const table = db.schema(<schema>).from(<table>)
+   * const table = nx.db.schema(<schema>).from(<table>)
    * // perform CRUD operations on the table
    * ```
    */
@@ -70,4 +69,37 @@ export class SchemaQueryBuilder<
       schema: this.schema,
     });
   }
+
+  /**
+   * It is used to call a database function (RPC) in the database schema.
+   *
+   * @param fn name of function
+   *
+   * @example
+   * ```ts
+   * import { Client } from 'nuvix';
+   *
+   * const nx = new Client({ project: <project-id> })
+   *
+   * const result = await nx.db.schema(<schema>).fn(<function-name>).call(<args>)
+   * ```
+   */
+  fn<
+    Fn extends string &
+      keyof GetSchemaType<Schemas, Schema, false>["Functions"],
+  >(fn: Fn) {
+    return new FnQueryBuilder<
+      T,
+      GetSchemaType<Schemas, Schema, false>["Functions"][Fn],
+      GetSchemaType<Schemas, Schema, false>
+    >(this.client, {
+      schema: this.schema,
+      functionName: fn,
+    });
+  }
+
+  /**
+   * Alias for `fn` method.
+   */
+  readonly rpc = this.fn;
 }

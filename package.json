@@ -36,8 +36,5 @@
     "types"
   ],
   "jsdelivr": "dist/index.global.js",
-  "unpkg": "dist/index.global.js",
-  "dependencies": {
-    "socket.io-client": "^4.8.1"
-  }
+  "unpkg": "dist/index.global.js"
 }

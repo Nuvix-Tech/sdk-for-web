@@ -3,17 +3,17 @@ import {
   Headers,
   Payload,
   PromiseResponseType,
-  Realtime,
-  RealtimeRequest,
-  RealtimeResponse,
-  RealtimeResponseConnected,
-  RealtimeResponseError,
+  // Realtime,
+  // RealtimeRequest,
+  // RealtimeResponse,
+  // RealtimeResponseConnected,
+  // RealtimeResponseError,
   RealtimeResponseEvent,
   ResponseType,
   UploadProgress,
 } from "./type";
 import { Models } from "./models";
-import { io } from "socket.io-client";
+// import { io } from "socket.io-client";
 import { NuvixException } from "./error";
 
 /**
@@ -22,7 +22,19 @@ import { NuvixException } from "./error";
 class BaseClient<IsSafe extends boolean = false | true> {
   static CHUNK_SIZE = 1024 * 1024 * 5;
 
-  public safeResponse: IsSafe;
+  public readonly safeResponse: IsSafe;
+
+  /**
+   * Holds configuration such as project.
+   */
+  config: Config = {
+    endpoint: "https://api.nuvix.in/v1",
+    endpointRealtime: "",
+    project: "",
+    jwt: "",
+    locale: "",
+    session: "",
+  };
 
   constructor({
     safeResponse,
@@ -36,18 +48,6 @@ class BaseClient<IsSafe extends boolean = false | true> {
       ...rest,
     };
   }
-
-  /**
-   * Holds configuration such as project.
-   */
-  config: Config = {
-    endpoint: "https://api.nuvix.in/v1",
-    endpointRealtime: "",
-    project: "",
-    jwt: "",
-    locale: "",
-    session: "",
-  };
 
   /**
    * Custom headers for API requests.
@@ -87,11 +87,11 @@ class BaseClient<IsSafe extends boolean = false | true> {
    *
    * @returns {this}
    */
-  setEndpointRealtime(endpointRealtime: string): this {
-    this.config.endpointRealtime = endpointRealtime;
+  // setEndpointRealtime(endpointRealtime: string): this {
+  //   this.config.endpointRealtime = endpointRealtime;
 
-    return this;
-  }
+  //   return this;
+  // }
 
   /**
    * Set Project
@@ -148,176 +148,176 @@ class BaseClient<IsSafe extends boolean = false | true> {
     return this;
   }
 
-  private realtime: Realtime = {
-    socket: undefined,
-    timeout: undefined,
-    heartbeat: undefined,
-    url: "",
-    channels: new Set(),
-    subscriptions: new Map(),
-    subscriptionsCounter: 0,
-    reconnect: true,
-    reconnectAttempts: 0,
-    lastMessage: undefined,
-    connect: () => {
-      clearTimeout(this.realtime.timeout);
-      this.realtime.timeout = window?.setTimeout(() => {
-        this.realtime.createSocket();
-      }, 50);
-    },
-    getTimeout: () => {
-      switch (true) {
-        case this.realtime.reconnectAttempts < 5:
-          return 1000;
-        case this.realtime.reconnectAttempts < 15:
-          return 5000;
-        case this.realtime.reconnectAttempts < 100:
-          return 10_000;
-        default:
-          return 60_000;
-      }
-    },
-    createHeartbeat: () => {
-      if (this.realtime.heartbeat) {
-        clearTimeout(this.realtime.heartbeat);
-      }
+  // private realtime: Realtime = {
+  //   socket: undefined,
+  //   timeout: undefined,
+  //   heartbeat: undefined,
+  //   url: "",
+  //   channels: new Set(),
+  //   subscriptions: new Map(),
+  //   subscriptionsCounter: 0,
+  //   reconnect: true,
+  //   reconnectAttempts: 0,
+  //   lastMessage: undefined,
+  //   connect: () => {
+  //     clearTimeout(this.realtime.timeout);
+  //     this.realtime.timeout = window?.setTimeout(() => {
+  //       this.realtime.createSocket();
+  //     }, 50);
+  //   },
+  //   getTimeout: () => {
+  //     switch (true) {
+  //       case this.realtime.reconnectAttempts < 5:
+  //         return 1000;
+  //       case this.realtime.reconnectAttempts < 15:
+  //         return 5000;
+  //       case this.realtime.reconnectAttempts < 100:
+  //         return 10_000;
+  //       default:
+  //         return 60_000;
+  //     }
+  //   },
+  //   createHeartbeat: () => {
+  //     if (this.realtime.heartbeat) {
+  //       clearTimeout(this.realtime.heartbeat);
+  //     }
 
-      this.realtime.heartbeat = window?.setInterval(() => {
-        this.realtime.socket?.send(
-          JSON.stringify({
-            type: "ping",
-          }),
-        );
-      }, 20_000);
-    },
-    createSocket: () => {
-      if (this.realtime.channels.size < 1) {
-        this.realtime.reconnect = false;
-        this.realtime.socket?.close();
-        return;
-      }
+  //     this.realtime.heartbeat = window?.setInterval(() => {
+  //       this.realtime.socket?.send(
+  //         JSON.stringify({
+  //           type: "ping",
+  //         }),
+  //       );
+  //     }, 20_000);
+  //   },
+  //   createSocket: () => {
+  //     if (this.realtime.channels.size < 1) {
+  //       this.realtime.reconnect = false;
+  //       this.realtime.socket?.close();
+  //       return;
+  //     }
 
-      const channels = new URLSearchParams();
-      const _channels = Array.from(this.realtime.channels);
-      channels.set("project", this.config.project);
-      this.realtime.channels.forEach((channel) => {
-        channels.append("channels[]", channel);
-      });
+  //     const channels = new URLSearchParams();
+  //     const _channels = Array.from(this.realtime.channels);
+  //     channels.set("project", this.config.project);
+  //     this.realtime.channels.forEach((channel) => {
+  //       channels.append("channels[]", channel);
+  //     });
 
-      const url =
-        this.config.endpointRealtime + "/realtime?" + channels.toString();
+  //     const url =
+  //       this.config.endpointRealtime + "/realtime?" + channels.toString();
 
-      if (
-        url !== this.realtime.url || // Check if URL is present
-        !this.realtime.socket // Check if Socket.IO client has not been created
-      ) {
-        this.realtime.url = url;
-        this.realtime.socket?.disconnect();
-        this.realtime.socket = io(url, {
-          query: {
-            project: this.config.project,
-            channels: _channels.join(","),
-          },
-          reconnection: false,
-        });
+  //     if (
+  //       url !== this.realtime.url || // Check if URL is present
+  //       !this.realtime.socket // Check if Socket.IO client has not been created
+  //     ) {
+  //       this.realtime.url = url;
+  //       this.realtime.socket?.disconnect();
+  //       this.realtime.socket = io(url, {
+  //         query: {
+  //           project: this.config.project,
+  //           channels: _channels.join(","),
+  //         },
+  //         reconnection: false,
+  //       });
 
-        this.realtime.socket.on("connect", () => {
-          this.realtime.reconnectAttempts = 0;
-        });
+  //       this.realtime.socket.on("connect", () => {
+  //         this.realtime.reconnectAttempts = 0;
+  //       });
 
-        this.realtime.socket.on("disconnect", (reason: any) => {
-          if (
-            !this.realtime.reconnect ||
-            (this.realtime?.lastMessage?.type === "error" &&
-              (<RealtimeResponseError>this.realtime?.lastMessage.data).code ===
-                1008)
-          ) {
-            this.realtime.reconnect = true;
-            return;
-          }
+  //       this.realtime.socket.on("disconnect", (reason: any) => {
+  //         if (
+  //           !this.realtime.reconnect ||
+  //           (this.realtime?.lastMessage?.type === "error" &&
+  //             (<RealtimeResponseError>this.realtime?.lastMessage.data).code ===
+  //               1008)
+  //         ) {
+  //           this.realtime.reconnect = true;
+  //           return;
+  //         }
 
-          const timeout = this.realtime.getTimeout();
-          console.error(
-            `Realtime disconnected. Reconnect in ${timeout / 1000} seconds. Reason: ${reason}`,
-          );
+  //         const timeout = this.realtime.getTimeout();
+  //         console.error(
+  //           `Realtime disconnected. Reconnect in ${timeout / 1000} seconds. Reason: ${reason}`,
+  //         );
 
-          setTimeout(() => {
-            this.realtime.reconnectAttempts++;
-            this.realtime.createSocket();
-          }, timeout);
-        });
+  //         setTimeout(() => {
+  //           this.realtime.reconnectAttempts++;
+  //           this.realtime.createSocket();
+  //         }, timeout);
+  //       });
 
-        this.realtime.socket.on("message", this.realtime.onMessage);
-      }
-    },
-    onMessage: (event) => {
-      try {
-        const message: RealtimeResponse = JSON.parse(event.data);
-        this.realtime.lastMessage = message;
-        switch (message.type) {
-          case "connected":
-            const cookie = JSON.parse(
-              window.localStorage.getItem("cookieFallback") ?? "{}",
-            );
-            const session = cookie?.[`a_session_${this.config.project}`];
-            const messageData = <RealtimeResponseConnected>message.data;
+  //       this.realtime.socket.on("message", this.realtime.onMessage);
+  //     }
+  //   },
+  //   onMessage: (event) => {
+  //     try {
+  //       const message: RealtimeResponse = JSON.parse(event.data);
+  //       this.realtime.lastMessage = message;
+  //       switch (message.type) {
+  //         case "connected":
+  //           const cookie = JSON.parse(
+  //             window.localStorage.getItem("cookieFallback") ?? "{}",
+  //           );
+  //           const session = cookie?.[`a_session_${this.config.project}`];
+  //           const messageData = <RealtimeResponseConnected>message.data;
 
-            if (session && !messageData.user) {
-              this.realtime.socket?.send(
-                JSON.stringify(<RealtimeRequest>{
-                  type: "authentication",
-                  data: {
-                    session,
-                  },
-                }),
-              );
-            }
-            break;
-          case "event":
-            let data = <RealtimeResponseEvent<unknown>>message.data;
-            if (data?.channels) {
-              const isSubscribed = data.channels.some((channel) =>
-                this.realtime.channels.has(channel),
-              );
-              if (!isSubscribed) return;
-              this.realtime.subscriptions.forEach((subscription) => {
-                if (
-                  data.channels.some((channel) =>
-                    subscription.channels.includes(channel),
-                  )
-                ) {
-                  setTimeout(() => subscription.callback(data));
-                }
-              });
-            }
-            break;
-          case "pong":
-            break; // Handle pong response if needed
-          case "error":
-            throw message.data;
-          default:
-            break;
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    },
-    cleanUp: (channels) => {
-      this.realtime.channels.forEach((channel) => {
-        if (channels.includes(channel)) {
-          let found = Array.from(this.realtime.subscriptions).some(
-            ([_key, subscription]) => {
-              return subscription.channels.includes(channel);
-            },
-          );
+  //           if (session && !messageData.user) {
+  //             this.realtime.socket?.send(
+  //               JSON.stringify(<RealtimeRequest>{
+  //                 type: "authentication",
+  //                 data: {
+  //                   session,
+  //                 },
+  //               }),
+  //             );
+  //           }
+  //           break;
+  //         case "event":
+  //           let data = <RealtimeResponseEvent<unknown>>message.data;
+  //           if (data?.channels) {
+  //             const isSubscribed = data.channels.some((channel) =>
+  //               this.realtime.channels.has(channel),
+  //             );
+  //             if (!isSubscribed) return;
+  //             this.realtime.subscriptions.forEach((subscription) => {
+  //               if (
+  //                 data.channels.some((channel) =>
+  //                   subscription.channels.includes(channel),
+  //                 )
+  //               ) {
+  //                 setTimeout(() => subscription.callback(data));
+  //               }
+  //             });
+  //           }
+  //           break;
+  //         case "pong":
+  //           break; // Handle pong response if needed
+  //         case "error":
+  //           throw message.data;
+  //         default:
+  //           break;
+  //       }
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   },
+  //   cleanUp: (channels) => {
+  //     this.realtime.channels.forEach((channel) => {
+  //       if (channels.includes(channel)) {
+  //         let found = Array.from(this.realtime.subscriptions).some(
+  //           ([_key, subscription]) => {
+  //             return subscription.channels.includes(channel);
+  //           },
+  //         );
 
-          if (!found) {
-            this.realtime.channels.delete(channel);
-          }
-        }
-      });
-    },
-  };
+  //         if (!found) {
+  //           this.realtime.channels.delete(channel);
+  //         }
+  //       }
+  //     });
+  //   },
+  // };
 
   /**
    * Subscribes to Nuvix events and passes you the payload in realtime.
@@ -344,27 +344,27 @@ class BaseClient<IsSafe extends boolean = false | true> {
    * @param {(payload: RealtimeMessage) => void} callback Is called on every realtime update.
    * @returns {() => void} Unsubscribes from events.
    */
-  subscribe<T extends unknown>(
-    channels: string | string[],
-    callback: (payload: RealtimeResponseEvent<T>) => void,
-  ): () => void {
-    let channelArray = typeof channels === "string" ? [channels] : channels;
-    channelArray.forEach((channel) => this.realtime.channels.add(channel));
+  // subscribe<T extends unknown>(
+  //   channels: string | string[],
+  //   callback: (payload: RealtimeResponseEvent<T>) => void,
+  // ): () => void {
+  //   let channelArray = typeof channels === "string" ? [channels] : channels;
+  //   channelArray.forEach((channel) => this.realtime.channels.add(channel));
 
-    const counter = this.realtime.subscriptionsCounter++;
-    this.realtime.subscriptions.set(counter, {
-      channels: channelArray,
-      callback,
-    });
+  //   const counter = this.realtime.subscriptionsCounter++;
+  //   this.realtime.subscriptions.set(counter, {
+  //     channels: channelArray,
+  //     callback,
+  //   });
 
-    this.realtime.connect();
+  //   this.realtime.connect();
 
-    return () => {
-      this.realtime.subscriptions.delete(counter);
-      this.realtime.cleanUp(channelArray);
-      this.realtime.connect();
-    };
-  }
+  //   return () => {
+  //     this.realtime.subscriptions.delete(counter);
+  //     this.realtime.cleanUp(channelArray);
+  //     this.realtime.connect();
+  //   };
+  // }
 
   prepareRequest(
     method: string,
