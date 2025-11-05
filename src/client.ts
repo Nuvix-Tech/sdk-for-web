@@ -19,7 +19,7 @@ import { Schemas } from "./type";
  * @template DB - The database schema type. Extends `Record<string, DatabaseTypes.GenericSchema>`.
  * @template CollectionsTypes - The collection document types. Defaults to DB if not specified.
  * @template IsSafe - Boolean flag controlling response type:
- *                     - true: Service/database methods return `{ error: boolean; data?: T }`.
+ *                     - true: Service/database methods return `{ error: NuvixException; data?: T }`.
  *                     - false: Methods return data directly (`T`).
  *
  * Example usage:
