@@ -1,10 +1,8 @@
-import { Client, Account, OAuthProvider } from "nuvix";
+import { Client, OAuthProvider } from "nuvix";
 
-const client = new Client()
-.setEndpoint('https://cloud.nuvix.io/v1') // Your API Endpoint
+const nx = new Client()
+.setEndpoint('https://api.nuvix.in/v1') // Your API Endpoint
 .setProject('<YOUR_PROJECT_ID>'); // Your project ID
-
-const account = new Account(client);
 
 account.createOAuth2Token(
 OAuthProvider.Amazon, // provider

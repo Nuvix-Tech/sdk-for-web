@@ -1,12 +1,10 @@
-import { Client, Avatars, CreditCard } from "nuvix";
+import { Client, CreditCard } from "nuvix";
 
-const client = new Client()
-.setEndpoint('https://cloud.nuvix.io/v1') // Your API Endpoint
+const nx = new Client()
+.setEndpoint('https://api.nuvix.in/v1') // Your API Endpoint
 .setProject('<YOUR_PROJECT_ID>'); // Your project ID
 
-const avatars = new Avatars(client);
-
-const result = avatars.getCreditCard(
+const result = nx.avatars.getCreditCard(
 CreditCard.AmericanExpress, // code
 0, // width (optional)
 0, // height (optional)
